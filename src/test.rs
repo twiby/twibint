@@ -19,6 +19,13 @@ fn from_str() {
 }
 
 #[test]
+fn to_str() {
+	let bg = BigInt::new(123);
+
+	assert_eq!(String::from(&bg), "123");
+}
+
+#[test]
 fn add_assign() {
 	let mut bg = BigInt::new(0);
 	bg += 100u32;
@@ -37,4 +44,39 @@ fn add() {
 
 	assert_eq!(&b1 + &b2, BigInt::new(150));
 	assert_eq!(&b1 + 50, BigInt::new(150));
+}
+
+#[test]
+fn bits() {
+	let b1 = BigInt::new(0);
+	let b2 = BigInt::new(4294967295);
+	let b3 = BigInt::new(2147483648);
+
+	assert_eq!(b1.nb_bits(), 32);
+	assert_eq!(b2.nb_bits(), 32);
+	assert_eq!(b3.nb_bits(), 32);
+
+	for b in 0..b1.nb_bits() {
+		assert!(!b1.bit(b));
+	}
+
+	for b in 0..b2.nb_bits() {
+		assert!(b2.bit(b));
+	}
+
+	for b in 0..b3.nb_bits()-1 {
+		assert!(!b3.bit(b));
+	}
+	assert!(b3.bit(31));
+
+	let mut count = 0;
+	for bit in b1.bits() {
+		assert!(!bit);
+		count += 1;
+	}
+	for bit in b2.bits().rev() {
+		assert!(bit);
+		count += 1;
+	}
+	assert_eq!(count, 64);
 }
