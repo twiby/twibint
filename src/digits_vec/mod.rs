@@ -38,3 +38,13 @@ impl Digits {
 		}
 	}
 }
+
+impl<'a> From<&'a Digits> for String {
+	fn from(other: &'a Digits) -> String {
+		let mut ret = "".to_string();
+		for c in other.val.iter().rev() {
+			ret.push(char::from_digit((*c).into(), 10).unwrap());
+		}
+		return ret;
+	}
+}

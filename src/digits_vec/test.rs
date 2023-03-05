@@ -27,3 +27,9 @@ fn double() {
 	d.times_2();
 	assert_eq!(d.val, vec![4, 4, 8, 1]);
 }
+
+#[test]
+fn string() {
+	let d = Digits::new(1943);
+	assert_eq!(String::from(&d), "1943");
+}
