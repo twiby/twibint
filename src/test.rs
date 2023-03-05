@@ -9,14 +9,14 @@ fn new() {
 	assert_eq!(bg.val, val);
 }
 
-#[test]
-fn from_str() {
-	let s = "123";
+// #[test]
+// fn from_str() {
+// 	let s = "123";
 
-	let bg = BigInt::from(s);
+// 	let bg = BigInt::from(s);
 
-	assert_eq!(bg.val, 123);
-}
+// 	assert_eq!(bg.val, 123);
+// }
 
 #[test]
 fn to_str() {

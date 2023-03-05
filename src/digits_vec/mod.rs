@@ -39,8 +39,20 @@ impl Digits {
 	}
 }
 
-impl<'a> From<&'a Digits> for String {
-	fn from(other: &'a Digits) -> String {
+impl From<&str> for Digits {
+	fn from(other: &str) -> Digits {
+		let mut ret = Digits::new(0);
+
+		for c in other.chars().rev() {
+			ret.val.push(c.to_digit(10).unwrap().try_into().unwrap());
+		}
+
+		ret
+	}
+}
+
+impl From<&Digits> for String {
+	fn from(other: &Digits) -> String {
 		let mut ret = "".to_string();
 		for c in other.val.iter().rev() {
 			ret.push(char::from_digit((*c).into(), 10).unwrap());

@@ -33,3 +33,12 @@ fn string() {
 	let d = Digits::new(1943);
 	assert_eq!(String::from(&d), "1943");
 }
+
+#[test]
+fn from_str() {
+	let s = "123";
+
+	let bg = Digits::from(s);
+
+	assert_eq!(bg.val, vec![3,2,1]);
+}

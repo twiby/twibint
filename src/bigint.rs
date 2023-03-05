@@ -29,21 +29,21 @@ impl BigInt {
 	}
 }
 
-impl From<&str> for BigInt {
-	fn from(s: &str) -> BigInt {
-		let mut ret = BigInt::new(0);
+// impl From<&str> for BigInt {
+// 	fn from(s: &str) -> BigInt {
+// 		let mut ret = BigInt::new(0);
 
-		let mut base = 1;
-		for c in s.chars().rev() {
-			let v = c.to_digit(10).unwrap();
+// 		let mut base = 1;
+// 		for c in s.chars().rev() {
+// 			let v = c.to_digit(10).unwrap();
 
-			ret += v * base;
-			base *= 10;
-		}
+// 			ret += v * base;
+// 			base *= 10;
+// 		}
 
-		return ret;
-	}
-}
+// 		return ret;
+// 	}
+// }
 
 impl From<&BigInt> for Digits {
 	fn from(b: &BigInt) -> Digits {
