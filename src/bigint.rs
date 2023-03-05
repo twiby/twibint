@@ -1,6 +1,8 @@
 
 
 
+use crate::digits_vec::Digits;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct BigInt {
 	pub val: u32
@@ -43,8 +45,23 @@ impl From<&str> for BigInt {
 	}
 }
 
+impl From<&BigInt> for Digits {
+	fn from(b: &BigInt) -> Digits {
+		let mut digits = Digits::new(0);
+
+		for bit in b.bits().rev() {
+			digits.times_2();
+			if bit {
+				digits.add_n_at_k(1, 0);
+			}
+		}
+
+		digits
+	}
+}
+
 impl From<&BigInt> for String {
 	fn from(b: &BigInt) -> String {
-		b.val.to_string()
+		String::from(&Digits::from(b))
 	}
 }
