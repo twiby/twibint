@@ -32,3 +32,14 @@ impl<'a> AddAssign<&'a BigInt> for BigInt {
 		self.val += other.val;
 	}
 }
+
+pub fn add_assign_byte(a: &mut [u32], b: u32) -> bool {
+	let (v, c) = a[0].overflowing_add(b);
+	a[0] = v;
+
+	if a.len() > 1 {
+		return add_assign_byte(&mut a[1..], c as u32);
+	} else {
+		return c;
+	}
+}

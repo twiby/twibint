@@ -1,3 +1,4 @@
+use crate::ops::add_assign_byte;
 use crate::BigInt;
 
 #[test]
@@ -79,4 +80,13 @@ fn bits() {
 		count += 1;
 	}
 	assert_eq!(count, 64);
+}
+
+#[test]
+fn add_assign_byte_test() {
+	let mut b1: Vec<u32> = vec![u32::MAX, u32::MAX];
+	let c = add_assign_byte(&mut b1, 2);
+
+	assert_eq!(c, true);
+	assert_eq!(b1, vec![1, 0]);
 }
