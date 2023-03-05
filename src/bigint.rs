@@ -5,22 +5,22 @@ use crate::digits_vec::Digits;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BigInt {
-	pub val: u32
+	pub val: Vec<u32>
 }
 
 impl BigInt {
 	pub fn new(val: u32) -> BigInt {
-		BigInt{val:val}
+		BigInt{val: vec![val]}
 	}
 
 	#[inline]
 	pub fn nb_bits(&self) -> usize {
-		32
+		32 * self.val.len()
 	}
 
 	#[inline]
 	pub fn bit(&self, b: usize) -> bool {
-		(self.val >> b) & 1 != 0
+		(self.val[b/32] >> b%32) & 1 != 0
 	}
 
 	#[inline]

@@ -7,7 +7,7 @@ fn new() {
 
 	let bg = BigInt::new(val);
 
-	assert_eq!(bg.val, val);
+	assert_eq!(bg.val, vec![val]);
 }
 
 // #[test]
@@ -27,15 +27,35 @@ fn to_str() {
 }
 
 #[test]
+fn to_str_overflow() {
+	let mut bg = BigInt::new(u32::MAX);
+	bg += 1;
+
+	assert_eq!(String::from(&bg), "4294967296");
+}
+
+#[test]
 fn add_assign() {
 	let mut bg = BigInt::new(0);
 	bg += 100u32;
 
-	assert_eq!(bg.val, 100);
+	assert_eq!(bg.val, vec![100]);
 
 	bg += &BigInt::new(100);
 
-	assert_eq!(bg.val, 200);
+	assert_eq!(bg.val, vec![200]);
+}
+
+#[test]
+fn add_assign_overflow() {
+	let mut bg = BigInt::new(u32::MAX);
+	bg += 1u32;
+
+	assert_eq!(bg.val, vec![0, 1]);
+
+	bg += &BigInt::new(100);
+
+	assert_eq!(bg.val, vec![100, 1]);
 }
 
 #[test]
@@ -89,4 +109,20 @@ fn add_assign_byte_test() {
 
 	assert_eq!(c, true);
 	assert_eq!(b1, vec![1, 0]);
+}
+
+#[test]
+fn fibonacci() {
+	let mut n1 = BigInt::new(0);
+	let mut n2 = BigInt::new(1);
+	let mut n = 500;
+
+	while n > 1 {
+		let temp = n2.clone();
+		n2 += &n1;
+		n1 = temp;
+		n -= 1;
+	}
+
+	assert_eq!(String::from(&n2), "139423224561697880139724382870407283950070256587697307264108962948325571622863290691557658876222521294125");
 }
