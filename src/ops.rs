@@ -125,39 +125,38 @@ pub fn pure_mul(a: u32, b: u32) -> (u32, u32) {
 	return ((full%U32_RADIX).try_into().unwrap(), (full/U32_RADIX).try_into().unwrap());
 }
 pub fn mul_assign(a: &mut [u32], b: u32) -> u32 {
-	let mut c = false;
+	let mut c: bool;
 	let (mut c1, mut c2, mut v): (u32,u32,u32);
 
 	(a[0], c1) = pure_mul(a[0], b);
-	for i in 1..a.len() {
-		(v, c2) = pure_mul(a[i], b);
-		(a[i], c) = v.overflowing_add(c1 + (c as u32));
-		c1 = c2;
+	for val in a.iter_mut().skip(1) {
+		(v, c2) = pure_mul(*val, b);
+		(*val, c) = v.overflowing_add(c1);
+		c1 = c2 + (c as u32);
 	}
-	return c1 + (c as u32);
+	return c1;
 }
 
 pub fn shl_assign(a: &mut [u32], b: usize) -> u32 {
 	let mut carry_1: u32;
 	let mut carry_2: u32 = 0;
-	for i in 0..a.len() {
-		carry_1 = a[i] >> (32-b);
-		a[i] <<= b;
-		a[i] |= carry_2;
+	for val in a {
+		carry_1 = *val >> (32-b);
+		*val <<= b;
+		*val |= carry_2;
 		carry_2 = carry_1
 	}
 	return carry_2;
 }
 
-pub fn add_assign_byte(a: &mut [u32], b: u32) -> bool {
-	let (mut v, mut c) = a[0].overflowing_add(b);
-	a[0] = v;
+pub fn add_assign_byte(a: &mut [u32], mut b: u32) -> bool {
+	let mut c = false;
 
-	let mut i = 1;
-	while c && i<a.len() {
-		(v,c) = a[i].overflowing_add(1);
-		a[i] = v;
-		i += 1;
+	for val in a {
+		(*val,c) = val.overflowing_add(b);
+		b = 1;
+		if !c { return false; }
 	}
+
 	return c
 }
