@@ -29,6 +29,12 @@ impl BigInt {
 	}
 }
 
+impl From<Vec<u32>> for BigInt {
+	fn from(v: Vec<u32>) -> BigInt {
+		BigInt{val:v}
+	}
+}
+
 // impl From<&str> for BigInt {
 // 	fn from(s: &str) -> BigInt {
 // 		let mut ret = BigInt::new(0);
@@ -63,5 +69,10 @@ impl From<&BigInt> for Digits {
 impl From<&BigInt> for String {
 	fn from(b: &BigInt) -> String {
 		String::from(&Digits::from(b))
+	}
+}
+impl From<BigInt> for String {
+	fn from(b: BigInt) -> String {
+		String::from(&Digits::from(&b))
 	}
 }

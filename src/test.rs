@@ -1,3 +1,5 @@
+use crate::ops::mul_assign;
+use crate::ops::pure_mul;
 use crate::ops::add_assign_byte;
 use crate::BigInt;
 
@@ -112,6 +114,17 @@ fn add_assign_byte_test() {
 }
 
 #[test]
+fn add_assign_full_test() {
+	let mut b1 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX]);
+	b1 += 1;
+
+	assert_eq!(b1.val, vec![0, 0, 0, 1]);
+
+	let b = &BigInt::new(u32::MAX) + &BigInt::new(u32::MAX);
+	assert_eq!(b.val, vec![4294967294, 1]);
+}
+
+#[test]
 fn fibonacci() {
 	let mut n1 = BigInt::new(0);
 	let mut n2 = BigInt::new(1);
@@ -124,5 +137,116 @@ fn fibonacci() {
 		n -= 1;
 	}
 
-	assert_eq!(String::from(&n2), "139423224561697880139724382870407283950070256587697307264108962948325571622863290691557658876222521294125");
+	assert_eq!(String::from(&n2), "1394232245616978801397243828704\
+		072839500702565876973072641089629483255716228632906915\
+		57658876222521294125");
 }
+
+#[test]
+fn fibonacci_5() {
+	let mut n1 = BigInt::new(0);
+	let mut n2 = BigInt::new(1);
+	let mut n = 500;
+
+	while n > 1 {
+		let temp = n2.clone();
+		n2 += &n1;
+		n1 = temp;
+		n -= 1;
+	}
+
+	n2 *= 5u32;
+
+	assert_eq!(String::from(&n2), "6971161228084894006986219143520\
+		364197503512829384865363205448147416278581143164534577\
+		88294381112606470625");
+}
+
+#[test]
+fn fibonacci_5_bis() {
+	let mut n1 = BigInt::new(0);
+	let mut n2 = BigInt::new(1);
+	let mut n = 500;
+
+	while n > 1 {
+		let temp = n2.clone();
+		n2 += &n1;
+		n1 = temp;
+		n -= 1;
+	}
+
+
+	let n3 = &n2 * &BigInt::new(5);
+	assert_eq!(String::from(&n3), "6971161228084894006986219143520\
+		364197503512829384865363205448147416278581143164534577\
+		88294381112606470625");
+	let n3 = &BigInt::new(5) * &n2;
+	assert_eq!(String::from(&n3), "6971161228084894006986219143520\
+		364197503512829384865363205448147416278581143164534577\
+		88294381112606470625");
+}
+
+#[test]
+fn fibonacci_square() {
+	let mut n1 = BigInt::new(0);
+	let mut n2 = BigInt::new(1);
+	let mut n = 500;
+
+	while n > 1 {
+		let temp = n2.clone();
+		n2 += &n1;
+		n1 = temp;
+		n -= 1;
+	}
+	let n1 = n2.clone();
+	assert_eq!(String::from(&n2), "1394232245616978801397243828704\
+		072839500702565876973072641089629483255716228632906915\
+		57658876222521294125");
+	assert_eq!(String::from(&n1), "1394232245616978801397243828704\
+		072839500702565876973072641089629483255716228632906915\
+		57658876222521294125");
+
+	let n3 = &n1 * &BigInt::from(vec![1,2]);
+	assert_eq!(String::from(&n3), "1197636379730135883426986149904088164401882181843047237880919768151177099109732530421226027034957340830083465166125");
+
+	assert_eq!(String::from(&n1*505575602), "70488980690561591893764998983784650568241707916619531913830861936195395765223225155085259704056844689235065938250");
+
+	let n3 = &n2 * &n1;
+	assert_eq!(String::from(&n3), "19438835547181635041596396415865294747559575831069137016545616216954503763688963053816123829809193659535915661080641869480232607381532114794348172492750360328240298056819461819264536306335141533339064759515625");
+}
+
+#[test]
+fn mul_test() {
+	let n1 = BigInt::new(4294967295);
+	let n2 = BigInt::new(4294967295);
+	let n3 = &n1 * &n2;
+
+	assert_eq!(String::from(&n3), "18446744065119617025");	
+}
+
+#[test]
+fn pure_mul_test() {
+	let (a,b) = pure_mul(u32::MAX, u32::MAX);
+	assert_eq!(a, 1);
+	assert_eq!(b, 4294967294);
+
+	let n1 = BigInt::from(vec![4294967295, 4294967295, 4294967295]);
+	let n2 = &n1 * 4294967295;
+	assert_eq!(String::from(&n2), "340282366841710300949110269833929293825");
+}
+
+#[test]
+fn shr_assign_test() {
+	let b = BigInt::new(2147483648);
+	let b2 = &b << 33;
+	assert_eq!(b2.val, vec![0,0,1]);
+}
+
+#[test]
+fn mul_assign_u32() {
+	let mut b = BigInt::new(2147483648);
+	let c = mul_assign(&mut b.val, 5);
+	assert_eq!(c, 2);
+	assert_eq!(String::from(&b), "2147483648");
+}
+
