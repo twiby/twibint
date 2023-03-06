@@ -35,6 +35,11 @@ impl AddAssign<u32> for BigInt {
 	}
 }
 
+impl AddAssign<BigInt> for BigInt {
+	fn add_assign(&mut self, other: BigInt) {
+		*self += &other;
+	}
+}
 impl<'a> AddAssign<&'a BigInt> for BigInt {
 	fn add_assign(&mut self, other: &'a BigInt) {
 		while self.val.len() < other.val.len() {
