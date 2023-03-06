@@ -100,7 +100,7 @@ impl<'a> Mul<u32> for &'a BigInt {
 impl Mul<&BigInt> for u32 {
 	type Output = BigInt;
 	fn mul(self, other: &BigInt) -> BigInt {
-		other + self
+		other * self
 	}
 }
 impl<'a> Mul<&BigInt> for &'a BigInt {
