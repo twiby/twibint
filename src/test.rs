@@ -22,6 +22,12 @@ fn from_str() {
 }
 
 #[test]
+fn from_u64() {
+	let n = BigInt::from(18446744073709551614u64);
+	assert_eq!(n.val, vec![4294967294, 4294967295]);
+}
+
+#[test]
 fn to_str() {
 	let bg = BigInt::new(123);
 

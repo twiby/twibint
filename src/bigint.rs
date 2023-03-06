@@ -29,6 +29,12 @@ impl BigInt {
 	}
 }
 
+impl From<u64> for BigInt {
+	fn from(n: u64) -> BigInt {
+		BigInt{val: vec![(n%4294967296).try_into().unwrap(), (n/4294967296).try_into().unwrap()]}
+	}
+}
+
 impl From<Vec<u32>> for BigInt {
 	fn from(v: Vec<u32>) -> BigInt {
 		BigInt{val:v}
