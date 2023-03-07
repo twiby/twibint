@@ -43,6 +43,27 @@ fn to_str_overflow() {
 }
 
 #[test]
+fn cmp() {
+	let n1 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX]);
+	assert!(n1 == n1);
+	assert!(n1 <= n1);
+	assert!(n1 >= n1);
+
+	let n2 = BigInt::from(vec![u32::MAX-1, u32::MAX, u32::MAX]);
+	assert!(n2 < n1);
+	assert!(n1 > n2);
+
+	let n3 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX-1]);
+	assert!(n3 < n2);
+	assert!(n3 < n1);
+
+	let n4 = BigInt::from(vec![u32::MAX, u32::MAX]);
+	assert!(n4 <= n1);
+	assert!(n4 <= n2);
+	assert!(n4 <= n3);
+}
+
+#[test]
 fn add_assign() {
 	let mut bg = BigInt::new(0);
 	bg += 100u32;
