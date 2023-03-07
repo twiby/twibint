@@ -3,7 +3,7 @@
 
 use crate::digits_vec::Digits;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigInt {
 	pub val: Vec<u32>
 }

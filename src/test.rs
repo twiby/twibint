@@ -233,6 +233,24 @@ fn factorial_100() {
 }
 
 #[test]
+fn fact_mod() {
+	let mut n1 = BigInt::new(0);
+	let mut n2 = BigInt::new(1);
+	let mut n = 500;
+
+	while n > 1 {
+		let temp = n2.clone();
+		n2 += &n1;
+		n1 = temp;
+		n -= 1;
+	}
+	let n3 = &n2 * &n2;
+
+	assert_eq!(&n3 % 13, 9);
+	assert_eq!(&n3 % 4294967295, 637285095);
+}
+
+#[test]
 fn mul_test() {
 	let n1 = BigInt::new(4294967295);
 	let n2 = BigInt::new(4294967295);

@@ -1,4 +1,4 @@
-use core::ops::{Add, AddAssign, Shl, ShlAssign, Mul, MulAssign};
+use core::ops::{Add, AddAssign, Shl, ShlAssign, Mul, MulAssign, Rem, RemAssign};
 
 use crate::BigInt;
 
@@ -123,6 +123,30 @@ impl<'a> Mul<&BigInt> for &'a BigInt {
 		ret
 	}
 }
+
+impl RemAssign<u32> for BigInt {
+	fn rem_assign(&mut self, other: u32) {
+		let value = &*self % other;
+		*self = BigInt::new(value);
+	}
+}
+impl<'a> Rem<u32> for &'a BigInt {
+	type Output = u32;
+	fn rem(self: &'a BigInt, other: u32) -> u32 {
+		let other_64 = other as u64;
+
+		let mut base_mod: u64 = 1;
+		let base_mod_multiplier: u64 = U32_RADIX % other_64;
+
+		let mut ret: u64 = 0;
+		for val in &self.val {
+			ret += (*val as u64) * base_mod;
+			ret %= other_64;
+			base_mod = (base_mod * base_mod_multiplier) % other_64;
+		}
+		ret.try_into().unwrap()
+	}
+} 
 
 const U32_RADIX: u64 = 1 << 32;
 pub fn pure_mul(a: u32, b: u32) -> (u32, u32) {
