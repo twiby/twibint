@@ -2,7 +2,7 @@ use core::ops::{Add, AddAssign, Shl, ShlAssign, Mul, MulAssign, Rem, RemAssign};
 
 use crate::BigInt;
 
-impl<'a> Add<u32> for &'a BigInt {
+impl Add<u32> for &BigInt {
 	type Output = BigInt;
 
 	fn add(self, other: u32) -> Self::Output {
@@ -17,10 +17,10 @@ impl Add<&BigInt> for u32 {
 		other + self
 	}
 }
-impl<'a> Add<&'a BigInt> for &'a BigInt {
+impl Add<&BigInt> for &BigInt {
 	type Output = BigInt;
 
-	fn add(self, other: &'a BigInt) -> Self::Output {
+	fn add(self, other: &BigInt) -> Self::Output {
 		let mut ret = self.clone();
 		ret += other;
 		return ret;
@@ -40,8 +40,8 @@ impl AddAssign<BigInt> for BigInt {
 		*self += &other;
 	}
 }
-impl<'a> AddAssign<&'a BigInt> for BigInt {
-	fn add_assign(&mut self, other: &'a BigInt) {
+impl AddAssign<&BigInt> for BigInt {
+	fn add_assign(&mut self, other: &BigInt) {
 		while self.val.len() < other.val.len() {
 			self.val.push(0);
 		}
@@ -54,7 +54,7 @@ impl<'a> AddAssign<&'a BigInt> for BigInt {
 	}
 }
 
-impl<'a> Shl<usize> for &'a BigInt {
+impl Shl<usize> for &BigInt {
 	type Output = BigInt;
 	fn shl(self, other: usize) -> BigInt {
 		let mut ret = self.clone();
@@ -94,9 +94,9 @@ impl MulAssign<u32> for BigInt {
 		}
 	}
 }
-impl<'a> Mul<u32> for &'a BigInt {
+impl Mul<u32> for &BigInt {
 	type Output = BigInt;
-	fn mul(self: &'a BigInt, other: u32) -> BigInt {
+	fn mul(self, other: u32) -> BigInt {
 		let mut ret = self.clone();
 		ret *= other;
 		ret
@@ -108,9 +108,9 @@ impl Mul<&BigInt> for u32 {
 		other * self
 	}
 }
-impl<'a> Mul<&BigInt> for &'a BigInt {
+impl Mul<&BigInt> for &BigInt {
 	type Output = BigInt;
-	fn mul(self: &'a BigInt, other: &BigInt) -> BigInt {
+	fn mul(self, other: &BigInt) -> BigInt {
 		if self.val.len() == 0 || other.val.len() == 0 {
 			return BigInt::new(0);
 		}
@@ -130,9 +130,9 @@ impl RemAssign<u32> for BigInt {
 		*self = BigInt::new(value);
 	}
 }
-impl<'a> Rem<u32> for &'a BigInt {
+impl Rem<u32> for &BigInt {
 	type Output = u32;
-	fn rem(self: &'a BigInt, other: u32) -> u32 {
+	fn rem(self, other: u32) -> u32 {
 		let other_64 = other as u64;
 
 		let mut base_mod: u64 = 1;
@@ -146,7 +146,7 @@ impl<'a> Rem<u32> for &'a BigInt {
 		}
 		ret.try_into().unwrap()
 	}
-} 
+}
 
 const U32_RADIX: u64 = 1 << 32;
 pub fn pure_mul(a: u32, b: u32) -> (u32, u32) {
