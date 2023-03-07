@@ -1,4 +1,4 @@
-use core::ops::{Add, AddAssign, Shl, ShlAssign, Mul, MulAssign, Rem, RemAssign};
+use core::ops::{Add, AddAssign, Sub, SubAssign, Shl, ShlAssign, Mul, MulAssign, Rem, RemAssign};
 
 use crate::BigInt;
 
@@ -51,6 +51,49 @@ impl AddAssign<&BigInt> for BigInt {
 				self.val.push(1);
 			}
 		}
+	}
+}
+
+impl SubAssign<u32> for BigInt {
+	fn sub_assign(&mut self, other: u32) {
+		if &*self < &BigInt::new(other) {
+			panic!("Attempt at subtraction with underflow");
+		}
+
+		sub_assign_byte(&mut self.val, other);
+		while self.val.len() > 1 && self.val.last() == Some(&0) {
+			self.val.pop();
+		}
+	}
+}
+impl SubAssign<&BigInt> for BigInt {
+	fn sub_assign(&mut self, other: &BigInt) {
+		if &*self < other {
+			panic!("Attempt at subtraction with underflow");
+		}
+
+		for b in 0..other.val.len() {
+			sub_assign_byte(&mut self.val[b..], other.val[b]);
+			while self.val.len() > 1 && self.val.last() == Some(&0) {
+				self.val.pop();
+			}
+		}
+	}
+}
+impl Sub<u32> for &BigInt {
+	type Output = BigInt;
+	fn sub(self, other: u32) -> BigInt {
+		let mut ret = self.clone();
+		ret -= other;
+		return ret;
+	}
+}
+impl Sub<&BigInt> for &BigInt {
+	type Output = BigInt;
+	fn sub(self, other: &BigInt) -> BigInt {
+		let mut ret = self.clone();
+		ret -= other;
+		ret
 	}
 }
 
@@ -193,4 +236,13 @@ pub fn add_assign_byte(a: &mut [u32], mut b: u32) -> bool {
 	}
 
 	return c
+}
+pub fn sub_assign_byte(a: &mut [u32], mut b: u32) {
+	let mut c: bool;
+
+	for val in a {
+		(*val,c) = val.overflowing_sub(b);
+		b = 1;
+		if !c { return; }
+	}
 }
