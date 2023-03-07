@@ -94,6 +94,11 @@ impl MulAssign<u32> for BigInt {
 		}
 	}
 }
+impl MulAssign<&BigInt> for BigInt {
+	fn mul_assign(&mut self, other: &BigInt) {
+		*self = &*self * other;
+	}
+}
 impl Mul<u32> for &BigInt {
 	type Output = BigInt;
 	fn mul(self, other: u32) -> BigInt {
