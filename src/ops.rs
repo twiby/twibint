@@ -1,4 +1,6 @@
-use core::ops::{Add, AddAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign};
+use core::ops::{
+    Add, AddAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
+};
 
 use crate::BigInt;
 
@@ -89,9 +91,7 @@ impl SubAssign<&BigInt> for BigInt {
                 }
             }
 
-            while self.val.len() > 1 && self.val.last() == Some(&0) {
-                self.val.pop();
-            }
+            self.remove_trailing_zeros();
         }
     }
 }
@@ -154,6 +154,52 @@ impl ShlAssign<usize> for BigInt {
         if carry > 0 {
             self.val.push(carry);
         }
+    }
+}
+
+impl Shr<usize> for &BigInt {
+    type Output = BigInt;
+    fn shr(self, other: usize) -> BigInt {
+        let mut ret = self.clone();
+        ret >>= other;
+        ret
+    }
+}
+impl Shr<usize> for BigInt {
+    type Output = BigInt;
+    fn shr(mut self, other: usize) -> BigInt {
+        self >>= other;
+        self
+    }
+}
+impl ShrAssign<usize> for BigInt {
+    fn shr_assign(&mut self, mut b: usize) {
+        if b >= self.nb_bits() {
+            self.val = vec![0];
+            return;
+        }
+
+        // First apply whole word shifts (by decreasing b by steps of 32)
+        let u32_shifts = b / 32;
+        self.val = self.val[u32_shifts..].to_vec();
+        b %= 32;
+
+        // Early exit
+        if b == 0 {
+            return;
+        }
+
+        // remaining: shift by less than 32
+        let mut underflowing_bits: u32;
+        let mut carry: u32 = 0;
+        for val in self.val.iter_mut().rev() {
+            underflowing_bits = *val << (32 - b);
+            *val >>= b;
+            *val |= carry;
+            carry = underflowing_bits
+        }
+
+        self.remove_trailing_zeros();
     }
 }
 

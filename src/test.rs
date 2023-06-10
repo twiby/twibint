@@ -360,6 +360,13 @@ fn shl_assign_test() {
 }
 
 #[test]
+fn shr_assign_test() {
+    let b = BigInt::from(vec![u32::MAX; 3]);
+    let b2 = &b >> 33;
+    assert_eq!(b2.val, vec![u32::MAX, u32::MAX >> 1]);
+}
+
+#[test]
 fn mul_assign_u32() {
     let mut b = BigInt::new(2147483648);
     b *= 5;

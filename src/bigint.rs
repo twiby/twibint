@@ -25,6 +25,13 @@ impl BigInt {
     pub fn bits<'a>(&'a self) -> impl DoubleEndedIterator<Item = bool> + 'a {
         (0..self.nb_bits()).map(|b| self.bit(b))
     }
+
+    #[inline]
+    pub(crate) fn remove_trailing_zeros(&mut self) {
+        while self.val.len() > 1 && self.val.last() == Some(&0) {
+            self.val.pop();
+        }
+    }
 }
 
 impl From<u64> for BigInt {
