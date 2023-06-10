@@ -2,6 +2,8 @@ use core::ops::{Add, AddAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, 
 
 use crate::BigInt;
 
+const U32_RADIX: u64 = 1 << 32;
+
 impl Add<u32> for &BigInt {
     type Output = BigInt;
 
@@ -29,9 +31,8 @@ impl Add<&BigInt> for &BigInt {
 
 impl AddAssign<u32> for BigInt {
     fn add_assign(&mut self, other: u32) {
-        if add_assign_byte(&mut self.val, other) {
-            self.val.push(1);
-        }
+        let other = BigInt::new(other);
+        *self += other;
     }
 }
 
@@ -46,8 +47,19 @@ impl AddAssign<&BigInt> for BigInt {
             self.val.push(0);
         }
 
-        for b in 0..other.val.len() {
-            if add_assign_byte(&mut self.val[b..], other.val[b]) {
+        for idx in 0..other.val.len() {
+            let mut b = other.val[idx];
+            let mut c = false;
+
+            for val in &mut self.val[idx..] {
+                (*val, c) = val.overflowing_add(b);
+                b = 1;
+                if !c {
+                    break;
+                }
+            }
+
+            if c {
                 self.val.push(1);
             }
         }
@@ -56,14 +68,7 @@ impl AddAssign<&BigInt> for BigInt {
 
 impl SubAssign<u32> for BigInt {
     fn sub_assign(&mut self, other: u32) {
-        if &*self < &BigInt::new(other) {
-            panic!("Attempt at subtraction with underflow");
-        }
-
-        sub_assign_byte(&mut self.val, other);
-        while self.val.len() > 1 && self.val.last() == Some(&0) {
-            self.val.pop();
-        }
+        *self -= &BigInt::new(other);
     }
 }
 impl SubAssign<&BigInt> for BigInt {
@@ -72,8 +77,18 @@ impl SubAssign<&BigInt> for BigInt {
             panic!("Attempt at subtraction with underflow");
         }
 
-        for b in 0..other.val.len() {
-            sub_assign_byte(&mut self.val[b..], other.val[b]);
+        for idx in 0..other.val.len() {
+            let mut b = other.val[idx];
+            let mut c: bool;
+
+            for val in &mut self.val[idx..] {
+                (*val, c) = val.overflowing_sub(b);
+                b = 1;
+                if !c {
+                    break;
+                }
+            }
+
             while self.val.len() > 1 && self.val.last() == Some(&0) {
                 self.val.pop();
             }
@@ -114,28 +129,56 @@ impl Shl<usize> for BigInt {
 }
 impl ShlAssign<usize> for BigInt {
     fn shl_assign(&mut self, mut b: usize) {
-        let mut u32_shift = 0;
-        while b >= 32 {
-            self.val.insert(0, 0);
-            b -= 32;
-            u32_shift += 1;
-        }
+        // First apply whole word shifts (by decreasing b by steps of 32)
+        let u32_shifts = b / 32;
+        let mut temp = vec![0u32; u32_shifts];
+        temp.append(&mut self.val);
+        self.val = temp;
+        b %= 32;
+
+        // Early exit
         if b == 0 {
             return;
         }
 
-        let c = shl_assign(&mut self.val[u32_shift..], b);
-        if c > 0 {
-            self.val.push(c);
+        // remaining: shift by less than 32
+        let mut overflowing_bits: u32;
+        let mut carry: u32 = 0;
+        for val in &mut self.val[(u32_shifts)..] {
+            overflowing_bits = *val >> (32 - b);
+            *val <<= b;
+            *val |= carry;
+            carry = overflowing_bits
+        }
+
+        if carry > 0 {
+            self.val.push(carry);
         }
     }
 }
 
+pub(crate) fn pure_mul(a: u32, b: u32) -> (u32, u32) {
+    let full = (a as u64) * (b as u64);
+    return (
+        (full % U32_RADIX).try_into().unwrap(),
+        (full / U32_RADIX).try_into().unwrap(),
+    );
+}
+
 impl MulAssign<u32> for BigInt {
     fn mul_assign(&mut self, other: u32) {
-        let c = mul_assign(&mut self.val, other);
-        if c > 0 {
-            self.val.push(c);
+        let mut c: bool;
+        let (mut c1, mut c2, mut v): (u32, u32, u32);
+
+        (self.val[0], c1) = pure_mul(self.val[0], other);
+        for val in self.val.iter_mut().skip(1) {
+            (v, c2) = pure_mul(*val, other);
+            (*val, c) = v.overflowing_add(c1);
+            c1 = c2 + (c as u32);
+        }
+
+        if c1 > 0 {
+            self.val.push(c1);
         }
     }
 }
@@ -195,63 +238,5 @@ impl Rem<u32> for &BigInt {
             base_mod = (base_mod * base_mod_multiplier) % other_64;
         }
         ret.try_into().unwrap()
-    }
-}
-
-const U32_RADIX: u64 = 1 << 32;
-pub fn pure_mul(a: u32, b: u32) -> (u32, u32) {
-    let full = (a as u64) * (b as u64);
-    return (
-        (full % U32_RADIX).try_into().unwrap(),
-        (full / U32_RADIX).try_into().unwrap(),
-    );
-}
-pub fn mul_assign(a: &mut [u32], b: u32) -> u32 {
-    let mut c: bool;
-    let (mut c1, mut c2, mut v): (u32, u32, u32);
-
-    (a[0], c1) = pure_mul(a[0], b);
-    for val in a.iter_mut().skip(1) {
-        (v, c2) = pure_mul(*val, b);
-        (*val, c) = v.overflowing_add(c1);
-        c1 = c2 + (c as u32);
-    }
-    return c1;
-}
-
-pub fn shl_assign(a: &mut [u32], b: usize) -> u32 {
-    let mut carry_1: u32;
-    let mut carry_2: u32 = 0;
-    for val in a {
-        carry_1 = *val >> (32 - b);
-        *val <<= b;
-        *val |= carry_2;
-        carry_2 = carry_1
-    }
-    return carry_2;
-}
-
-pub fn add_assign_byte(a: &mut [u32], mut b: u32) -> bool {
-    let mut c = false;
-
-    for val in a {
-        (*val, c) = val.overflowing_add(b);
-        b = 1;
-        if !c {
-            return false;
-        }
-    }
-
-    return c;
-}
-pub fn sub_assign_byte(a: &mut [u32], mut b: u32) {
-    let mut c: bool;
-
-    for val in a {
-        (*val, c) = val.overflowing_sub(b);
-        b = 1;
-        if !c {
-            return;
-        }
     }
 }

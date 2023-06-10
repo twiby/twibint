@@ -1,5 +1,3 @@
-use crate::ops::add_assign_byte;
-use crate::ops::mul_assign;
 use crate::ops::pure_mul;
 use crate::BigInt;
 
@@ -132,15 +130,6 @@ fn bits() {
 }
 
 #[test]
-fn add_assign_byte_test() {
-    let mut b1: Vec<u32> = vec![u32::MAX, u32::MAX];
-    let c = add_assign_byte(&mut b1, 2);
-
-    assert_eq!(c, true);
-    assert_eq!(b1, vec![1, 0]);
-}
-
-#[test]
 fn add_assign_full_test() {
     let mut b1 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX]);
     b1 += 1;
@@ -161,6 +150,15 @@ fn sub() {
     assert_eq!(b1, BigInt::from(vec![u32::MAX, u32::MAX - 1]));
     b1 -= &BigInt::from(vec![u32::MAX, u32::MAX - 1]);
     assert_eq!(b1, BigInt::new(0));
+}
+
+#[test]
+fn sub_full() {
+    let n1 = BigInt::from("12345678910111213");
+    let n2 = BigInt::from("987654321");
+
+    let n3 = &n1 - &n2;
+    assert_eq!(String::from(&n3), "12345677922456892");
 }
 
 #[test]
@@ -355,7 +353,7 @@ fn pure_mul_test() {
 }
 
 #[test]
-fn shr_assign_test() {
+fn shl_assign_test() {
     let b = BigInt::new(2147483648);
     let b2 = &b << 33;
     assert_eq!(b2.val, vec![0, 0, 1]);
@@ -364,7 +362,7 @@ fn shr_assign_test() {
 #[test]
 fn mul_assign_u32() {
     let mut b = BigInt::new(2147483648);
-    let c = mul_assign(&mut b.val, 5);
-    assert_eq!(c, 2);
-    assert_eq!(String::from(&b), "2147483648");
+    b *= 5;
+
+    assert_eq!(String::from(&b), "10737418240");
 }
