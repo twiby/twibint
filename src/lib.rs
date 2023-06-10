@@ -1,9 +1,8 @@
 mod bigint;
-mod ops;
 mod digits_vec;
+mod ops;
 
 pub use crate::bigint::BigInt;
 
 #[cfg(test)]
 mod test;
-
