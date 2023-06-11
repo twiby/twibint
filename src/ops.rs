@@ -79,20 +79,20 @@ impl SubAssign<&BigInt> for BigInt {
             panic!("Attempt at subtraction with underflow");
         }
 
-        for idx in 0..other.val.len() {
-            let mut b = other.val[idx];
-            let mut c: bool;
-
-            for val in &mut self.val[idx..] {
-                (*val, c) = val.overflowing_sub(b);
-                b = 1;
-                if !c {
-                    break;
-                }
-            }
-
-            self.remove_trailing_zeros();
+        let mut partial_carry_1: bool;
+        let mut partial_carry_2: bool;
+        let mut carry = false;
+        for (a, b) in self.val.iter_mut().zip(other.val.iter()) {
+            (*a, partial_carry_1) = a.overflowing_sub(*b);
+            (*a, partial_carry_2) = a.overflowing_sub(carry as u32);
+            carry = partial_carry_1 | partial_carry_2;
         }
+
+        for val in self.val.iter_mut().skip(other.val.len()) {
+            (*val, carry) = val.overflowing_sub(carry as u32);
+        }
+
+        self.remove_trailing_zeros();
     }
 }
 impl Sub<u32> for &BigInt {
