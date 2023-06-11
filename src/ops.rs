@@ -48,21 +48,22 @@ impl AddAssign<&BigInt> for BigInt {
             self.val.push(0);
         }
 
-        for idx in 0..other.val.len() {
-            let mut b = other.val[idx];
-            let mut c = false;
+        let mut partial_carry_1: bool;
+        let mut partial_carry_2: bool;
+        let mut full_carry = false;
 
-            for val in &mut self.val[idx..] {
-                (*val, c) = val.overflowing_add(b);
-                b = 1;
-                if !c {
-                    break;
-                }
-            }
+        for (a, b) in self.val.iter_mut().zip(other.val.iter()) {
+            (*a, partial_carry_1) = a.overflowing_add(*b);
+            (*a, partial_carry_2) = a.overflowing_add(full_carry as u32);
+            full_carry = partial_carry_1 | partial_carry_2;
+        }
 
-            if c {
-                self.val.push(1);
-            }
+        for val in self.val.iter_mut().skip(other.val.len()) {
+            (*val, full_carry) = val.overflowing_add(full_carry as u32);
+        }
+
+        if full_carry {
+            self.val.push(1);
         }
     }
 }
