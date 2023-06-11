@@ -1,10 +1,9 @@
 use core::ops::{
-    Add, AddAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
+    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign,
+    Sub, SubAssign,
 };
 
 use crate::BigInt;
-
-const U32_RADIX: u64 = 1 << 32;
 
 impl Add<u32> for &BigInt {
     type Output = BigInt;
@@ -206,8 +205,8 @@ impl ShrAssign<usize> for BigInt {
 pub(crate) fn pure_mul(a: u32, b: u32) -> (u32, u32) {
     let full = (a as u64) * (b as u64);
     return (
-        (full % U32_RADIX).try_into().unwrap(),
-        (full / U32_RADIX).try_into().unwrap(),
+        ((full << 32) >> 32).try_into().unwrap(),
+        (full >> 32).try_into().unwrap(),
     );
 }
 
@@ -273,16 +272,40 @@ impl Rem<u32> for &BigInt {
     type Output = u32;
     fn rem(self, other: u32) -> u32 {
         let other_64 = other as u64;
+        let mut msb = 0u64;
 
-        let mut base_mod: u64 = 1;
-        let base_mod_multiplier: u64 = U32_RADIX % other_64;
-
-        let mut ret: u64 = 0;
-        for val in &self.val {
-            ret += (*val as u64) * base_mod;
-            ret %= other_64;
-            base_mod = (base_mod * base_mod_multiplier) % other_64;
+        for val in self.val.iter().rev() {
+            let current = (msb << 32) | (*val as u64);
+            msb = current % other_64;
         }
-        ret.try_into().unwrap()
+
+        msb.try_into().unwrap()
+    }
+}
+
+impl DivAssign<u32> for BigInt {
+    fn div_assign(&mut self, other: u32) {
+        *self = &*self / other;
+    }
+}
+impl Div<u32> for &BigInt {
+    type Output = BigInt;
+    fn div(self, other: u32) -> BigInt {
+        let other_64 = other as u64;
+        let mut msb = 0u64;
+        let mut div: u64;
+
+        let mut ret = BigInt::new(0);
+        for idx in (0..self.val.len()).rev() {
+            let lsb = self.val[idx] as u64;
+
+            let current = (msb << 32) | lsb;
+            (div, msb) = (current / other_64, current % other_64);
+
+            ret += BigInt::from(div) << (32 * idx);
+        }
+
+        ret.remove_trailing_zeros();
+        ret
     }
 }
