@@ -169,7 +169,21 @@ impl Default for BigInt {
 impl std::str::FromStr for BigInt {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(BigInt::from(s))
+        let mut ret = BigInt::new(0);
+
+        let mut base = BigInt::new(1);
+        for c in s.chars().rev() {
+            let v: u32 = match c.to_digit(10) {
+                Some(val) => val,
+                None => return Err(()),
+            };
+
+            ret += v * &base;
+            base *= 10;
+        }
+
+        ret.remove_trailing_zeros();
+        return Ok(ret);
     }
 }
 

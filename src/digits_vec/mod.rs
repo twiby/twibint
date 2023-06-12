@@ -50,6 +50,21 @@ impl From<&str> for Digits {
         ret
     }
 }
+impl std::str::FromStr for Digits {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut ret = Digits::new(0);
+
+        for c in s.chars().rev() {
+            ret.val.push(match c.to_digit(10) {
+                Some(uint) => uint.try_into().unwrap(),
+                None => return Err(()),
+            });
+        }
+
+        Ok(ret)
+    }
+}
 
 impl From<&Digits> for String {
     fn from(other: &Digits) -> String {

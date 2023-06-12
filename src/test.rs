@@ -584,6 +584,12 @@ fn fromstr() {
 }
 
 #[test]
+#[should_panic]
+fn fromstr_fail() {
+    let _: BigInt = "124test".parse().unwrap();
+}
+
+#[test]
 fn f64() {
     let a = BigInt::from(vec![u32::MAX, u32::MAX]);
     let f: f64 = From::from(&a);
