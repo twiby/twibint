@@ -125,3 +125,20 @@ impl std::fmt::Display for BigInt {
         write!(f, "{}", String::from(self))
     }
 }
+
+impl std::fmt::Binary for BigInt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = "".to_string();
+        for c in self.val.iter().rev() {
+            let binary = &format!("{:b}", c);
+            let mut full_binary = "".to_string();
+            for _ in 0..32 - binary.len() {
+                full_binary.push('0');
+            }
+            full_binary.push_str(&binary);
+            ret.push_str(&full_binary);
+        }
+
+        write!(f, "{}", ret)
+    }
+}

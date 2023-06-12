@@ -556,3 +556,12 @@ fn rem() {
     println!("{:?}", b.to_string());
     assert_eq!((&a % &b).to_string(), "268965438589694318452");
 }
+
+#[test]
+fn binary() {
+    let a = BigInt::from(vec![256, 1024]);
+    assert_eq!(
+        format!("{:b}", a),
+        "0000000000000000000001000000000000000000000000000000000100000000"
+    );
+}
