@@ -36,18 +36,22 @@ impl BigInt {
 
 impl From<u64> for BigInt {
     fn from(n: u64) -> BigInt {
-        BigInt {
+        let mut ret = BigInt {
             val: vec![
                 (n % 4294967296).try_into().unwrap(),
                 (n / 4294967296).try_into().unwrap(),
             ],
-        }
+        };
+        ret.remove_trailing_zeros();
+        ret
     }
 }
 
 impl From<Vec<u32>> for BigInt {
     fn from(v: Vec<u32>) -> BigInt {
-        BigInt { val: v }
+        let mut ret = BigInt { val: v };
+        ret.remove_trailing_zeros();
+        ret
     }
 }
 
@@ -63,6 +67,7 @@ impl From<&str> for BigInt {
             base *= 10;
         }
 
+        ret.remove_trailing_zeros();
         return ret;
     }
 }
