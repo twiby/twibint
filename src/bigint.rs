@@ -142,3 +142,61 @@ impl std::fmt::Binary for BigInt {
         write!(f, "{}", ret)
     }
 }
+
+impl std::fmt::LowerHex for BigInt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = "".to_string();
+        for c in self.val.iter().rev() {
+            let binary = &format!("{:x}", c);
+            let mut full_binary = "".to_string();
+            for _ in 0..8 - binary.len() {
+                full_binary.push('0');
+            }
+            full_binary.push_str(&binary);
+            ret.push_str(&full_binary);
+        }
+
+        write!(f, "{}", ret)
+    }
+}
+
+impl Default for BigInt {
+    fn default() -> BigInt {
+        BigInt::new(0)
+    }
+}
+
+impl std::str::FromStr for BigInt {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(BigInt::from(s))
+    }
+}
+
+impl std::hash::Hash for BigInt {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
+        self.val.hash(state);
+    }
+}
+
+impl From<&BigInt> for f64 {
+    fn from(int: &BigInt) -> f64 {
+        let mut base = 1f64;
+        let mut ret = 0f64;
+        for a in &int.val {
+            ret += (*a as f64) * base;
+            base *= (1u64 << 32) as f64;
+        }
+        ret
+    }
+}
+
+impl std::fmt::LowerExp for BigInt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let val = f64::from(self);
+        std::fmt::LowerExp::fmt(&val, f)
+    }
+}

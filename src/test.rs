@@ -565,3 +565,43 @@ fn binary() {
         "0000000000000000000001000000000000000000000000000000000100000000"
     );
 }
+
+#[test]
+fn hex() {
+    let a = BigInt::from(vec![256, 1024]);
+    assert_eq!(format!("{:x}", a), "0000040000000100");
+}
+
+#[test]
+fn default() {
+    assert_eq!(BigInt::default(), BigInt::new(0));
+}
+
+#[test]
+fn fromstr() {
+    let a: BigInt = "124".parse().unwrap();
+    assert_eq!(a, BigInt::new(124));
+}
+
+#[test]
+fn f64() {
+    let a = BigInt::from(vec![u32::MAX, u32::MAX]);
+    let f: f64 = From::from(&a);
+    assert_eq!(f, 1.8446744073709552e+19);
+
+    assert_eq!(format!("{:e}", a), format!("{:e}", f));
+}
+
+#[test]
+fn hash() {
+    use std::collections::HashMap;
+    let mut map = HashMap::<BigInt, String>::new();
+
+    map.insert(BigInt::from(vec![1, 2, 3]), "first".to_string());
+    map.insert(BigInt::from(vec![3, 2, 1]), "second".to_string());
+
+    assert!(map.contains_key(&BigInt::from(vec![1, 2, 3])));
+    assert!(map.contains_key(&BigInt::from(vec![3, 2, 1])));
+    assert_eq!(map[&BigInt::from(vec![1, 2, 3])], "first");
+    assert_eq!(map[&BigInt::from(vec![3, 2, 1])], "second");
+}
