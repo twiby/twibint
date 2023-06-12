@@ -13,7 +13,7 @@ fn new() {
 fn from_str() {
     let s = "1234567891011121314151617181920";
 
-    let bg = BigInt::from(s);
+    let bg = bigint!(s);
 
     assert_eq!(String::from(bg), "1234567891011121314151617181920");
 }
@@ -41,20 +41,20 @@ fn to_str_overflow() {
 
 #[test]
 fn cmp() {
-    let n1 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX]);
+    let n1 = bigintvec![u32::MAX, u32::MAX, u32::MAX];
     assert!(n1 == n1);
     assert!(n1 <= n1);
     assert!(n1 >= n1);
 
-    let n2 = BigInt::from(vec![u32::MAX - 1, u32::MAX, u32::MAX]);
+    let n2 = bigintvec![u32::MAX - 1, u32::MAX, u32::MAX];
     assert!(n2 < n1);
     assert!(n1 > n2);
 
-    let n3 = BigInt::from(vec![u32::MAX, u32::MAX, u32::MAX - 1]);
+    let n3 = bigintvec![u32::MAX, u32::MAX, u32::MAX - 1];
     assert!(n3 < n2);
     assert!(n3 < n1);
 
-    let n4 = BigInt::from(vec![u32::MAX, u32::MAX]);
+    let n4 = bigintvec![u32::MAX, u32::MAX];
     assert!(n4 <= n1);
     assert!(n4 <= n2);
     assert!(n4 <= n3);
@@ -97,7 +97,7 @@ fn bits() {
 
 #[test]
 fn binary() {
-    let a = BigInt::from(vec![256, 1024]);
+    let a = bigintvec![256, 1024];
     assert_eq!(
         format!("{:b}", a),
         "0000000000000000000001000000000000000000000000000000000100000000"
@@ -106,7 +106,7 @@ fn binary() {
 
 #[test]
 fn hex() {
-    let a = BigInt::from(vec![256, 1024]);
+    let a = bigintvec![256, 1024];
     assert_eq!(format!("{:x}", a), "0000040000000100");
 }
 
@@ -129,7 +129,7 @@ fn fromstr_fail() {
 
 #[test]
 fn f64() {
-    let a = BigInt::from(vec![u32::MAX, u32::MAX]);
+    let a = bigintvec![u32::MAX, u32::MAX];
     let f: f64 = From::from(&a);
     assert_eq!(f, 1.8446744073709552e+19);
 
@@ -141,11 +141,11 @@ fn hash() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigInt, String>::new();
 
-    map.insert(BigInt::from(vec![1, 2, 3]), "first".to_string());
-    map.insert(BigInt::from(vec![3, 2, 1]), "second".to_string());
+    map.insert(bigintvec![1, 2, 3], "first".to_string());
+    map.insert(bigintvec![3, 2, 1], "second".to_string());
 
-    assert!(map.contains_key(&BigInt::from(vec![1, 2, 3])));
-    assert!(map.contains_key(&BigInt::from(vec![3, 2, 1])));
-    assert_eq!(map[&BigInt::from(vec![1, 2, 3])], "first");
-    assert_eq!(map[&BigInt::from(vec![3, 2, 1])], "second");
+    assert!(map.contains_key(&bigintvec![1, 2, 3]));
+    assert!(map.contains_key(&bigintvec![3, 2, 1]));
+    assert_eq!(map[&bigintvec![1, 2, 3]], "first");
+    assert_eq!(map[&bigintvec![3, 2, 1]], "second");
 }

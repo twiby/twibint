@@ -1,6 +1,30 @@
 use crate::digits_vec::Digits;
 use core::cmp::Ordering;
 
+#[macro_export]
+macro_rules! bigintvec {
+    ( $( $x:expr ),* ) => {
+        {
+            let mut temp_vec = Vec::new();
+            $(
+                temp_vec.push($x);
+            )*
+            BigInt::from(temp_vec)
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! bigint {
+    ( $( $x:expr ),* ) => {
+        {
+            $(
+                BigInt::from($x)
+            )*
+        }
+    };
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigInt {
     pub val: Vec<u32>,
