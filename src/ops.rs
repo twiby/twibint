@@ -1,6 +1,7 @@
+use core::cmp::Ordering;
 use core::ops::{
-    Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign,
-    Sub, SubAssign,
+    Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
+    Mul, MulAssign, Rem, RemAssign, Shl, ShlAssign, Shr, ShrAssign, Sub, SubAssign,
 };
 
 use crate::BigInt;
@@ -203,6 +204,73 @@ impl ShrAssign<usize> for BigInt {
     }
 }
 
+impl BitAnd<&BigInt> for &BigInt {
+    type Output = BigInt;
+    fn bitand(self, other: &BigInt) -> BigInt {
+        let mut ret = BigInt::from(
+            self.val
+                .iter()
+                .zip(other.val.iter())
+                .map(|(a, b)| a & b)
+                .collect::<Vec<_>>(),
+        );
+        ret.remove_trailing_zeros();
+        ret
+    }
+}
+impl BitAndAssign<&BigInt> for BigInt {
+    fn bitand_assign(&mut self, other: &BigInt) {
+        *self = &*self & other;
+    }
+}
+
+impl BitOr<&BigInt> for &BigInt {
+    type Output = BigInt;
+    fn bitor(self, other: &BigInt) -> BigInt {
+        let (big, small) = match self.cmp(other) {
+            Ordering::Equal => return self.clone(),
+            Ordering::Less => (other, self),
+            Ordering::Greater => (self, other),
+        };
+
+        let mut ret = big.clone();
+        ret.val
+            .iter_mut()
+            .zip(small.val.iter())
+            .for_each(|(b, s)| *b |= *s);
+        ret
+    }
+}
+impl BitOrAssign<&BigInt> for BigInt {
+    fn bitor_assign(&mut self, other: &BigInt) {
+        *self = &*self | other;
+    }
+}
+
+impl BitXor<&BigInt> for &BigInt {
+    type Output = BigInt;
+    fn bitxor(self, other: &BigInt) -> BigInt {
+        let (big, small) = match self.cmp(other) {
+            Ordering::Equal => return self.clone(),
+            Ordering::Less => (other, self),
+            Ordering::Greater => (self, other),
+        };
+
+        let mut ret = big.clone();
+        ret.val
+            .iter_mut()
+            .zip(small.val.iter())
+            .for_each(|(b, s)| *b ^= *s);
+        ret.remove_trailing_zeros();
+        ret
+    }
+}
+impl BitXorAssign<&BigInt> for BigInt {
+    fn bitxor_assign(&mut self, other: &BigInt) {
+        *self = &*self ^ other;
+    }
+}
+
 pub(crate) fn pure_mul(a: u32, b: u32) -> (u32, u32) {
     let full = (a as u64) * (b as u64);
     return (
@@ -263,36 +331,27 @@ impl Mul<&BigInt> for &BigInt {
     }
 }
 
-impl RemAssign<u32> for BigInt {
-    fn rem_assign(&mut self, other: u32) {
-        let value = &*self % other;
-        *self = BigInt::new(value);
+trait RemDiv<T> {
+    type DivOutput;
+    type RemOutput;
+    fn rem_div(&self, other: &T) -> Option<(Self::DivOutput, Self::RemOutput)>;
+    fn div(&self, other: &T) -> Option<Self::DivOutput> {
+        self.rem_div(other).map(|ret| ret.0)
+    }
+    fn rem(&self, other: &T) -> Option<Self::RemOutput> {
+        self.rem_div(other).map(|ret| ret.1)
     }
 }
-impl Rem<u32> for &BigInt {
-    type Output = u32;
-    fn rem(self, other: u32) -> u32 {
-        let other_64 = other as u64;
-        let mut msb = 0u64;
 
-        for val in self.val.iter().rev() {
-            let current = (msb << 32) | (*val as u64);
-            msb = current % other_64;
+impl RemDiv<u32> for BigInt {
+    type DivOutput = BigInt;
+    type RemOutput = u32;
+    fn rem_div(&self, other: &u32) -> Option<(BigInt, u32)> {
+        if *other == 0 {
+            return None;
         }
 
-        msb.try_into().unwrap()
-    }
-}
-
-impl DivAssign<u32> for BigInt {
-    fn div_assign(&mut self, other: u32) {
-        *self = &*self / other;
-    }
-}
-impl Div<u32> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: u32) -> BigInt {
-        let other_64 = other as u64;
+        let other_64 = *other as u64;
         let mut msb = 0u64;
         let mut div: u64;
 
@@ -307,6 +366,63 @@ impl Div<u32> for &BigInt {
         }
 
         ret.remove_trailing_zeros();
-        ret
+        Some((ret, msb.try_into().unwrap()))
+    }
+
+    fn rem(&self, other: &u32) -> Option<u32> {
+        let other_64 = *other as u64;
+        let mut msb = 0u64;
+
+        for val in self.val.iter().rev() {
+            let current = (msb << 32) | (*val as u64);
+            msb = current % other_64;
+        }
+
+        Some(msb.try_into().unwrap())
+    }
+}
+
+impl RemAssign<u32> for BigInt {
+    fn rem_assign(&mut self, other: u32) {
+        let value = &*self % other;
+        *self = BigInt::new(value);
+    }
+}
+impl Rem<u32> for &BigInt {
+    type Output = u32;
+    fn rem(self, other: u32) -> u32 {
+        RemDiv::rem(self, &other).unwrap()
+    }
+}
+
+impl DivAssign<u32> for BigInt {
+    fn div_assign(&mut self, other: u32) {
+        *self = &*self / other;
+    }
+}
+impl Div<u32> for &BigInt {
+    type Output = BigInt;
+    fn div(self, other: u32) -> BigInt {
+        RemDiv::div(self, &other).unwrap()
+    }
+}
+impl Div<&BigInt> for u32 {
+    type Output = u32;
+    fn div(self, other: &BigInt) -> u32 {
+        if other == &BigInt::new(0) {
+            panic!("Attempt at division by zero.");
+        }
+
+        let big_self = BigInt::new(self);
+        match big_self.cmp(other) {
+            Ordering::Equal => 1u32,
+            Ordering::Less => 0u32,
+            Ordering::Greater => big_self.val[0] / other.val[0],
+        }
+    }
+}
+impl DivAssign<&BigInt> for u32 {
+    fn div_assign(&mut self, other: &BigInt) {
+        *self = *self / other;
     }
 }

@@ -412,9 +412,72 @@ fn shr_assign_test() {
 }
 
 #[test]
+fn bit_and() {
+    let mut n1 = BigInt::from(vec![u32::MAX, 15]);
+    let n2 = BigInt::from(vec![15, u32::MAX, u32::MAX]);
+
+    assert_eq!(&n1 & &n2, BigInt::from(vec![15, 15]));
+    assert_eq!(&n2 & &n1, BigInt::from(vec![15, 15]));
+
+    n1 &= &n2;
+    assert_eq!(n1, BigInt::from(vec![15, 15]));
+}
+
+#[test]
+fn bit_or() {
+    let mut n1 = BigInt::from(vec![u32::MAX, 15]);
+    let n2 = BigInt::from(vec![15, u32::MAX, u32::MAX]);
+
+    assert_eq!(&n1 | &n2, BigInt::from(vec![u32::MAX; 3]));
+    assert_eq!(&n2 | &n1, BigInt::from(vec![u32::MAX; 3]));
+
+    n1 |= &n2;
+    assert_eq!(n1, BigInt::from(vec![u32::MAX; 3]));
+}
+
+#[test]
+fn bit_xor() {
+    let mut n1 = BigInt::from(vec![u32::MAX, 15]);
+    let n2 = BigInt::from(vec![15, u32::MAX, u32::MAX]);
+
+    assert_eq!(
+        &n1 ^ &n2,
+        BigInt::from(vec![4294967280, 4294967280, u32::MAX])
+    );
+    assert_eq!(
+        &n2 ^ &n1,
+        BigInt::from(vec![4294967280, 4294967280, u32::MAX])
+    );
+
+    n1 ^= &n2;
+    assert_eq!(n1, BigInt::from(vec![4294967280, 4294967280, u32::MAX]));
+}
+
+#[test]
 fn mul_assign_u32() {
     let mut b = BigInt::new(2147483648);
     b *= 5;
 
     assert_eq!(String::from(&b), "10737418240");
+}
+
+#[test]
+#[should_panic]
+fn div_by_zero() {
+    let n = BigInt::new(12345);
+    let _ = &n / 0u32;
+}
+
+#[test]
+fn div_1() {
+    let mut a = 16u32;
+
+    a /= &BigInt::new(3);
+    assert_eq!(a, 5u32);
+
+    a /= &BigInt::new(5);
+    assert_eq!(a, 1u32);
+
+    a /= &BigInt::new(10);
+    assert_eq!(a, 0u32);
 }

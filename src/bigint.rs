@@ -1,7 +1,7 @@
 use crate::digits_vec::Digits;
 use core::cmp::Ordering;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BigInt {
     pub val: Vec<u32>,
 }
@@ -95,16 +95,22 @@ impl From<BigInt> for String {
 
 impl PartialOrd<BigInt> for BigInt {
     fn partial_cmp(&self, other: &BigInt) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for BigInt {
+    fn cmp(&self, other: &BigInt) -> Ordering {
         match self.val.len().cmp(&other.val.len()) {
             Ordering::Equal => (),
-            o => return Some(o),
+            o => return o,
         };
         for (a, b) in self.val.iter().zip(other.val.iter()).rev() {
             match a.cmp(b) {
                 Ordering::Equal => continue,
-                o => return Some(o),
+                o => return o,
             };
         }
-        Some(Ordering::Equal)
+        Ordering::Equal
     }
 }
