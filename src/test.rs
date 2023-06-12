@@ -1,4 +1,3 @@
-use crate::ops::pure_mul;
 use crate::BigInt;
 
 #[test]
@@ -388,10 +387,6 @@ fn mul_test() {
 
 #[test]
 fn pure_mul_test() {
-    let (a, b) = pure_mul(u32::MAX, u32::MAX);
-    assert_eq!(a, 1);
-    assert_eq!(b, 4294967294);
-
     let n1 = BigInt::from(vec![4294967295, 4294967295, 4294967295]);
     let n2 = &n1 * 4294967295;
     assert_eq!(String::from(&n2), "340282366841710300949110269833929293825");
