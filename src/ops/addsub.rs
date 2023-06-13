@@ -1,3 +1,4 @@
+use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 use crate::BigInt;
@@ -26,11 +27,23 @@ impl Add<&BigInt> for &BigInt {
         return ret;
     }
 }
+impl Add<BigInt> for BigInt {
+    type Output = BigInt;
+
+    fn add(self, other: BigInt) -> Self::Output {
+        &self + &other
+    }
+}
 
 impl AddAssign<u32> for BigInt {
     fn add_assign(&mut self, other: u32) {
         let other = BigInt::new(other);
         *self += other;
+    }
+}
+impl AddAssign<&u32> for BigInt {
+    fn add_assign(&mut self, other: &u32) {
+        *self += *other;
     }
 }
 
@@ -107,6 +120,22 @@ impl Sub<&BigInt> for &BigInt {
     fn sub(self, other: &BigInt) -> BigInt {
         let mut ret = self.clone();
         ret -= other;
+        ret
+    }
+}
+
+impl<T> Sum<T> for BigInt
+where
+    BigInt: AddAssign<T>,
+{
+    fn sum<I>(iter: I) -> BigInt
+    where
+        I: Iterator<Item = T>,
+    {
+        let mut ret = BigInt::new(0);
+        for el in iter {
+            ret += el;
+        }
         ret
     }
 }

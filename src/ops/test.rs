@@ -455,3 +455,31 @@ fn rem() {
     println!("{:?}", b.to_string());
     assert_eq!((&a % &b).to_string(), "268965438589694318452");
 }
+
+#[test]
+fn product() {
+    let mut values = Vec::<u32>::with_capacity(20);
+    for i in 0..20 {
+        values.push(i + 1);
+    }
+
+    let n1: BigInt = values.iter().product();
+    assert_eq!(n1, bigint!("2432902008176640000"));
+
+    let big_values = values.iter().map(|n| BigInt::new(*n)).collect::<Vec<_>>();
+    let n2: BigInt = big_values.iter().product();
+    assert_eq!(n2, bigint!("2432902008176640000"));
+}
+
+#[test]
+fn sum() {
+    let values = vec![u32::MAX; 10];
+
+    let n1: BigInt = values.iter().sum();
+    println!("{:?}", n1.to_string());
+    assert_eq!(n1, bigint!("42949672950"));
+
+    let big_values = values.iter().map(|n| BigInt::new(*n)).collect::<Vec<_>>();
+    let n2: BigInt = big_values.iter().sum();
+    assert_eq!(n2, bigint!("42949672950"));
+}
