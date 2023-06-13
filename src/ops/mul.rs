@@ -59,6 +59,12 @@ impl Mul<u32> for &BigInt {
         ret
     }
 }
+impl Mul<u32> for BigInt {
+    type Output = BigInt;
+    fn mul(self, other: u32) -> BigInt {
+        &self * other
+    }
+}
 impl Mul<&BigInt> for u32 {
     type Output = BigInt;
     fn mul(self, other: &BigInt) -> BigInt {

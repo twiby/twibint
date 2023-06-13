@@ -183,6 +183,22 @@ impl std::fmt::LowerHex for BigInt {
         write!(f, "{}", ret)
     }
 }
+impl std::fmt::UpperHex for BigInt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = "".to_string();
+        for c in self.val.iter().rev() {
+            let binary = &format!("{:X}", c);
+            let mut full_binary = "".to_string();
+            for _ in 0..8 - binary.len() {
+                full_binary.push('0');
+            }
+            full_binary.push_str(&binary);
+            ret.push_str(&full_binary);
+        }
+
+        write!(f, "{}", ret)
+    }
+}
 
 impl Default for BigInt {
     fn default() -> BigInt {
@@ -236,5 +252,11 @@ impl std::fmt::LowerExp for BigInt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);
         std::fmt::LowerExp::fmt(&val, f)
+    }
+}
+impl std::fmt::UpperExp for BigInt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let val = f64::from(self);
+        std::fmt::UpperExp::fmt(&val, f)
     }
 }
