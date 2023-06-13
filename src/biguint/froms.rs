@@ -98,3 +98,46 @@ impl From<u64> for BigUint {
         ret
     }
 }
+
+#[derive(Debug)]
+pub enum FromFloat64Error {
+    NotNormal(f64),
+    Negative(f64),
+}
+
+impl std::fmt::Display for FromFloat64Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            FromFloat64Error::NotNormal(num) => {
+                write!(f, "Attempt at converting an abnormal float: {}", num)
+            }
+            FromFloat64Error::Negative(num) => {
+                write!(f, "Attempt at converting a negative number: {}", num)
+            }
+        }
+    }
+}
+
+impl TryFrom<f64> for BigUint {
+    type Error = FromFloat64Error;
+
+    fn try_from(f: f64) -> Result<BigUint, FromFloat64Error> {
+        if f != 0f64 && !f.is_normal() {
+            return Err(FromFloat64Error::NotNormal(f));
+        } else if f.is_sign_negative() {
+            return Err(FromFloat64Error::Negative(f));
+        }
+
+        let f_u64: u64 = f.to_bits();
+
+        let two_to_the_52 = 1 << 52;
+        let exponent = (((f_u64 << 1) >> 53) as i64) - 1023 - 52;
+        let mantissa = two_to_the_52 | (f_u64 & (two_to_the_52 - 1));
+
+        Ok(match exponent {
+            i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
+            i if i > 0 => BigUint::from(mantissa) << exponent.try_into().unwrap(),
+            _ => BigUint::from(mantissa),
+        })
+    }
+}

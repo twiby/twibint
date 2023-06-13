@@ -149,3 +149,40 @@ fn hash() {
     assert_eq!(map[&biguintvec![1, 2, 3]], "first");
     assert_eq!(map[&biguintvec![3, 2, 1]], "second");
 }
+
+#[test]
+fn from_f64() {
+    // Test zero
+    let f = 0f64;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, BigUint::default());
+
+    // Test positive exponent
+    let f: f64 = 1.8446744073709552e+19;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, biguint!("18446744073709551616"));
+
+    // Test negative exponent
+    let f: f64 = 1.8446744073709552e+3;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, biguint!("1844"));
+}
+
+#[test]
+#[should_panic]
+fn from_f64_fail() {
+    let f: f64 = -1.8446744073709552e+19;
+    let _ = BigUint::try_from(f).unwrap();
+}
+#[test]
+#[should_panic]
+fn from_f64_fail2() {
+    let f: f64 = f64::INFINITY;
+    let _ = BigUint::try_from(f).unwrap();
+}
+#[test]
+#[should_panic]
+fn from_f64_fail3() {
+    let f: f64 = f64::NAN;
+    let _ = BigUint::try_from(f).unwrap();
+}
