@@ -1,65 +1,65 @@
-use crate::BigInt;
+use crate::BigUint;
 
 #[test]
 fn add_assign() {
-    let mut bg = BigInt::new(0);
+    let mut bg = BigUint::new(0);
     bg += 100u32;
 
     assert_eq!(bg.val, vec![100]);
 
-    bg += &BigInt::new(100);
+    bg += &BigUint::new(100);
 
     assert_eq!(bg.val, vec![200]);
 }
 
 #[test]
 fn add_assign_overflow() {
-    let mut bg = BigInt::new(u32::MAX);
+    let mut bg = BigUint::new(u32::MAX);
     bg += 1u32;
 
     assert_eq!(bg.val, vec![0, 1]);
 
-    bg += &BigInt::new(100);
+    bg += &BigUint::new(100);
 
     assert_eq!(bg.val, vec![100, 1]);
 }
 
 #[test]
 fn add() {
-    let b1 = BigInt::new(100);
-    let b2 = BigInt::new(50);
+    let b1 = BigUint::new(100);
+    let b2 = BigUint::new(50);
 
-    assert_eq!(&b1 + &b2, BigInt::new(150));
-    assert_eq!(&b1 + 50, BigInt::new(150));
+    assert_eq!(&b1 + &b2, BigUint::new(150));
+    assert_eq!(&b1 + 50, BigUint::new(150));
 }
 
 #[test]
 fn add_assign_full_test() {
-    let mut b1 = bigintvec![u32::MAX, u32::MAX, u32::MAX];
+    let mut b1 = biguintvec![u32::MAX, u32::MAX, u32::MAX];
     b1 += 1;
 
     assert_eq!(b1.val, vec![0, 0, 0, 1]);
 
-    let b = &BigInt::new(u32::MAX) + &BigInt::new(u32::MAX);
+    let b = &BigUint::new(u32::MAX) + &BigUint::new(u32::MAX);
     assert_eq!(b.val, vec![4294967294, 1]);
 }
 
 #[test]
 fn sub() {
-    let mut b1 = bigintvec![u32::MAX, u32::MAX];
+    let mut b1 = biguintvec![u32::MAX, u32::MAX];
     b1 -= u32::MAX;
 
-    assert_eq!(b1, bigintvec![0, u32::MAX]);
+    assert_eq!(b1, biguintvec![0, u32::MAX]);
     b1 -= 1;
-    assert_eq!(b1, bigintvec![u32::MAX, u32::MAX - 1]);
-    b1 -= &bigintvec![u32::MAX, u32::MAX - 1];
-    assert_eq!(b1, BigInt::new(0));
+    assert_eq!(b1, biguintvec![u32::MAX, u32::MAX - 1]);
+    b1 -= &biguintvec![u32::MAX, u32::MAX - 1];
+    assert_eq!(b1, BigUint::new(0));
 }
 
 #[test]
 fn sub_full() {
-    let n1 = bigint!("12345678910111213");
-    let n2 = bigint!("987654321");
+    let n1 = biguint!("12345678910111213");
+    let n2 = biguint!("987654321");
 
     let n3 = &n1 - &n2;
     assert_eq!(String::from(&n3), "12345677922456892");
@@ -67,15 +67,15 @@ fn sub_full() {
 
 #[test]
 fn fibonacci() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
         let temp = n2.clone();
         n2 += &n1;
         assert_eq!(&n2 - &n1, temp);
-        assert_eq!(&n2 - &(&n1 + &temp), BigInt::new(0));
+        assert_eq!(&n2 - &(&n1 + &temp), BigUint::new(0));
         n1 = temp;
         n -= 1;
     }
@@ -90,8 +90,8 @@ fn fibonacci() {
 
 #[test]
 fn fibonacci_5() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -113,8 +113,8 @@ fn fibonacci_5() {
 
 #[test]
 fn fibonacci_5_bis() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -124,14 +124,14 @@ fn fibonacci_5_bis() {
         n -= 1;
     }
 
-    let n3 = &n2 * &BigInt::new(5);
+    let n3 = &n2 * &BigUint::new(5);
     assert_eq!(
         String::from(&n3),
         "6971161228084894006986219143520\
 		364197503512829384865363205448147416278581143164534577\
 		88294381112606470625"
     );
-    let n3 = &BigInt::new(5) * &n2;
+    let n3 = &BigUint::new(5) * &n2;
     assert_eq!(
         String::from(&n3),
         "6971161228084894006986219143520\
@@ -142,8 +142,8 @@ fn fibonacci_5_bis() {
 
 #[test]
 fn fibonacci_square() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -166,7 +166,7 @@ fn fibonacci_square() {
 		57658876222521294125"
     );
 
-    let n3 = &n1 * &bigintvec![1, 2];
+    let n3 = &n1 * &biguintvec![1, 2];
     assert_eq!(
         String::from(&n3),
         "1197636379730135883426986149904\
@@ -203,7 +203,7 @@ fn fibonacci_square() {
 
 #[test]
 fn factorial_100() {
-    let mut n = BigInt::new(1);
+    let mut n = BigUint::new(1);
 
     for i in 1..=100u32 {
         n *= i;
@@ -220,8 +220,8 @@ fn factorial_100() {
 
 #[test]
 fn fact_mod() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -238,8 +238,8 @@ fn fact_mod() {
 
 #[test]
 fn fact_div() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -252,7 +252,7 @@ fn fact_div() {
 
     assert_eq!(
         &n3 / 13,
-        bigint!(
+        biguint!(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -261,7 +261,7 @@ fn fact_div() {
     );
     assert_eq!(
         &n3 / 4294967295,
-        bigint!(
+        biguint!(
             "45259565933858024969189\
     	89092294192835654543867968879846044465914135558921337249217357\
     	80617389059621687664461274568142421215633665995869120916045822\
@@ -272,7 +272,7 @@ fn fact_div() {
     n3 /= 13;
     assert_eq!(
         n3,
-        bigint!(
+        biguint!(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -283,8 +283,8 @@ fn fact_div() {
 
 #[test]
 fn mul_test() {
-    let n1 = BigInt::new(4294967295);
-    let n2 = BigInt::new(4294967295);
+    let n1 = BigUint::new(4294967295);
+    let n2 = BigUint::new(4294967295);
     let n3 = &n1 * &n2;
 
     assert_eq!(String::from(&n3), "18446744065119617025");
@@ -292,64 +292,64 @@ fn mul_test() {
 
 #[test]
 fn pure_mul_test() {
-    let n1 = bigintvec![4294967295, 4294967295, 4294967295];
+    let n1 = biguintvec![4294967295, 4294967295, 4294967295];
     let n2 = &n1 * 4294967295;
     assert_eq!(String::from(&n2), "340282366841710300949110269833929293825");
 }
 
 #[test]
 fn shl_assign_test() {
-    let b = BigInt::new(2147483648);
+    let b = BigUint::new(2147483648);
     let b2 = &b << 33;
     assert_eq!(b2.val, vec![0, 0, 1]);
 }
 
 #[test]
 fn shr_assign_test() {
-    let b = bigintvec![u32::MAX, u32::MAX, u32::MAX];
+    let b = biguintvec![u32::MAX, u32::MAX, u32::MAX];
     let b2 = &b >> 33;
     assert_eq!(b2.val, vec![u32::MAX, u32::MAX >> 1]);
 }
 
 #[test]
 fn bit_and() {
-    let mut n1 = bigintvec![u32::MAX, 15];
-    let n2 = bigintvec![15, u32::MAX, u32::MAX];
+    let mut n1 = biguintvec![u32::MAX, 15];
+    let n2 = biguintvec![15, u32::MAX, u32::MAX];
 
-    assert_eq!(&n1 & &n2, bigintvec![15, 15]);
-    assert_eq!(&n2 & &n1, bigintvec![15, 15]);
+    assert_eq!(&n1 & &n2, biguintvec![15, 15]);
+    assert_eq!(&n2 & &n1, biguintvec![15, 15]);
 
     n1 &= &n2;
-    assert_eq!(n1, bigintvec![15, 15]);
+    assert_eq!(n1, biguintvec![15, 15]);
 }
 
 #[test]
 fn bit_or() {
-    let mut n1 = bigintvec![u32::MAX, 15];
-    let n2 = bigintvec![15, u32::MAX, u32::MAX];
+    let mut n1 = biguintvec![u32::MAX, 15];
+    let n2 = biguintvec![15, u32::MAX, u32::MAX];
 
-    assert_eq!(&n1 | &n2, bigintvec![u32::MAX, u32::MAX, u32::MAX]);
-    assert_eq!(&n2 | &n1, bigintvec![u32::MAX, u32::MAX, u32::MAX]);
+    assert_eq!(&n1 | &n2, biguintvec![u32::MAX, u32::MAX, u32::MAX]);
+    assert_eq!(&n2 | &n1, biguintvec![u32::MAX, u32::MAX, u32::MAX]);
 
     n1 |= &n2;
-    assert_eq!(n1, bigintvec![u32::MAX, u32::MAX, u32::MAX]);
+    assert_eq!(n1, biguintvec![u32::MAX, u32::MAX, u32::MAX]);
 }
 
 #[test]
 fn bit_xor() {
-    let mut n1 = bigintvec![u32::MAX, 15];
-    let n2 = bigintvec![15, u32::MAX, u32::MAX];
+    let mut n1 = biguintvec![u32::MAX, 15];
+    let n2 = biguintvec![15, u32::MAX, u32::MAX];
 
-    assert_eq!(&n1 ^ &n2, bigintvec![4294967280, 4294967280, u32::MAX]);
-    assert_eq!(&n2 ^ &n1, bigintvec![4294967280, 4294967280, u32::MAX]);
+    assert_eq!(&n1 ^ &n2, biguintvec![4294967280, 4294967280, u32::MAX]);
+    assert_eq!(&n2 ^ &n1, biguintvec![4294967280, 4294967280, u32::MAX]);
 
     n1 ^= &n2;
-    assert_eq!(n1, bigintvec![4294967280, 4294967280, u32::MAX]);
+    assert_eq!(n1, biguintvec![4294967280, 4294967280, u32::MAX]);
 }
 
 #[test]
 fn mul_assign_u32() {
-    let mut b = BigInt::new(2147483648);
+    let mut b = BigUint::new(2147483648);
     b *= 5;
 
     assert_eq!(b.to_string(), "10737418240");
@@ -358,7 +358,7 @@ fn mul_assign_u32() {
 #[test]
 #[should_panic]
 fn div_by_zero() {
-    let n = BigInt::new(12345);
+    let n = BigUint::new(12345);
     let _ = &n / 0u32;
 }
 
@@ -366,20 +366,20 @@ fn div_by_zero() {
 fn div_1() {
     let mut a = 16u32;
 
-    a /= &BigInt::new(3);
+    a /= &BigUint::new(3);
     assert_eq!(a, 5u32);
 
-    a /= &BigInt::new(5);
+    a /= &BigUint::new(5);
     assert_eq!(a, 1u32);
 
-    a /= &BigInt::new(10);
+    a /= &BigUint::new(10);
     assert_eq!(a, 0u32);
 }
 
 #[test]
 fn div_2() {
-    let mut n1 = BigInt::new(0);
-    let mut n2 = BigInt::new(1);
+    let mut n1 = BigUint::new(0);
+    let mut n2 = BigUint::new(1);
     let mut n = 500;
 
     while n > 1 {
@@ -391,17 +391,17 @@ fn div_2() {
     let mut n3 = &n2 * &n2;
 
     assert_eq!(
-        &n3 / &bigint!(
+        &n3 / &biguint!(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
     	48326176773601497063020348946641164733333774212270432"
         ),
-        BigInt::from(13)
+        BigUint::from(13)
     );
     assert_eq!(
-        &n3 / &bigint!(13),
-        bigint!(
+        &n3 / &biguint!(13),
+        biguint!(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -410,7 +410,7 @@ fn div_2() {
     );
     assert_eq!(
         &n3 / 4294967295,
-        bigint!(
+        biguint!(
             "45259565933858024969189\
     	89092294192835654543867968879846044465914135558921337249217357\
     	80617389059621687664461274568142421215633665995869120916045822\
@@ -421,7 +421,7 @@ fn div_2() {
     n3 /= 13;
     assert_eq!(
         n3,
-        bigint!(
+        biguint!(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -429,10 +429,10 @@ fn div_2() {
         )
     );
 
-    n3 /= &bigintvec![256, 256, 1024];
+    n3 /= &biguintvec![256, 256, 1024];
     assert_eq!(
         n3,
-        bigint!(
+        biguint!(
             "79160260402704383443505518173623327171271715\
 		894251231563668951724860277618637301958917651208758398\
 		250711971981987758781540730998305599662194105412632969\
@@ -440,17 +440,17 @@ fn div_2() {
         )
     );
 
-    let mut n4 = &n3 * &bigintvec![256, 256, 1024];
-    assert_eq!(&n4 % &n3, BigInt::new(0));
+    let mut n4 = &n3 * &biguintvec![256, 256, 1024];
+    assert_eq!(&n4 % &n3, BigUint::new(0));
 
-    n4 /= &bigintvec![256, 256, 1024];
+    n4 /= &biguintvec![256, 256, 1024];
     assert_eq!(n3, n4);
 }
 
 #[test]
 fn rem() {
-    let a = bigintvec![256, 256, 256, 1024];
-    let b = bigintvec![109, 75, 31];
+    let a = biguintvec![256, 256, 256, 1024];
+    let b = biguintvec![109, 75, 31];
     println!("{:?}", a.to_string());
     println!("{:?}", b.to_string());
     assert_eq!((&a % &b).to_string(), "268965438589694318452");
@@ -463,23 +463,23 @@ fn product() {
         values.push(i + 1);
     }
 
-    let n1: BigInt = values.iter().product();
-    assert_eq!(n1, bigint!("2432902008176640000"));
+    let n1: BigUint = values.iter().product();
+    assert_eq!(n1, biguint!("2432902008176640000"));
 
-    let big_values = values.iter().map(|n| BigInt::new(*n)).collect::<Vec<_>>();
-    let n2: BigInt = big_values.iter().product();
-    assert_eq!(n2, bigint!("2432902008176640000"));
+    let big_values = values.iter().map(|n| BigUint::new(*n)).collect::<Vec<_>>();
+    let n2: BigUint = big_values.iter().product();
+    assert_eq!(n2, biguint!("2432902008176640000"));
 }
 
 #[test]
 fn sum() {
     let values = vec![u32::MAX; 10];
 
-    let n1: BigInt = values.iter().sum();
+    let n1: BigUint = values.iter().sum();
     println!("{:?}", n1.to_string());
-    assert_eq!(n1, bigint!("42949672950"));
+    assert_eq!(n1, biguint!("42949672950"));
 
-    let big_values = values.iter().map(|n| BigInt::new(*n)).collect::<Vec<_>>();
-    let n2: BigInt = big_values.iter().sum();
-    assert_eq!(n2, bigint!("42949672950"));
+    let big_values = values.iter().map(|n| BigUint::new(*n)).collect::<Vec<_>>();
+    let n2: BigUint = big_values.iter().sum();
+    assert_eq!(n2, biguint!("42949672950"));
 }

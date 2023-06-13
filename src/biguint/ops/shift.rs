@@ -1,23 +1,23 @@
 use core::ops::{Shl, ShlAssign, Shr, ShrAssign};
 
-use crate::BigInt;
+use crate::BigUint;
 
-impl Shl<usize> for &BigInt {
-    type Output = BigInt;
-    fn shl(self, other: usize) -> BigInt {
+impl Shl<usize> for &BigUint {
+    type Output = BigUint;
+    fn shl(self, other: usize) -> BigUint {
         let mut ret = self.clone();
         ret <<= other;
         ret
     }
 }
-impl Shl<usize> for BigInt {
-    type Output = BigInt;
-    fn shl(mut self, other: usize) -> BigInt {
+impl Shl<usize> for BigUint {
+    type Output = BigUint;
+    fn shl(mut self, other: usize) -> BigUint {
         self <<= other;
         self
     }
 }
-impl ShlAssign<usize> for BigInt {
+impl ShlAssign<usize> for BigUint {
     fn shl_assign(&mut self, mut b: usize) {
         // First apply whole word shifts (by decreasing b by steps of 32)
         let u32_shifts = b / 32;
@@ -47,22 +47,22 @@ impl ShlAssign<usize> for BigInt {
     }
 }
 
-impl Shr<usize> for &BigInt {
-    type Output = BigInt;
-    fn shr(self, other: usize) -> BigInt {
+impl Shr<usize> for &BigUint {
+    type Output = BigUint;
+    fn shr(self, other: usize) -> BigUint {
         let mut ret = self.clone();
         ret >>= other;
         ret
     }
 }
-impl Shr<usize> for BigInt {
-    type Output = BigInt;
-    fn shr(mut self, other: usize) -> BigInt {
+impl Shr<usize> for BigUint {
+    type Output = BigUint;
+    fn shr(mut self, other: usize) -> BigUint {
         self >>= other;
         self
     }
 }
-impl ShrAssign<usize> for BigInt {
+impl ShrAssign<usize> for BigUint {
     fn shr_assign(&mut self, mut b: usize) {
         if b >= self.nb_bits() {
             self.val = vec![0];

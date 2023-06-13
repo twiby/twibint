@@ -1,10 +1,10 @@
-use crate::BigInt;
+use crate::BigUint;
 
 #[test]
 fn new() {
     let val: u32 = 100;
 
-    let bg = BigInt::new(val);
+    let bg = BigUint::new(val);
 
     assert_eq!(bg.val, vec![val]);
 }
@@ -13,27 +13,27 @@ fn new() {
 fn from_str() {
     let s = "1234567891011121314151617181920";
 
-    let bg = bigint!(s);
+    let bg = biguint!(s);
 
     assert_eq!(String::from(bg), "1234567891011121314151617181920");
 }
 
 #[test]
 fn from_u64() {
-    let n = BigInt::from(18446744073709551614u64);
+    let n = BigUint::from(18446744073709551614u64);
     assert_eq!(n.val, vec![4294967294, 4294967295]);
 }
 
 #[test]
 fn to_str() {
-    let bg = BigInt::new(123);
+    let bg = BigUint::new(123);
 
     assert_eq!(String::from(&bg), "123");
 }
 
 #[test]
 fn to_str_overflow() {
-    let mut bg = BigInt::new(u32::MAX);
+    let mut bg = BigUint::new(u32::MAX);
     bg += 1;
 
     assert_eq!(String::from(&bg), "4294967296");
@@ -41,20 +41,20 @@ fn to_str_overflow() {
 
 #[test]
 fn cmp() {
-    let n1 = bigintvec![u32::MAX, u32::MAX, u32::MAX];
+    let n1 = biguintvec![u32::MAX, u32::MAX, u32::MAX];
     assert!(n1 == n1);
     assert!(n1 <= n1);
     assert!(n1 >= n1);
 
-    let n2 = bigintvec![u32::MAX - 1, u32::MAX, u32::MAX];
+    let n2 = biguintvec![u32::MAX - 1, u32::MAX, u32::MAX];
     assert!(n2 < n1);
     assert!(n1 > n2);
 
-    let n3 = bigintvec![u32::MAX, u32::MAX, u32::MAX - 1];
+    let n3 = biguintvec![u32::MAX, u32::MAX, u32::MAX - 1];
     assert!(n3 < n2);
     assert!(n3 < n1);
 
-    let n4 = bigintvec![u32::MAX, u32::MAX];
+    let n4 = biguintvec![u32::MAX, u32::MAX];
     assert!(n4 <= n1);
     assert!(n4 <= n2);
     assert!(n4 <= n3);
@@ -62,9 +62,9 @@ fn cmp() {
 
 #[test]
 fn bits() {
-    let b1 = BigInt::new(0);
-    let b2 = BigInt::new(4294967295);
-    let b3 = BigInt::new(2147483648);
+    let b1 = BigUint::new(0);
+    let b2 = BigUint::new(4294967295);
+    let b3 = BigUint::new(2147483648);
 
     assert_eq!(b1.nb_bits(), 32);
     assert_eq!(b2.nb_bits(), 32);
@@ -97,7 +97,7 @@ fn bits() {
 
 #[test]
 fn binary() {
-    let a = bigintvec![256, 1024];
+    let a = biguintvec![256, 1024];
     assert_eq!(
         format!("{:b}", a),
         "0000000000000000000001000000000000000000000000000000000100000000"
@@ -106,30 +106,30 @@ fn binary() {
 
 #[test]
 fn hex() {
-    let a = bigintvec![256, 1024];
+    let a = biguintvec![256, 1024];
     assert_eq!(format!("{:x}", a), "0000040000000100");
 }
 
 #[test]
 fn default() {
-    assert_eq!(BigInt::default(), BigInt::new(0));
+    assert_eq!(BigUint::default(), BigUint::new(0));
 }
 
 #[test]
 fn fromstr() {
-    let a: BigInt = "124".parse().unwrap();
-    assert_eq!(a, BigInt::new(124));
+    let a: BigUint = "124".parse().unwrap();
+    assert_eq!(a, BigUint::new(124));
 }
 
 #[test]
 #[should_panic]
 fn fromstr_fail() {
-    let _: BigInt = "124test".parse().unwrap();
+    let _: BigUint = "124test".parse().unwrap();
 }
 
 #[test]
 fn f64() {
-    let a = bigintvec![u32::MAX, u32::MAX];
+    let a = biguintvec![u32::MAX, u32::MAX];
     let f: f64 = From::from(&a);
     assert_eq!(f, 1.8446744073709552e+19);
 
@@ -139,13 +139,13 @@ fn f64() {
 #[test]
 fn hash() {
     use std::collections::HashMap;
-    let mut map = HashMap::<BigInt, String>::new();
+    let mut map = HashMap::<BigUint, String>::new();
 
-    map.insert(bigintvec![1, 2, 3], "first".to_string());
-    map.insert(bigintvec![3, 2, 1], "second".to_string());
+    map.insert(biguintvec![1, 2, 3], "first".to_string());
+    map.insert(biguintvec![3, 2, 1], "second".to_string());
 
-    assert!(map.contains_key(&bigintvec![1, 2, 3]));
-    assert!(map.contains_key(&bigintvec![3, 2, 1]));
-    assert_eq!(map[&bigintvec![1, 2, 3]], "first");
-    assert_eq!(map[&bigintvec![3, 2, 1]], "second");
+    assert!(map.contains_key(&biguintvec![1, 2, 3]));
+    assert!(map.contains_key(&biguintvec![3, 2, 1]));
+    assert_eq!(map[&biguintvec![1, 2, 3]], "first");
+    assert_eq!(map[&biguintvec![3, 2, 1]], "second");
 }

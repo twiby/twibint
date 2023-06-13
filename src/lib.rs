@@ -1,9 +1,4 @@
 #[macro_use]
-mod bigint;
-mod digits_vec;
-mod ops;
+mod biguint;
 
-pub use crate::bigint::BigInt;
-
-#[cfg(test)]
-mod test;
+pub use crate::biguint::BigUint;

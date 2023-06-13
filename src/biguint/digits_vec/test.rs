@@ -1,4 +1,4 @@
-use crate::digits_vec::Digits;
+use crate::biguint::digits_vec::Digits;
 
 #[test]
 fn new() {

@@ -1,38 +1,44 @@
-use crate::digits_vec::Digits;
 use core::cmp::Ordering;
+use digits_vec::Digits;
 
 #[macro_export]
-macro_rules! bigintvec {
+macro_rules! biguintvec {
     ( $( $x:expr ),* ) => {
         {
             let mut temp_vec = Vec::new();
             $(
                 temp_vec.push($x);
             )*
-            BigInt::from(temp_vec)
+            BigUint::from(temp_vec)
         }
     };
 }
 
 #[macro_export]
-macro_rules! bigint {
+macro_rules! biguint {
     ( $( $x:expr ),* ) => {
         {
             $(
-                BigInt::from($x)
+                BigUint::from($x)
             )*
         }
     };
 }
 
+mod digits_vec;
+mod ops;
+
+#[cfg(test)]
+mod test;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BigInt {
+pub struct BigUint {
     pub val: Vec<u32>,
 }
 
-impl BigInt {
-    pub fn new(val: u32) -> BigInt {
-        BigInt { val: vec![val] }
+impl BigUint {
+    pub fn new(val: u32) -> BigUint {
+        BigUint { val: vec![val] }
     }
 
     #[inline]
@@ -58,9 +64,9 @@ impl BigInt {
     }
 }
 
-impl From<u64> for BigInt {
-    fn from(n: u64) -> BigInt {
-        let mut ret = BigInt {
+impl From<u64> for BigUint {
+    fn from(n: u64) -> BigUint {
+        let mut ret = BigUint {
             val: vec![
                 (n % 4294967296).try_into().unwrap(),
                 (n / 4294967296).try_into().unwrap(),
@@ -71,19 +77,19 @@ impl From<u64> for BigInt {
     }
 }
 
-impl From<Vec<u32>> for BigInt {
-    fn from(v: Vec<u32>) -> BigInt {
-        let mut ret = BigInt { val: v };
+impl From<Vec<u32>> for BigUint {
+    fn from(v: Vec<u32>) -> BigUint {
+        let mut ret = BigUint { val: v };
         ret.remove_trailing_zeros();
         ret
     }
 }
 
-impl From<&str> for BigInt {
-    fn from(s: &str) -> BigInt {
-        let mut ret = BigInt::new(0);
+impl From<&str> for BigUint {
+    fn from(s: &str) -> BigUint {
+        let mut ret = BigUint::new(0);
 
-        let mut base = BigInt::new(1);
+        let mut base = BigUint::new(1);
         for c in s.chars().rev() {
             let v: u32 = c.to_digit(10).unwrap();
 
@@ -96,8 +102,8 @@ impl From<&str> for BigInt {
     }
 }
 
-impl From<&BigInt> for Digits {
-    fn from(b: &BigInt) -> Digits {
+impl From<&BigUint> for Digits {
+    fn from(b: &BigUint) -> Digits {
         let mut digits = Digits::new(0);
 
         for bit in b.bits().rev() {
@@ -111,25 +117,25 @@ impl From<&BigInt> for Digits {
     }
 }
 
-impl From<&BigInt> for String {
-    fn from(b: &BigInt) -> String {
+impl From<&BigUint> for String {
+    fn from(b: &BigUint) -> String {
         String::from(&Digits::from(b))
     }
 }
-impl From<BigInt> for String {
-    fn from(b: BigInt) -> String {
+impl From<BigUint> for String {
+    fn from(b: BigUint) -> String {
         String::from(&Digits::from(&b))
     }
 }
 
-impl PartialOrd<BigInt> for BigInt {
-    fn partial_cmp(&self, other: &BigInt) -> Option<Ordering> {
+impl PartialOrd<BigUint> for BigUint {
+    fn partial_cmp(&self, other: &BigUint) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for BigInt {
-    fn cmp(&self, other: &BigInt) -> Ordering {
+impl Ord for BigUint {
+    fn cmp(&self, other: &BigUint) -> Ordering {
         match self.val.len().cmp(&other.val.len()) {
             Ordering::Equal => (),
             o => return o,
@@ -144,13 +150,13 @@ impl Ord for BigInt {
     }
 }
 
-impl std::fmt::Display for BigInt {
+impl std::fmt::Display for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", String::from(self))
     }
 }
 
-impl std::fmt::Binary for BigInt {
+impl std::fmt::Binary for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = "".to_string();
         for c in self.val.iter().rev() {
@@ -167,7 +173,7 @@ impl std::fmt::Binary for BigInt {
     }
 }
 
-impl std::fmt::LowerHex for BigInt {
+impl std::fmt::LowerHex for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = "".to_string();
         for c in self.val.iter().rev() {
@@ -183,7 +189,7 @@ impl std::fmt::LowerHex for BigInt {
         write!(f, "{}", ret)
     }
 }
-impl std::fmt::UpperHex for BigInt {
+impl std::fmt::UpperHex for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = "".to_string();
         for c in self.val.iter().rev() {
@@ -200,18 +206,18 @@ impl std::fmt::UpperHex for BigInt {
     }
 }
 
-impl Default for BigInt {
-    fn default() -> BigInt {
-        BigInt::new(0)
+impl Default for BigUint {
+    fn default() -> BigUint {
+        BigUint::new(0)
     }
 }
 
-impl std::str::FromStr for BigInt {
+impl std::str::FromStr for BigUint {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut ret = BigInt::new(0);
+        let mut ret = BigUint::new(0);
 
-        let mut base = BigInt::new(1);
+        let mut base = BigUint::new(1);
         for c in s.chars().rev() {
             let v: u32 = match c.to_digit(10) {
                 Some(val) => val,
@@ -227,7 +233,7 @@ impl std::str::FromStr for BigInt {
     }
 }
 
-impl std::hash::Hash for BigInt {
+impl std::hash::Hash for BigUint {
     fn hash<H>(&self, state: &mut H)
     where
         H: std::hash::Hasher,
@@ -236,8 +242,8 @@ impl std::hash::Hash for BigInt {
     }
 }
 
-impl From<&BigInt> for f64 {
-    fn from(int: &BigInt) -> f64 {
+impl From<&BigUint> for f64 {
+    fn from(int: &BigUint) -> f64 {
         let mut base = 1f64;
         let mut ret = 0f64;
         for a in &int.val {
@@ -248,13 +254,13 @@ impl From<&BigInt> for f64 {
     }
 }
 
-impl std::fmt::LowerExp for BigInt {
+impl std::fmt::LowerExp for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);
         std::fmt::LowerExp::fmt(&val, f)
     }
 }
-impl std::fmt::UpperExp for BigInt {
+impl std::fmt::UpperExp for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);
         std::fmt::UpperExp::fmt(&val, f)

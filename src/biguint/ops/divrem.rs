@@ -1,7 +1,7 @@
 use core::cmp::Ordering;
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
-use crate::BigInt;
+use crate::BigUint;
 
 trait RemDiv<T> {
     type DivOutput;
@@ -15,10 +15,10 @@ trait RemDiv<T> {
     }
 }
 
-impl RemDiv<u32> for BigInt {
-    type DivOutput = BigInt;
+impl RemDiv<u32> for BigUint {
+    type DivOutput = BigUint;
     type RemOutput = u32;
-    fn rem_div(&self, other: &u32) -> Option<(BigInt, u32)> {
+    fn rem_div(&self, other: &u32) -> Option<(BigUint, u32)> {
         if *other == 0 {
             return None;
         }
@@ -27,14 +27,14 @@ impl RemDiv<u32> for BigInt {
         let mut msb = 0u64;
         let mut div: u64;
 
-        let mut ret = BigInt::new(0);
+        let mut ret = BigUint::new(0);
         for idx in (0..self.val.len()).rev() {
             let lsb = self.val[idx] as u64;
 
             let current = (msb << 32) | lsb;
             (div, msb) = (current / other_64, current % other_64);
 
-            ret += BigInt::from(div) << (32 * idx);
+            ret += BigUint::from(div) << (32 * idx);
         }
 
         ret.remove_trailing_zeros();
@@ -54,38 +54,38 @@ impl RemDiv<u32> for BigInt {
     }
 }
 
-impl RemAssign<u32> for BigInt {
+impl RemAssign<u32> for BigUint {
     fn rem_assign(&mut self, other: u32) {
         let value = &*self % other;
-        *self = BigInt::new(value);
+        *self = BigUint::new(value);
     }
 }
-impl Rem<u32> for &BigInt {
+impl Rem<u32> for &BigUint {
     type Output = u32;
     fn rem(self, other: u32) -> u32 {
         RemDiv::rem(self, &other).unwrap()
     }
 }
 
-impl DivAssign<u32> for BigInt {
+impl DivAssign<u32> for BigUint {
     fn div_assign(&mut self, other: u32) {
         *self = &*self / other;
     }
 }
-impl Div<u32> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: u32) -> BigInt {
+impl Div<u32> for &BigUint {
+    type Output = BigUint;
+    fn div(self, other: u32) -> BigUint {
         RemDiv::div(self, &other).unwrap()
     }
 }
-impl Div<&BigInt> for u32 {
+impl Div<&BigUint> for u32 {
     type Output = u32;
-    fn div(self, other: &BigInt) -> u32 {
-        if other == &BigInt::new(0) {
+    fn div(self, other: &BigUint) -> u32 {
+        if other == &BigUint::new(0) {
             panic!("Attempt at division by zero.");
         }
 
-        let big_self = BigInt::new(self);
+        let big_self = BigUint::new(self);
         match big_self.cmp(other) {
             Ordering::Equal => 1u32,
             Ordering::Less => 0u32,
@@ -93,19 +93,19 @@ impl Div<&BigInt> for u32 {
         }
     }
 }
-impl DivAssign<&BigInt> for u32 {
-    fn div_assign(&mut self, other: &BigInt) {
+impl DivAssign<&BigUint> for u32 {
+    fn div_assign(&mut self, other: &BigUint) {
         *self = *self / other;
     }
 }
-impl Rem<&BigInt> for u32 {
+impl Rem<&BigUint> for u32 {
     type Output = u32;
-    fn rem(self, other: &BigInt) -> u32 {
-        if other == &BigInt::new(0) {
+    fn rem(self, other: &BigUint) -> u32 {
+        if other == &BigUint::new(0) {
             panic!("Attempt at division by zero.");
         }
 
-        let big_self = BigInt::new(self);
+        let big_self = BigUint::new(self);
         match big_self.cmp(other) {
             Ordering::Equal => 0u32,
             Ordering::Less => self,
@@ -113,49 +113,49 @@ impl Rem<&BigInt> for u32 {
         }
     }
 }
-impl RemAssign<&BigInt> for u32 {
-    fn rem_assign(&mut self, other: &BigInt) {
+impl RemAssign<&BigUint> for u32 {
+    fn rem_assign(&mut self, other: &BigUint) {
         *self = *self / other;
     }
 }
 
-impl RemDiv<BigInt> for BigInt {
-    type DivOutput = BigInt;
-    type RemOutput = BigInt;
-    fn rem_div(&self, other: &BigInt) -> Option<(BigInt, BigInt)> {
-        if other == &BigInt::new(0) {
+impl RemDiv<BigUint> for BigUint {
+    type DivOutput = BigUint;
+    type RemOutput = BigUint;
+    fn rem_div(&self, other: &BigUint) -> Option<(BigUint, BigUint)> {
+        if other == &BigUint::new(0) {
             return None;
         }
 
         match self.cmp(other) {
-            Ordering::Equal => return Some((BigInt::new(1), BigInt::new(0))),
-            Ordering::Less => return Some((BigInt::new(0), self.clone())),
+            Ordering::Equal => return Some((BigUint::new(1), BigUint::new(0))),
+            Ordering::Less => return Some((BigUint::new(0), self.clone())),
             _ => (),
         }
 
         if self.val.len() == 1 {
             return Some((
-                BigInt::new(self.val[0] / other),
-                BigInt::new(self.val[0] % other),
+                BigUint::new(self.val[0] / other),
+                BigUint::new(self.val[0] % other),
             ));
         }
 
         assert!(self.val.len() >= other.val.len());
 
-        let mut ret = BigInt::new(0);
-        let mut remainder = BigInt::new(0);
+        let mut ret = BigUint::new(0);
+        let mut remainder = BigUint::new(0);
         for idx in (0..self.val.len()).rev() {
-            remainder = &(remainder << 32) ^ &BigInt::new(self.val[idx]);
+            remainder = &(remainder << 32) ^ &BigUint::new(self.val[idx]);
 
             match remainder.cmp(other) {
                 Ordering::Less => continue,
                 Ordering::Equal => {
                     remainder -= other;
-                    ret += BigInt::new(1) << 32 * idx;
+                    ret += BigUint::new(1) << 32 * idx;
                 }
                 Ordering::Greater => {
                     let mut quotient = 0u32;
-                    let mut product = BigInt::new(0);
+                    let mut product = BigUint::new(0);
 
                     // We add to the current product power of 2 by power of 2
                     for bit in (0..32).rev() {
@@ -167,7 +167,7 @@ impl RemDiv<BigInt> for BigInt {
                     }
 
                     remainder -= &product;
-                    ret += BigInt::new(quotient) << 32 * idx;
+                    ret += BigUint::new(quotient) << 32 * idx;
                 }
             };
         }
@@ -175,25 +175,25 @@ impl RemDiv<BigInt> for BigInt {
         Some((ret, remainder))
     }
 }
-impl RemAssign<&BigInt> for BigInt {
-    fn rem_assign(&mut self, other: &BigInt) {
+impl RemAssign<&BigUint> for BigUint {
+    fn rem_assign(&mut self, other: &BigUint) {
         *self = &*self % other;
     }
 }
-impl Rem<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn rem(self, other: &BigInt) -> BigInt {
+impl Rem<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn rem(self, other: &BigUint) -> BigUint {
         RemDiv::rem(self, other).unwrap()
     }
 }
-impl DivAssign<&BigInt> for BigInt {
-    fn div_assign(&mut self, other: &BigInt) {
+impl DivAssign<&BigUint> for BigUint {
+    fn div_assign(&mut self, other: &BigUint) {
         *self = &*self / other;
     }
 }
-impl Div<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: &BigInt) -> BigInt {
+impl Div<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn div(self, other: &BigUint) -> BigUint {
         RemDiv::div(self, other).unwrap()
     }
 }

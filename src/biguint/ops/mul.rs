@@ -1,7 +1,7 @@
 use core::iter::Product;
 use core::ops::{Mul, MulAssign};
 
-use crate::BigInt;
+use crate::BigUint;
 
 fn pure_mul(a: u32, b: u32) -> (u32, u32) {
     let full = (a as u64) * (b as u64);
@@ -17,7 +17,7 @@ fn pure_mul_test() {
     assert_eq!(b, 4294967294);
 }
 
-impl MulAssign<u32> for BigInt {
+impl MulAssign<u32> for BigUint {
     fn mul_assign(&mut self, other: u32) {
         let mut c: bool;
         let (mut c1, mut c2, mut v): (u32, u32, u32);
@@ -36,49 +36,49 @@ impl MulAssign<u32> for BigInt {
         }
     }
 }
-impl MulAssign<&u32> for BigInt {
+impl MulAssign<&u32> for BigUint {
     fn mul_assign(&mut self, other: &u32) {
         *self *= *other;
     }
 }
-impl MulAssign<&BigInt> for BigInt {
-    fn mul_assign(&mut self, other: &BigInt) {
+impl MulAssign<&BigUint> for BigUint {
+    fn mul_assign(&mut self, other: &BigUint) {
         *self = &*self * other;
     }
 }
-impl MulAssign<BigInt> for BigInt {
-    fn mul_assign(&mut self, other: BigInt) {
+impl MulAssign<BigUint> for BigUint {
+    fn mul_assign(&mut self, other: BigUint) {
         *self = &*self * &other;
     }
 }
-impl Mul<u32> for &BigInt {
-    type Output = BigInt;
-    fn mul(self, other: u32) -> BigInt {
+impl Mul<u32> for &BigUint {
+    type Output = BigUint;
+    fn mul(self, other: u32) -> BigUint {
         let mut ret = self.clone();
         ret *= other;
         ret
     }
 }
-impl Mul<u32> for BigInt {
-    type Output = BigInt;
-    fn mul(self, other: u32) -> BigInt {
+impl Mul<u32> for BigUint {
+    type Output = BigUint;
+    fn mul(self, other: u32) -> BigUint {
         &self * other
     }
 }
-impl Mul<&BigInt> for u32 {
-    type Output = BigInt;
-    fn mul(self, other: &BigInt) -> BigInt {
+impl Mul<&BigUint> for u32 {
+    type Output = BigUint;
+    fn mul(self, other: &BigUint) -> BigUint {
         other * self
     }
 }
-impl Mul<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn mul(self, other: &BigInt) -> BigInt {
+impl Mul<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn mul(self, other: &BigUint) -> BigUint {
         if self.val.len() == 0 || other.val.len() == 0 {
-            return BigInt::new(0);
+            return BigUint::new(0);
         }
 
-        let mut ret = BigInt::new(0);
+        let mut ret = BigUint::new(0);
         for i in 0..other.val.len() {
             ret += &((self * other.val[i]) << (i * 32));
         }
@@ -86,22 +86,22 @@ impl Mul<&BigInt> for &BigInt {
         ret
     }
 }
-impl Mul<BigInt> for BigInt {
-    type Output = BigInt;
-    fn mul(self, other: BigInt) -> BigInt {
+impl Mul<BigUint> for BigUint {
+    type Output = BigUint;
+    fn mul(self, other: BigUint) -> BigUint {
         &self * &other
     }
 }
 
-impl<T> Product<T> for BigInt
+impl<T> Product<T> for BigUint
 where
-    BigInt: MulAssign<T>,
+    BigUint: MulAssign<T>,
 {
-    fn product<I>(iter: I) -> BigInt
+    fn product<I>(iter: I) -> BigUint
     where
         I: Iterator<Item = T>,
     {
-        let mut ret = BigInt::new(1);
+        let mut ret = BigUint::new(1);
         for el in iter {
             ret *= el;
         }

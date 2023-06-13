@@ -1,12 +1,12 @@
 use core::cmp::Ordering;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign};
 
-use crate::BigInt;
+use crate::BigUint;
 
-impl BitAnd<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn bitand(self, other: &BigInt) -> BigInt {
-        let mut ret = BigInt::from(
+impl BitAnd<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn bitand(self, other: &BigUint) -> BigUint {
+        let mut ret = BigUint::from(
             self.val
                 .iter()
                 .zip(other.val.iter())
@@ -17,15 +17,15 @@ impl BitAnd<&BigInt> for &BigInt {
         ret
     }
 }
-impl BitAndAssign<&BigInt> for BigInt {
-    fn bitand_assign(&mut self, other: &BigInt) {
+impl BitAndAssign<&BigUint> for BigUint {
+    fn bitand_assign(&mut self, other: &BigUint) {
         *self = &*self & other;
     }
 }
 
-impl BitOr<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn bitor(self, other: &BigInt) -> BigInt {
+impl BitOr<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn bitor(self, other: &BigUint) -> BigUint {
         let (big, small) = match self.cmp(other) {
             Ordering::Equal => return self.clone(),
             Ordering::Less => (other, self),
@@ -40,15 +40,15 @@ impl BitOr<&BigInt> for &BigInt {
         ret
     }
 }
-impl BitOrAssign<&BigInt> for BigInt {
-    fn bitor_assign(&mut self, other: &BigInt) {
+impl BitOrAssign<&BigUint> for BigUint {
+    fn bitor_assign(&mut self, other: &BigUint) {
         *self = &*self | other;
     }
 }
 
-impl BitXor<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn bitxor(self, other: &BigInt) -> BigInt {
+impl BitXor<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn bitxor(self, other: &BigUint) -> BigUint {
         let (big, small) = match self.cmp(other) {
             Ordering::Equal => return self.clone(),
             Ordering::Less => (other, self),
@@ -64,8 +64,8 @@ impl BitXor<&BigInt> for &BigInt {
         ret
     }
 }
-impl BitXorAssign<&BigInt> for BigInt {
-    fn bitxor_assign(&mut self, other: &BigInt) {
+impl BitXorAssign<&BigUint> for BigUint {
+    fn bitxor_assign(&mut self, other: &BigUint) {
         *self = &*self ^ other;
     }
 }

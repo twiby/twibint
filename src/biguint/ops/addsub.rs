@@ -1,59 +1,59 @@
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::BigInt;
+use crate::BigUint;
 
-impl Add<u32> for &BigInt {
-    type Output = BigInt;
+impl Add<u32> for &BigUint {
+    type Output = BigUint;
 
     fn add(self, other: u32) -> Self::Output {
-        let mut ret: BigInt = self.clone();
+        let mut ret: BigUint = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<&BigInt> for u32 {
-    type Output = BigInt;
-    fn add(self, other: &BigInt) -> Self::Output {
+impl Add<&BigUint> for u32 {
+    type Output = BigUint;
+    fn add(self, other: &BigUint) -> Self::Output {
         other + self
     }
 }
-impl Add<&BigInt> for &BigInt {
-    type Output = BigInt;
+impl Add<&BigUint> for &BigUint {
+    type Output = BigUint;
 
-    fn add(self, other: &BigInt) -> Self::Output {
+    fn add(self, other: &BigUint) -> Self::Output {
         let mut ret = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<BigInt> for BigInt {
-    type Output = BigInt;
+impl Add<BigUint> for BigUint {
+    type Output = BigUint;
 
-    fn add(self, other: BigInt) -> Self::Output {
+    fn add(self, other: BigUint) -> Self::Output {
         &self + &other
     }
 }
 
-impl AddAssign<u32> for BigInt {
+impl AddAssign<u32> for BigUint {
     fn add_assign(&mut self, other: u32) {
-        let other = BigInt::new(other);
+        let other = BigUint::new(other);
         *self += other;
     }
 }
-impl AddAssign<&u32> for BigInt {
+impl AddAssign<&u32> for BigUint {
     fn add_assign(&mut self, other: &u32) {
         *self += *other;
     }
 }
 
-impl AddAssign<BigInt> for BigInt {
-    fn add_assign(&mut self, other: BigInt) {
+impl AddAssign<BigUint> for BigUint {
+    fn add_assign(&mut self, other: BigUint) {
         *self += &other;
     }
 }
-impl AddAssign<&BigInt> for BigInt {
-    fn add_assign(&mut self, other: &BigInt) {
+impl AddAssign<&BigUint> for BigUint {
+    fn add_assign(&mut self, other: &BigUint) {
         while self.val.len() < other.val.len() {
             self.val.push(0);
         }
@@ -80,13 +80,13 @@ impl AddAssign<&BigInt> for BigInt {
     }
 }
 
-impl SubAssign<u32> for BigInt {
+impl SubAssign<u32> for BigUint {
     fn sub_assign(&mut self, other: u32) {
-        *self -= &BigInt::new(other);
+        *self -= &BigUint::new(other);
     }
 }
-impl SubAssign<&BigInt> for BigInt {
-    fn sub_assign(&mut self, other: &BigInt) {
+impl SubAssign<&BigUint> for BigUint {
+    fn sub_assign(&mut self, other: &BigUint) {
         if &*self < other {
             panic!("Attempt at subtraction with underflow");
         }
@@ -107,32 +107,32 @@ impl SubAssign<&BigInt> for BigInt {
         self.remove_trailing_zeros();
     }
 }
-impl Sub<u32> for &BigInt {
-    type Output = BigInt;
-    fn sub(self, other: u32) -> BigInt {
+impl Sub<u32> for &BigUint {
+    type Output = BigUint;
+    fn sub(self, other: u32) -> BigUint {
         let mut ret = self.clone();
         ret -= other;
         return ret;
     }
 }
-impl Sub<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn sub(self, other: &BigInt) -> BigInt {
+impl Sub<&BigUint> for &BigUint {
+    type Output = BigUint;
+    fn sub(self, other: &BigUint) -> BigUint {
         let mut ret = self.clone();
         ret -= other;
         ret
     }
 }
 
-impl<T> Sum<T> for BigInt
+impl<T> Sum<T> for BigUint
 where
-    BigInt: AddAssign<T>,
+    BigUint: AddAssign<T>,
 {
-    fn sum<I>(iter: I) -> BigInt
+    fn sum<I>(iter: I) -> BigUint
     where
         I: Iterator<Item = T>,
     {
-        let mut ret = BigInt::new(0);
+        let mut ret = BigUint::new(0);
         for el in iter {
             ret += el;
         }
