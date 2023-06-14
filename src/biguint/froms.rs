@@ -135,6 +135,7 @@ impl<T: std::fmt::Display> std::fmt::Display for FromFloatError<T> {
     }
 }
 
+#[cfg(target_endian = "little")]
 impl TryFrom<f64> for BigUint {
     type Error = FromFloatError<f64>;
 
@@ -161,6 +162,7 @@ impl TryFrom<f64> for BigUint {
     }
 }
 
+#[cfg(target_endian = "little")]
 impl TryFrom<f32> for BigUint {
     type Error = FromFloatError<f32>;
 
