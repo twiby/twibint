@@ -49,11 +49,15 @@ fn hash() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigInt, String>::new();
 
-    map.insert(bigintvec![1, 2, 3], "first".to_string());
-    map.insert(bigintvec![3, 2, 1], "second".to_string());
+    let n1 = bigintvec![1, 2, 3];
+    let mut n2 = n1.clone();
+    n2.sign = false;
 
-    assert!(map.contains_key(&bigintvec![1, 2, 3]));
-    assert!(map.contains_key(&bigintvec![3, 2, 1]));
-    assert_eq!(map[&bigintvec![1, 2, 3]], "first");
-    assert_eq!(map[&bigintvec![3, 2, 1]], "second");
+    map.insert(n1.clone(), "first".to_string());
+    map.insert(n2.clone(), "second".to_string());
+
+    assert!(map.contains_key(&n1));
+    assert!(map.contains_key(&n2));
+    assert_eq!(map[&n1], "first");
+    assert_eq!(map[&n2], "second");
 }
