@@ -25,8 +25,11 @@ impl From<&BigUint> for f32 {
     }
 }
 
+#[derive(Debug)]
+pub struct UnexpectedCharacterError(char);
+
 impl std::str::FromStr for BigUint {
-    type Err = ();
+    type Err = UnexpectedCharacterError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut ret = BigUint::new(0);
 
@@ -34,7 +37,7 @@ impl std::str::FromStr for BigUint {
         for c in s.chars().rev() {
             let v: u32 = match c.to_digit(10) {
                 Some(val) => val,
-                None => return Err(()),
+                None => return Err(UnexpectedCharacterError(c)),
             };
 
             ret += v * &base;
@@ -83,18 +86,7 @@ impl From<Vec<u32>> for BigUint {
 
 impl From<&str> for BigUint {
     fn from(s: &str) -> BigUint {
-        let mut ret = BigUint::new(0);
-
-        let mut base = BigUint::new(1);
-        for c in s.chars().rev() {
-            let v: u32 = c.to_digit(10).unwrap();
-
-            ret += v * &base;
-            base *= 10;
-        }
-
-        ret.remove_trailing_zeros();
-        return ret;
+        <BigUint as std::str::FromStr>::from_str(s).unwrap()
     }
 }
 
