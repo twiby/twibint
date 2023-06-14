@@ -148,8 +148,10 @@ impl TryFrom<f64> for BigUint {
         let f_u64: u64 = f.to_bits();
 
         let two_to_the_52 = 1 << 52;
-        let exponent = (((f_u64 << 1) >> 53) as i64) - 1023 - 52;
-        let mantissa = two_to_the_52 | (f_u64 & (two_to_the_52 - 1));
+        let mantissa_mask = two_to_the_52 - 1;
+
+        let exponent = ((f_u64 >> 52) as i64) - 1023 - 52;
+        let mantissa = two_to_the_52 | (f_u64 & mantissa_mask);
 
         Ok(match exponent {
             i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
@@ -172,8 +174,10 @@ impl TryFrom<f32> for BigUint {
         let f_u32: u32 = f.to_bits();
 
         let two_to_the_23 = 1 << 23;
-        let exponent = (((f_u32 << 1) >> 24) as i64) - 127 - 23;
-        let mantissa = two_to_the_23 | (f_u32 & (two_to_the_23 - 1));
+        let mantissa_mask = two_to_the_23 - 1;
+
+        let exponent = ((f_u32 >> 23) as i64) - 127 - 23;
+        let mantissa = two_to_the_23 | (f_u32 & mantissa_mask);
 
         Ok(match exponent {
             i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
