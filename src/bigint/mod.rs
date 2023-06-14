@@ -25,7 +25,7 @@ macro_rules! bigintvec {
     };
 }
 
-// mod fmt;
+mod fmt;
 mod froms;
 // mod ops;
 
