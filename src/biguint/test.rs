@@ -137,6 +137,13 @@ fn f64() {
 }
 
 #[test]
+fn f32() {
+    let a = biguintvec![u32::MAX, u32::MAX];
+    let f: f32 = From::from(&a);
+    assert_eq!(f, 1.8446744e+19);
+}
+
+#[test]
 fn hash() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigUint, String>::new();
@@ -184,5 +191,41 @@ fn from_f64_fail2() {
 #[should_panic]
 fn from_f64_fail3() {
     let f: f64 = f64::NAN;
+    let _ = BigUint::try_from(f).unwrap();
+}
+#[test]
+fn from_f32() {
+    // Test zero
+    let f = 0f32;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, BigUint::default());
+
+    // Test positive exponent
+    let f: f32 = 1.8446744e+19;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, biguint!("18446744073709551616"));
+
+    // Test negative exponent
+    let f: f32 = 1.8446744e+3;
+    let n = BigUint::try_from(f).unwrap();
+    assert_eq!(n, biguint!("1844"));
+}
+
+#[test]
+#[should_panic]
+fn from_f32_fail() {
+    let f: f32 = -1.8446744e+19;
+    let _ = BigUint::try_from(f).unwrap();
+}
+#[test]
+#[should_panic]
+fn from_f32_fail2() {
+    let f: f32 = f32::INFINITY;
+    let _ = BigUint::try_from(f).unwrap();
+}
+#[test]
+#[should_panic]
+fn from_f32_fail3() {
+    let f: f32 = f32::NAN;
     let _ = BigUint::try_from(f).unwrap();
 }

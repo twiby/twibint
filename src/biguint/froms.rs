@@ -13,6 +13,18 @@ impl From<&BigUint> for f64 {
     }
 }
 
+impl From<&BigUint> for f32 {
+    fn from(int: &BigUint) -> f32 {
+        let mut base = 1f32;
+        let mut ret = 0f32;
+        for a in &int.val {
+            ret += (*a as f32) * base;
+            base *= (1u64 << 32) as f32;
+        }
+        ret
+    }
+}
+
 impl std::str::FromStr for BigUint {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -98,20 +110,25 @@ impl From<u64> for BigUint {
         ret
     }
 }
-
-#[derive(Debug)]
-pub enum FromFloat64Error {
-    NotNormal(f64),
-    Negative(f64),
+impl From<u32> for BigUint {
+    fn from(n: u32) -> BigUint {
+        BigUint::new(n)
+    }
 }
 
-impl std::fmt::Display for FromFloat64Error {
+#[derive(Debug)]
+pub enum FromFloatError<T> {
+    NotNormal(T),
+    Negative(T),
+}
+
+impl<T: std::fmt::Display> std::fmt::Display for FromFloatError<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            FromFloat64Error::NotNormal(num) => {
+            FromFloatError::NotNormal(num) => {
                 write!(f, "Attempt at converting an abnormal float: {}", num)
             }
-            FromFloat64Error::Negative(num) => {
+            FromFloatError::Negative(num) => {
                 write!(f, "Attempt at converting a negative number: {}", num)
             }
         }
@@ -119,13 +136,13 @@ impl std::fmt::Display for FromFloat64Error {
 }
 
 impl TryFrom<f64> for BigUint {
-    type Error = FromFloat64Error;
+    type Error = FromFloatError<f64>;
 
-    fn try_from(f: f64) -> Result<BigUint, FromFloat64Error> {
+    fn try_from(f: f64) -> Result<BigUint, FromFloatError<f64>> {
         if f != 0f64 && !f.is_normal() {
-            return Err(FromFloat64Error::NotNormal(f));
+            return Err(FromFloatError::NotNormal(f));
         } else if f.is_sign_negative() {
-            return Err(FromFloat64Error::Negative(f));
+            return Err(FromFloatError::Negative(f));
         }
 
         let f_u64: u64 = f.to_bits();
@@ -133,6 +150,30 @@ impl TryFrom<f64> for BigUint {
         let two_to_the_52 = 1 << 52;
         let exponent = (((f_u64 << 1) >> 53) as i64) - 1023 - 52;
         let mantissa = two_to_the_52 | (f_u64 & (two_to_the_52 - 1));
+
+        Ok(match exponent {
+            i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
+            i if i > 0 => BigUint::from(mantissa) << exponent.try_into().unwrap(),
+            _ => BigUint::from(mantissa),
+        })
+    }
+}
+
+impl TryFrom<f32> for BigUint {
+    type Error = FromFloatError<f32>;
+
+    fn try_from(f: f32) -> Result<BigUint, FromFloatError<f32>> {
+        if f != 0f32 && !f.is_normal() {
+            return Err(FromFloatError::NotNormal(f));
+        } else if f.is_sign_negative() {
+            return Err(FromFloatError::Negative(f));
+        }
+
+        let f_u32: u32 = f.to_bits();
+
+        let two_to_the_23 = 1 << 23;
+        let exponent = (((f_u32 << 1) >> 24) as i64) - 127 - 23;
+        let mantissa = two_to_the_23 | (f_u32 & (two_to_the_23 - 1));
 
         Ok(match exponent {
             i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
