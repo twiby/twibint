@@ -67,3 +67,23 @@ fn sum() {
     let n2: BigInt = big_values.iter().sum();
     assert_eq!(n2, bigint!("-42949672950"));
 }
+
+#[test]
+fn mul_full_test() {
+    assert_eq!(
+        bigint!("4294967295") * bigint!("4294967295"),
+        bigint!("18446744065119617025")
+    );
+    assert_eq!(
+        bigint!("-4294967295") * bigint!("-4294967295"),
+        bigint!("18446744065119617025")
+    );
+    assert_eq!(
+        bigint!("-4294967295") * bigint!("4294967295"),
+        bigint!("-18446744065119617025")
+    );
+    assert_eq!(
+        bigint!("4294967295") * bigint!("-4294967295"),
+        bigint!("-18446744065119617025")
+    );
+}
