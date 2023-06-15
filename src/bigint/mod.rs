@@ -27,12 +27,12 @@ macro_rules! bigintvec {
 
 mod fmt;
 mod froms;
-// mod ops;
+mod ops;
 
 #[cfg(test)]
 mod test;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Eq)]
 pub struct BigInt {
     pub uint: BigUint,
     pub sign: bool,
@@ -87,5 +87,11 @@ impl Ord for BigInt {
             (false, true) => Ordering::Less,
             (false, false) => self.uint.cmp(&other.uint).reverse(),
         }
+    }
+}
+
+impl PartialEq for BigInt {
+    fn eq(&self, other: &Self) -> bool {
+        self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![0]))
     }
 }

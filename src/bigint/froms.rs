@@ -9,7 +9,7 @@ impl From<i32> for BigInt {
 }
 impl From<u32> for BigInt {
     fn from(val: u32) -> BigInt {
-        BigInt::new(val as i32)
+        BigInt::from(BigUint::from(val))
     }
 }
 impl From<u64> for BigInt {
