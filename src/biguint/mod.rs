@@ -26,9 +26,9 @@ macro_rules! biguint {
 }
 
 mod digits_vec;
-mod fmt;
-mod froms;
-mod ops;
+pub(crate) mod fmt;
+pub(crate) mod froms;
+pub(crate) mod ops;
 
 #[cfg(test)]
 mod test;

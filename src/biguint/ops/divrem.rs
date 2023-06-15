@@ -3,7 +3,7 @@ use core::ops::{Div, DivAssign, Rem, RemAssign};
 
 use crate::BigUint;
 
-trait RemDiv<T> {
+pub trait RemDiv<T> {
     type DivOutput;
     type RemOutput;
     fn rem_div(&self, other: &T) -> Option<(Self::DivOutput, Self::RemOutput)>;
@@ -115,7 +115,7 @@ impl Rem<&BigUint> for u32 {
 }
 impl RemAssign<&BigUint> for u32 {
     fn rem_assign(&mut self, other: &BigUint) {
-        *self = *self / other;
+        *self = *self % other;
     }
 }
 
