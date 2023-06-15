@@ -1,9 +1,7 @@
 mod addsub;
-mod neg;
-// mod bitwise;
-// mod divrem;
+mod divrem;
 mod mul;
-// mod shift;
+mod neg;
 
 #[cfg(test)]
 mod test;
