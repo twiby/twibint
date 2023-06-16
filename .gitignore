@@ -16,3 +16,8 @@ Cargo.lock
 /Cargo.lock
 
 .DS_Store
+
+# Python
+__pycache__
+.*
+tests/__pycache__
