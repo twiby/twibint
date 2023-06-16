@@ -24,6 +24,10 @@ impl BigUint {
         }
     }
 
+    pub fn __bool__(&self) -> bool {
+        self != &BigUint::default()
+    }
+
     pub fn __str__(&self) -> PyResult<String> {
         return Ok(self.to_string());
     }
