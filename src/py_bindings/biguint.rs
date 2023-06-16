@@ -8,7 +8,7 @@ pub struct BigUint {
 #[pymethods]
 impl BigUint {
     #[new]
-    pub fn new(n: u64) -> PyResult<Self> {
+    pub fn new(n: u32) -> PyResult<Self> {
         Ok(Self {
             val: crate::BigUint::from(n),
         })
