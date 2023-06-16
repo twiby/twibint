@@ -65,10 +65,12 @@ fn bits() {
     let b1 = BigUint::new(0);
     let b2 = BigUint::new(4294967295);
     let b3 = BigUint::new(2147483648);
+    let b4 = &b3 >> 1;
 
-    assert_eq!(b1.nb_bits(), 32);
+    assert_eq!(b1.nb_bits(), 0);
     assert_eq!(b2.nb_bits(), 32);
     assert_eq!(b3.nb_bits(), 32);
+    assert_eq!(b4.nb_bits(), 31);
 
     for b in 0..b1.nb_bits() {
         assert!(!b1.bit(b));
@@ -92,7 +94,7 @@ fn bits() {
         assert!(bit);
         count += 1;
     }
-    assert_eq!(count, 64);
+    assert_eq!(count, 32);
 }
 
 #[test]
