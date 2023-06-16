@@ -1,3 +1,4 @@
+use crate::biguint::ops::truediv::TrueDiv;
 use crate::BigUint;
 
 #[test]
@@ -230,4 +231,12 @@ fn from_f32_fail2() {
 fn from_f32_fail3() {
     let f: f32 = f32::NAN;
     let _ = BigUint::try_from(f).unwrap();
+}
+
+#[test]
+fn truediv() {
+    let n2 = biguint!("123456678890123345567789");
+    let n1 = biguint!("12345667555");
+
+    n1.truediv(&n2);
 }
