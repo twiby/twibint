@@ -1,3 +1,4 @@
+use crate::biguint::froms::FromFloatError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -22,5 +23,16 @@ impl ErrorTypeToString for UnexpectedCharacterError {
 impl From<UnexpectedCharacterError> for pyo3::PyErr {
     fn from(e: UnexpectedCharacterError) -> Self {
         py_value_error::<UnexpectedCharacterError>(format!("{:?}", e).as_str())
+    }
+}
+
+impl<T> ErrorTypeToString for FromFloatError<T> {
+    fn str() -> String {
+        "ModularArithmeticError: ".to_string()
+    }
+}
+impl<T: std::fmt::Display> From<FromFloatError<T>> for pyo3::PyErr {
+    fn from(e: FromFloatError<T>) -> Self {
+        py_value_error::<FromFloatError<T>>(&e.to_string())
     }
 }

@@ -5,11 +5,27 @@ use pyo3::types::PyInt;
 
 pub use crate::BigUint;
 
+// TODO: typical python services: __truediv__, __int__ and __pow__
+
 #[pymethods]
 impl BigUint {
     #[new]
     pub fn __init__(n: &PyInt) -> PyResult<Self> {
         Ok(n.to_string().as_str().parse()?)
+    }
+    #[cfg(target_endian = "little")]
+    #[staticmethod]
+    pub fn from_f32(n: f32) -> PyResult<Self> {
+        Ok(n.try_into()?)
+    }
+    #[cfg(target_endian = "little")]
+    #[staticmethod]
+    pub fn from_f64(n: f64) -> PyResult<Self> {
+        Ok(n.try_into()?)
+    }
+
+    pub fn __abs__(&self) -> Self {
+        self.clone()
     }
 
     pub fn __float__(&self) -> f64 {
