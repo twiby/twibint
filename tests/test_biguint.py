@@ -1,6 +1,7 @@
 import bigint as bi
 
 def test_biguint():
-	a = bi.BigUint(4294967295)
-	b = bi.BigUint(4294967295)
-	assert str(a + b) == "8589934590"
+	a = 123456789101112131415161718
+	b = 987654321919293949596979899
+
+	assert bi.BigUint(a) + bi.BigUint(b) == bi.BigUint(a + b)

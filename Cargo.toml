@@ -7,5 +7,5 @@ edition = "2021"
 name = "bigint"
 
 [dependencies.pyo3]
-version = "0.15.1"
+version = "0.19.0"
 features = ["extension-module"]

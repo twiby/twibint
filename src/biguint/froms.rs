@@ -26,7 +26,7 @@ impl From<&BigUint> for f32 {
 }
 
 #[derive(Debug)]
-pub struct UnexpectedCharacterError(char);
+pub struct UnexpectedCharacterError(pub char);
 
 impl std::str::FromStr for BigUint {
     type Err = UnexpectedCharacterError;
@@ -87,6 +87,11 @@ impl From<Vec<u32>> for BigUint {
 impl From<&str> for BigUint {
     fn from(s: &str) -> BigUint {
         <BigUint as std::str::FromStr>::from_str(s).unwrap()
+    }
+}
+impl From<String> for BigUint {
+    fn from(s: String) -> BigUint {
+        BigUint::from(s.as_str())
     }
 }
 
