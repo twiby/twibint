@@ -1,16 +1,70 @@
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pyclass::CompareOp::*;
+use pyo3::types::PyInt;
 
 pub use crate::BigUint;
 
 #[pymethods]
 impl BigUint {
     #[new]
-    pub fn __init__(n: &pyo3::types::PyInt) -> PyResult<Self> {
+    pub fn __init__(n: &PyInt) -> PyResult<Self> {
         Ok(n.to_string().as_str().parse()?)
     }
+
+    pub fn __float__(&self) -> f64 {
+        self.into()
+    }
+
     pub fn __add__(&self, other: &Self) -> Self {
         self + other
+    }
+    pub fn __iadd__(&mut self, other: &Self) {
+        *self += other
+    }
+    pub fn __sub__(&self, other: &Self) -> Self {
+        self - other
+    }
+    pub fn __isub__(&mut self, other: &Self) {
+        *self -= other
+    }
+    pub fn __mul__(&self, other: &Self) -> Self {
+        self * other
+    }
+    pub fn __floordiv__(&self, other: &Self) -> Self {
+        self / other
+    }
+    pub fn __mod__(&self, other: &Self) -> Self {
+        self % other
+    }
+    pub fn __divmod__(&self, other: &Self) -> PyResult<(Self, Self)> {
+        match <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other) {
+            Some(val) => Ok(val),
+            None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
+        }
+    }
+
+    pub fn __lshift__(&self, n: usize) -> Self {
+        self << n
+    }
+    pub fn __rshift__(&self, n: usize) -> Self {
+        self >> n
+    }
+    pub fn __ilshift__(&mut self, n: usize) {
+        *self <<= n;
+    }
+    pub fn __irshift__(&mut self, n: usize) {
+        *self >>= n;
+    }
+
+    pub fn __and__(&self, other: &Self) -> Self {
+        self & other
+    }
+    pub fn __or__(&self, other: &Self) -> Self {
+        self | other
+    }
+    pub fn __xor__(&self, other: &Self) -> Self {
+        self ^ other
     }
 
     pub fn __richcmp__(&self, other: &Self, cmp: pyo3::basic::CompareOp) -> bool {
