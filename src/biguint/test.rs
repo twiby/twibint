@@ -10,6 +10,12 @@ fn new() {
 }
 
 #[test]
+fn zero() {
+    let val = BigUint::default();
+    assert_eq!(val.to_string(), "0");
+}
+
+#[test]
 fn from_str() {
     let s = "1234567891011121314151617181920";
 
