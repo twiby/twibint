@@ -238,5 +238,8 @@ fn truediv() {
     let n2 = biguint!("123456678890123345567789");
     let n1 = biguint!("12345667555");
 
-    n1.truediv(&n2);
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-14f64;
+    assert_eq!(f.to_bits(), true_div.to_bits());
+    assert_eq!(f, true_div);
 }

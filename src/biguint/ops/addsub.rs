@@ -85,6 +85,11 @@ impl SubAssign<u32> for BigUint {
         *self -= &BigUint::new(other);
     }
 }
+impl SubAssign<BigUint> for BigUint {
+    fn sub_assign(&mut self, other: BigUint) {
+        *self -= &other;
+    }
+}
 impl SubAssign<&BigUint> for BigUint {
     fn sub_assign(&mut self, other: &BigUint) {
         if &*self < other {
