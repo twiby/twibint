@@ -299,16 +299,20 @@ fn pure_mul_test() {
 
 #[test]
 fn shl_assign_test() {
-    let b = BigUint::new(2147483648);
+    let mut b = BigUint::new(2147483648);
     let b2 = &b << 33;
     assert_eq!(b2.val, vec![0, 0, 1]);
+    b <<= 33;
+    assert_eq!(b.val, vec![0, 0, 1]);
 }
 
 #[test]
 fn shr_assign_test() {
-    let b = biguintvec![u32::MAX, u32::MAX, u32::MAX];
+    let mut b = biguintvec![u32::MAX, u32::MAX, u32::MAX];
     let b2 = &b >> 33;
     assert_eq!(b2.val, vec![u32::MAX, u32::MAX >> 1]);
+    b >>= 33;
+    assert_eq!(b.val, vec![u32::MAX, u32::MAX >> 1]);
 }
 
 #[test]

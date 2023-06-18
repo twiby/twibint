@@ -109,6 +109,26 @@ impl From<u32> for BigUint {
 }
 
 #[derive(Debug)]
+pub struct IntoU64Error {}
+impl TryFrom<&BigUint> for u64 {
+    type Error = IntoU64Error;
+    fn try_from(uint: &BigUint) -> Result<u64, IntoU64Error> {
+        match uint.val.len() {
+            0 => unreachable!(),
+            1 => Ok(uint.val[0].into()),
+            2 => Ok(uint.val[0] as u64 + ((uint.val[1] as u64) << 32)),
+            _ => Err(IntoU64Error {}),
+        }
+    }
+}
+impl TryFrom<BigUint> for u64 {
+    type Error = IntoU64Error;
+    fn try_from(uint: BigUint) -> Result<u64, IntoU64Error> {
+        u64::try_from(&uint)
+    }
+}
+
+#[derive(Debug)]
 pub enum FromFloatError<T> {
     NotNormal(T),
     Negative(T),

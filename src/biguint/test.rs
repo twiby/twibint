@@ -1,3 +1,4 @@
+use crate::biguint::ops::truediv::TrueDiv;
 use crate::BigUint;
 
 #[test]
@@ -65,10 +66,12 @@ fn bits() {
     let b1 = BigUint::new(0);
     let b2 = BigUint::new(4294967295);
     let b3 = BigUint::new(2147483648);
+    let b4 = &b3 >> 1;
 
-    assert_eq!(b1.nb_bits(), 32);
+    assert_eq!(b1.nb_bits(), 0);
     assert_eq!(b2.nb_bits(), 32);
     assert_eq!(b3.nb_bits(), 32);
+    assert_eq!(b4.nb_bits(), 31);
 
     for b in 0..b1.nb_bits() {
         assert!(!b1.bit(b));
@@ -92,7 +95,7 @@ fn bits() {
         assert!(bit);
         count += 1;
     }
-    assert_eq!(count, 64);
+    assert_eq!(count, 32);
 }
 
 #[test]
@@ -228,4 +231,55 @@ fn from_f32_fail2() {
 fn from_f32_fail3() {
     let f: f32 = f32::NAN;
     let _ = BigUint::try_from(f).unwrap();
+}
+
+#[test]
+fn truediv() {
+    let n1 = biguint!("123456678890123345567789");
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 10000000270550.242f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("123456678890123345567789") << 15;
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 3.2768000886539034e+17f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("123456678890123345567789") << 3030;
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = f64::INFINITY;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n2 = biguint!("123456678890123345567789");
+    let n1 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-14f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n2 = biguint!("12345667889012334556778900000000");
+    let n1 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-22f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("12345667889012334556778900000000");
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 1.0000000270550242e+21f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
 }
