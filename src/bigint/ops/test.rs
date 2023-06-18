@@ -157,7 +157,7 @@ fn pow() {
 fn truediv() {
     let n1 = bigint!("123456678890123345567789");
     let n2 = bigint!("-12345667555");
-    let f = n1.truediv(&n2);
+    let f = n1.truediv(&n2).unwrap();
     let true_div = -10000000270550.242f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
@@ -165,7 +165,7 @@ fn truediv() {
 
     let n2 = bigint!("-123456678890123345567789");
     let n1 = bigint!("-12345667555");
-    let f = n1.truediv(&n2);
+    let f = n1.truediv(&n2).unwrap();
     let true_div = 9.999999729449765e-14f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());

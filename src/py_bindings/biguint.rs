@@ -5,7 +5,7 @@ use pyo3::types::PyInt;
 
 pub use crate::BigUint;
 
-// TODO: typical python services: __truediv__, __int__ and __pow__
+// TODO: typical python services: __int__ and __pow__
 
 #[pymethods]
 impl BigUint {
@@ -55,6 +55,12 @@ impl BigUint {
     }
     pub fn __divmod__(&self, other: &Self) -> PyResult<(Self, Self)> {
         match <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other) {
+            Some(val) => Ok(val),
+            None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
+        }
+    }
+    pub fn __truediv__(&self, other: &Self) -> PyResult<f64> {
+        match <BigUint as crate::biguint::ops::truediv::TrueDiv<BigUint>>::truediv(self, other) {
             Some(val) => Ok(val),
             None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
         }

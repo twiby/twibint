@@ -2,12 +2,12 @@ use crate::biguint::ops::divrem::RemDiv;
 use crate::BigUint;
 
 pub trait TrueDiv<T> {
-    fn truediv(&self, other: &T) -> f64;
+    fn truediv(&self, other: &T) -> Option<f64>;
 }
 
 #[cfg(target_endian = "little")]
 impl TrueDiv<BigUint> for BigUint {
-    fn truediv(&self, n2: &BigUint) -> f64 {
+    fn truediv(&self, n2: &BigUint) -> Option<f64> {
         // Compute exponent, biased by 52
         let mut exponent: i64 = 53i64 - (self.nb_bits() as i64) + (n2.nb_bits() as i64);
 
@@ -17,7 +17,7 @@ impl TrueDiv<BigUint> for BigUint {
             i if i < 0 => self >> (-i).try_into().unwrap(),
             _ => self.clone(),
         };
-        let (mut q, r) = n1.rem_div(n2).unwrap();
+        let (mut q, r) = n1.rem_div(n2)?;
 
         // rounding
         if r > (n2 >> 1) {
@@ -32,14 +32,14 @@ impl TrueDiv<BigUint> for BigUint {
 
         // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
         if exponent > 52 + 1023 {
-            return 0f64;
+            return Some(0f64);
         } else if exponent <= -4096i64 + 52 + 1023 {
-            return f64::INFINITY;
+            return Some(f64::INFINITY);
         }
 
         // Get actual mantissa and exponent biased 1023
         let mantissa: u64 = q.try_into().unwrap();
         let exponent_u64: u64 = (52 + 1023 - exponent).try_into().unwrap();
-        f64::from_bits((exponent_u64 << 52) | mantissa)
+        Some(f64::from_bits((exponent_u64 << 52) | mantissa))
     }
 }

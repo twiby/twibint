@@ -16,6 +16,9 @@ def test_mod():
 def test_divmod():
 	a, b = divmod(B, A)
 	assert divmod(BigUint(B), BigUint(A)) == (BigUint(a), BigUint(b))
+def test_truediv():
+	assert BigUint(A) / BigUint(B) == A / B
+	assert BigUint(B) / BigUint(A) == B / A
 
 def test_shr():
 	assert (BigUint(A) >> 10 == BigUint(A >> 10))
