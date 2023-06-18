@@ -1,3 +1,4 @@
+use crate::biguint::ops::truediv::TrueDiv;
 use crate::BigUint;
 
 #[test]
@@ -486,4 +487,82 @@ fn sum() {
     let big_values = values.iter().map(|n| BigUint::new(*n)).collect::<Vec<_>>();
     let n2: BigUint = big_values.iter().sum();
     assert_eq!(n2, biguint!("42949672950"));
+}
+
+#[test]
+fn truediv() {
+    let n1 = biguint!("123456678890123345567789");
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 10000000270550.242f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("123456678890123345567789") << 15;
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 3.2768000886539034e+17f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("123456678890123345567789") << 3030;
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = f64::INFINITY;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n2 = biguint!("123456678890123345567789");
+    let n1 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-14f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n2 = biguint!("12345667889012334556778900000000");
+    let n1 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-22f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n1 = biguint!("12345667889012334556778900000000");
+    let n2 = biguint!("12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 1.0000000270550242e+21f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+}
+
+#[test]
+fn pow() {
+    let n = biguint!(5u32);
+    assert_eq!(n.pow(0), biguint!(1u32));
+    assert_eq!(n.pow(1), biguint!(5u32));
+    assert_eq!(n.pow(2), biguint!(25u32));
+    assert_eq!(n.pow(3), biguint!(125u32));
+
+    let n = biguint!(128u32);
+    let n2 = n.pow(50);
+    assert_eq!(
+        n2,
+        biguint!(
+            "2293498615990071511610820895302086940796564989168281\
+            123737588839386922876088484808070018553110125686554624"
+        )
+    );
+
+    let n = biguint!(128u32);
+    let n2 = n.pow(16);
+    assert_eq!(n2, biguint!("5192296858534827628530496329220096"));
+
+    let n = biguint!(128u32);
+    let n2 = n.pow(15);
+    assert_eq!(n2, biguint!("40564819207303340847894502572032"));
 }
