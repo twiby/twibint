@@ -5,7 +5,8 @@ use pyo3::types::PyInt;
 
 pub use crate::BigUint;
 
-// TODO: typical python services: __int__ and __pow__
+// TODO: typical python services: __int__
+// TODO:Division by zero should return an Error, not a None
 
 #[pymethods]
 impl BigUint {
@@ -63,6 +64,15 @@ impl BigUint {
         match <BigUint as crate::biguint::ops::truediv::TrueDiv<BigUint>>::truediv(self, other) {
             Some(val) => Ok(val),
             None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
+        }
+    }
+    pub fn __pow__(&self, other: usize, modulus: Option<usize>) -> PyResult<Self> {
+        if matches!(modulus, Some(_)) {
+            Err(PyErr::new::<PyValueError, _>(
+                "Modulus argument of pow function not supported",
+            ))
+        } else {
+            Ok(self.pow(other))
         }
     }
 

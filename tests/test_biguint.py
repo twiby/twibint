@@ -19,6 +19,9 @@ def test_divmod():
 def test_truediv():
 	assert BigUint(A) / BigUint(B) == A / B
 	assert BigUint(B) / BigUint(A) == B / A
+def test_pow():
+	assert BigUint(A) ** 2 == BigUint(A ** 2)
+	assert BigUint(B) ** 2 == BigUint(B ** 2)
 
 def test_shr():
 	assert (BigUint(A) >> 10 == BigUint(A >> 10))
