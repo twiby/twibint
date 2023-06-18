@@ -125,3 +125,30 @@ fn div_rem() {
     assert_eq!(q, bigint!(-3));
     assert_eq!(r, bigint!(1));
 }
+
+#[test]
+fn pow() {
+    let n = bigint!(-5i32);
+    assert_eq!(n.pow(0), bigint!(1i32));
+    assert_eq!(n.pow(1), bigint!(-5i32));
+    assert_eq!(n.pow(2), bigint!(25i32));
+    assert_eq!(n.pow(3), bigint!(-125i32));
+
+    let n = bigint!(128i32);
+    let n2 = n.pow(50);
+    assert_eq!(
+        n2,
+        bigint!(
+            "2293498615990071511610820895302086940796564989168281\
+            123737588839386922876088484808070018553110125686554624"
+        )
+    );
+
+    let n = bigint!(-128i32);
+    let n2 = n.pow(16);
+    assert_eq!(n2, bigint!("5192296858534827628530496329220096"));
+
+    let n = bigint!(-128i32);
+    let n2 = n.pow(15);
+    assert_eq!(n2, bigint!("-40564819207303340847894502572032"));
+}
