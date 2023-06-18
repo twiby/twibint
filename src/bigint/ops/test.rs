@@ -1,3 +1,4 @@
+use crate::biguint::ops::truediv::TrueDiv;
 use crate::BigInt;
 
 #[test]
@@ -151,4 +152,22 @@ fn pow() {
     let n = bigint!(-128i32);
     let n2 = n.pow(15);
     assert_eq!(n2, bigint!("-40564819207303340847894502572032"));
+}
+#[test]
+fn truediv() {
+    let n1 = bigint!("123456678890123345567789");
+    let n2 = bigint!("-12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = -10000000270550.242f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
+
+    let n2 = bigint!("-123456678890123345567789");
+    let n1 = bigint!("-12345667555");
+    let f = n1.truediv(&n2);
+    let true_div = 9.999999729449765e-14f64;
+    println!("{:b}", f.to_bits());
+    println!("{:b}", true_div.to_bits());
+    assert_eq!(f, true_div);
 }

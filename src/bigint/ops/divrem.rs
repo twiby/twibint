@@ -172,63 +172,6 @@ impl Div<i32> for BigInt {
         RemDiv::div(&self, &other).unwrap()
     }
 }
-
-// impl RemDiv<BigUint> for BigUint {
-//     type DivOutput = BigUint;
-//     type RemOutput = BigUint;
-//     fn rem_div(&self, other: &BigUint) -> Option<(BigUint, BigUint)> {
-//         if other == &BigUint::new(0) {
-//             return None;
-//         }
-
-//         match self.cmp(other) {
-//             Ordering::Equal => return Some((BigUint::new(1), BigUint::new(0))),
-//             Ordering::Less => return Some((BigUint::new(0), self.clone())),
-//             _ => (),
-//         }
-
-//         if self.val.len() == 1 {
-//             return Some((
-//                 BigUint::new(self.val[0] / other),
-//                 BigUint::new(self.val[0] % other),
-//             ));
-//         }
-
-//         assert!(self.val.len() >= other.val.len());
-
-//         let mut ret = BigUint::new(0);
-//         let mut remainder = BigUint::new(0);
-//         for idx in (0..self.val.len()).rev() {
-//             remainder = &(remainder << 32) ^ &BigUint::new(self.val[idx]);
-
-//             match remainder.cmp(other) {
-//                 Ordering::Less => continue,
-//                 Ordering::Equal => {
-//                     remainder -= other;
-//                     ret += BigUint::new(1) << 32 * idx;
-//                 }
-//                 Ordering::Greater => {
-//                     let mut quotient = 0u32;
-//                     let mut product = BigUint::new(0);
-
-//                     // We add to the current product power of 2 by power of 2
-//                     for bit in (0..32).rev() {
-//                         let temp = (1 << bit) * other;
-//                         if &product + &temp <= remainder {
-//                             quotient += 1 << bit;
-//                             product += temp;
-//                         }
-//                     }
-
-//                     remainder -= &product;
-//                     ret += BigUint::new(quotient) << 32 * idx;
-//                 }
-//             };
-//         }
-
-//         Some((ret, remainder))
-//     }
-// }
 impl RemAssign<&BigInt> for BigInt {
     fn rem_assign(&mut self, other: &BigInt) {
         *self = &*self % other;
