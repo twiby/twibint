@@ -1,4 +1,6 @@
 use crate::biguint::Digits;
+use crate::errors::FromFloatError;
+use crate::errors::UnexpectedCharacterError;
 use crate::BigUint;
 
 impl From<&BigUint> for f64 {
@@ -24,9 +26,6 @@ impl From<&BigUint> for f32 {
         ret
     }
 }
-
-#[derive(Debug)]
-pub struct UnexpectedCharacterError(char);
 
 impl std::str::FromStr for BigUint {
     type Err = UnexpectedCharacterError;
@@ -89,6 +88,11 @@ impl From<&str> for BigUint {
         <BigUint as std::str::FromStr>::from_str(s).unwrap()
     }
 }
+impl From<String> for BigUint {
+    fn from(s: String) -> BigUint {
+        BigUint::from(s.as_str())
+    }
+}
 
 impl From<u64> for BigUint {
     fn from(n: u64) -> BigUint {
@@ -125,25 +129,6 @@ impl TryFrom<BigUint> for u64 {
     type Error = IntoU64Error;
     fn try_from(uint: BigUint) -> Result<u64, IntoU64Error> {
         u64::try_from(&uint)
-    }
-}
-
-#[derive(Debug)]
-pub enum FromFloatError<T> {
-    NotNormal(T),
-    Negative(T),
-}
-
-impl<T: std::fmt::Display> std::fmt::Display for FromFloatError<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            FromFloatError::NotNormal(num) => {
-                write!(f, "Attempt at converting an abnormal float: {}", num)
-            }
-            FromFloatError::Negative(num) => {
-                write!(f, "Attempt at converting a negative number: {}", num)
-            }
-        }
     }
 }
 

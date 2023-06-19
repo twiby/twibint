@@ -1,5 +1,5 @@
-use crate::biguint::froms::FromFloatError;
-use crate::biguint::froms::UnexpectedCharacterError;
+use crate::errors::FromFloatError;
+use crate::errors::UnexpectedCharacterError;
 use crate::{BigInt, BigUint};
 
 impl From<i32> for BigInt {

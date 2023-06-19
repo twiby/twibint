@@ -1,6 +1,8 @@
 use core::cmp::Ordering;
 use digits_vec::Digits;
 
+use pyo3::prelude::*;
+
 #[macro_export]
 macro_rules! biguintvec {
     ( $( $x:expr ),* ) => {
@@ -34,6 +36,7 @@ pub(crate) mod ops;
 mod test;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[pyclass]
 pub struct BigUint {
     pub val: Vec<u32>,
 }

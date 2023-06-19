@@ -68,10 +68,14 @@ impl std::str::FromStr for Digits {
 
 impl From<&Digits> for String {
     fn from(other: &Digits) -> String {
-        let mut ret = "".to_string();
-        for c in other.val.iter().rev() {
-            ret.push(char::from_digit((*c).into(), 10).unwrap());
+        if other.val.len() == 0 {
+            return "0".to_string();
+        } else {
+            let mut ret = "".to_string();
+            for c in other.val.iter().rev() {
+                ret.push(char::from_digit((*c).into(), 10).unwrap());
+            }
+            return ret;
         }
-        return ret;
     }
 }
