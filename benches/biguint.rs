@@ -58,7 +58,8 @@ criterion_group!(
     mul<500>,
     mul<1_000>,
     mul<5_000>,
-    mul<10_000>
+    mul<10_000>,
+    mul<50_000>,
 );
 
 criterion_main!(biguint_add, biguint_mul);
