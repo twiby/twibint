@@ -5,10 +5,7 @@ use crate::BigUint;
 
 fn pure_mul(a: u32, b: u32) -> (u32, u32) {
     let full = (a as u64) * (b as u64);
-    return (
-        ((full << 32) >> 32).try_into().unwrap(),
-        (full >> 32).try_into().unwrap(),
-    );
+    return (full as u32, (full >> 32) as u32);
 }
 #[test]
 fn pure_mul_test() {
@@ -29,11 +26,8 @@ impl MulAssign<u32> for BigUint {
             c1 = c2 + (c as u32);
         }
 
-        if c1 > 0 {
-            self.val.push(c1);
-        } else {
-            self.remove_trailing_zeros();
-        }
+        self.val.push(c1);
+        self.remove_trailing_zeros();
     }
 }
 impl MulAssign<&u32> for BigUint {
@@ -74,10 +68,6 @@ impl Mul<&BigUint> for u32 {
 impl Mul<&BigUint> for &BigUint {
     type Output = BigUint;
     fn mul(self, other: &BigUint) -> BigUint {
-        if self.val.len() == 0 || other.val.len() == 0 {
-            return BigUint::new(0);
-        }
-
         let mut ret = BigUint::new(0);
         for i in 0..other.val.len() {
             ret += &((self * other.val[i]) << (i * 32));

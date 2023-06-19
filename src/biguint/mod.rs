@@ -48,15 +48,7 @@ impl BigUint {
 
     #[inline]
     pub fn nb_bits(&self) -> usize {
-        let mut last = *self.val.iter().last().unwrap();
-
-        let mut nb_bits_last = 0;
-        while last > 0 {
-            last >>= 1;
-            nb_bits_last += 1;
-        }
-
-        32 * (self.val.len() - 1) + nb_bits_last
+        32 * (self.val.len() - 1) + (32 - self.val.iter().last().unwrap().leading_zeros() as usize)
     }
 
     #[inline]

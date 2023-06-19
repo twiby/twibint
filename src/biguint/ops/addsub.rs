@@ -72,11 +72,8 @@ impl AddAssign<&BigUint> for BigUint {
             (*val, full_carry) = val.overflowing_add(full_carry as u32);
         }
 
-        if full_carry {
-            self.val.push(1);
-        } else {
-            self.remove_trailing_zeros();
-        }
+        self.val.push(full_carry as u32);
+        self.remove_trailing_zeros();
     }
 }
 
