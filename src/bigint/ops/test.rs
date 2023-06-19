@@ -90,6 +90,17 @@ fn mul_full_test() {
 }
 
 #[test]
+fn div_rem_u32() {
+    let (q, r) = (bigint!("10") / 3u32, bigint!("10") % 3u32);
+    assert_eq!(q, bigint!(3));
+    assert_eq!(r, 1);
+
+    let (q, r) = (bigint!("-10") / 3u32, bigint!("-10") % 3u32);
+    assert_eq!(q, bigint!(-4));
+    assert_eq!(r, 2);
+}
+
+#[test]
 fn div_rem_i32() {
     let (q, r) = (bigint!("10") / 3i32, bigint!("10") % 3i32);
     assert_eq!(q, bigint!(3));
@@ -100,12 +111,12 @@ fn div_rem_i32() {
     assert_eq!(r, -1);
 
     let (q, r) = (bigint!("-10") / 3i32, bigint!("-10") % 3i32);
-    assert_eq!(q, bigint!(-3));
-    assert_eq!(r, -1);
+    assert_eq!(q, bigint!(-4));
+    assert_eq!(r, 2);
 
     let (q, r) = (bigint!("10") / -3i32, bigint!("10") % -3i32);
-    assert_eq!(q, bigint!(-3));
-    assert_eq!(r, 1);
+    assert_eq!(q, bigint!(-4));
+    assert_eq!(r, -2);
 }
 
 #[test]
@@ -119,12 +130,12 @@ fn div_rem() {
     assert_eq!(r, bigint!(-1));
 
     let (q, r) = (bigint!("-10") / bigint!(3), bigint!("-10") % bigint!(3));
-    assert_eq!(q, bigint!(-3));
-    assert_eq!(r, bigint!(-1));
+    assert_eq!(q, bigint!(-4));
+    assert_eq!(r, bigint!(2));
 
     let (q, r) = (bigint!("10") / bigint!(-3), bigint!("10") % bigint!(-3));
-    assert_eq!(q, bigint!(-3));
-    assert_eq!(r, bigint!(1));
+    assert_eq!(q, bigint!(-4));
+    assert_eq!(r, bigint!(-2));
 }
 
 #[test]
