@@ -40,7 +40,7 @@ impl std::str::FromStr for BigUint {
             };
 
             ret += v * &base;
-            base *= 10;
+            base *= 10u32;
         }
 
         ret.remove_trailing_zeros();
@@ -97,10 +97,7 @@ impl From<String> for BigUint {
 impl From<u64> for BigUint {
     fn from(n: u64) -> BigUint {
         let mut ret = BigUint {
-            val: vec![
-                (n % 4294967296).try_into().unwrap(),
-                (n / 4294967296).try_into().unwrap(),
-            ],
+            val: vec![n as u32, (n >> 32) as u32],
         };
         ret.remove_trailing_zeros();
         ret

@@ -165,7 +165,7 @@ impl RemDiv<BigUint> for BigUint {
 
                     // We add to the current product power of 2 by power of 2
                     for bit in (0..32).rev() {
-                        let temp = (1 << bit) * other;
+                        let temp = (1u32 << bit) * other;
                         if &product + &temp <= remainder {
                             quotient += 1 << bit;
                             product += temp;

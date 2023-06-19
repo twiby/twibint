@@ -3,46 +3,14 @@ use core::ops::{Mul, MulAssign};
 
 use crate::BigUint;
 
-fn pure_mul(a: u32, b: u32) -> (u32, u32) {
-    let full = (a as u64) * (b as u64);
-    return (full as u32, (full >> 32) as u32);
-}
-#[test]
-fn pure_mul_test() {
-    let (a, b) = pure_mul(u32::MAX, u32::MAX);
-    assert_eq!(a, 1);
-    assert_eq!(b, 4294967294);
-}
-
 impl MulAssign<u32> for BigUint {
     fn mul_assign(&mut self, other: u32) {
-        let mut c: bool;
-        let (mut c1, mut c2, mut v): (u32, u32, u32);
-
-        (self.val[0], c1) = pure_mul(self.val[0], other);
-        for val in self.val.iter_mut().skip(1) {
-            (v, c2) = pure_mul(*val, other);
-            (*val, c) = v.overflowing_add(c1);
-            c1 = c2 + (c as u32);
-        }
-
-        self.val.push(c1);
-        self.remove_trailing_zeros();
+        *self *= other as u64;
     }
 }
 impl MulAssign<&u32> for BigUint {
     fn mul_assign(&mut self, other: &u32) {
         *self *= *other;
-    }
-}
-impl MulAssign<&BigUint> for BigUint {
-    fn mul_assign(&mut self, other: &BigUint) {
-        *self = &*self * other;
-    }
-}
-impl MulAssign<BigUint> for BigUint {
-    fn mul_assign(&mut self, other: BigUint) {
-        *self = &*self * &other;
     }
 }
 impl Mul<u32> for &BigUint {
@@ -65,15 +33,76 @@ impl Mul<&BigUint> for u32 {
         other * self
     }
 }
+
+impl MulAssign<u64> for BigUint {
+    fn mul_assign(&mut self, other: u64) {
+        let mut carry = 0u64;
+
+        for val in self.val.iter_mut() {
+            let full = other * (*val as u64) + carry;
+            (*val, carry) = (full as u32, full >> 32);
+        }
+
+        self.val.push(carry as u32);
+        self.remove_trailing_zeros();
+    }
+}
+impl MulAssign<&u64> for BigUint {
+    fn mul_assign(&mut self, other: &u64) {
+        *self *= *other;
+    }
+}
+impl Mul<u64> for &BigUint {
+    type Output = BigUint;
+    fn mul(self, other: u64) -> BigUint {
+        let mut ret = self.clone();
+        ret *= other;
+        ret
+    }
+}
+impl Mul<u64> for BigUint {
+    type Output = BigUint;
+    fn mul(self, other: u64) -> BigUint {
+        &self * other
+    }
+}
+impl Mul<&BigUint> for u64 {
+    type Output = BigUint;
+    fn mul(self, other: &BigUint) -> BigUint {
+        other * self
+    }
+}
+
 impl Mul<&BigUint> for &BigUint {
     type Output = BigUint;
     fn mul(self, other: &BigUint) -> BigUint {
-        let mut ret = BigUint::new(0);
-        for i in 0..other.val.len() {
-            ret += &((self * other.val[i]) << (i * 32));
+        let lhs = &self.val;
+        let rhs = &other.val;
+
+        let mut ret = vec![0u32; self.val.len() + other.val.len()];
+
+        for (idx_1, b) in rhs.iter().enumerate() {
+            let mut carry = 0u64;
+
+            for (a, r) in lhs.iter().zip(&mut ret[idx_1..]) {
+                let full = (*a as u64) * (*b as u64) + (*r as u64) + carry;
+                (*r, carry) = (full as u32, (full >> 32));
+            }
+
+            ret[idx_1 + lhs.len()] = carry as u32;
         }
 
-        ret
+        biguint!(ret)
+    }
+}
+impl MulAssign<&BigUint> for BigUint {
+    fn mul_assign(&mut self, other: &BigUint) {
+        *self = &*self * other;
+    }
+}
+impl MulAssign<BigUint> for BigUint {
+    fn mul_assign(&mut self, other: BigUint) {
+        *self = &*self * &other;
     }
 }
 impl Mul<BigUint> for BigUint {

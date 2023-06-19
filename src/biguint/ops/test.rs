@@ -176,7 +176,7 @@ fn fibonacci_square() {
     );
 
     assert_eq!(
-        String::from(&n1 * 505575602),
+        String::from(&n1 * 505575602u32),
         "704889806905615918937\
 		649989837846505682417079166195319138308619361953957652\
 		23225155085259704056844689235065938250"
@@ -294,7 +294,7 @@ fn mul_test() {
 #[test]
 fn pure_mul_test() {
     let n1 = biguintvec![4294967295, 4294967295, 4294967295];
-    let n2 = &n1 * 4294967295;
+    let n2 = &n1 * 4294967295u32;
     assert_eq!(String::from(&n2), "340282366841710300949110269833929293825");
 }
 
@@ -355,9 +355,16 @@ fn bit_xor() {
 #[test]
 fn mul_assign_u32() {
     let mut b = BigUint::new(2147483648);
-    b *= 5;
+    b *= 5u32;
 
     assert_eq!(b.to_string(), "10737418240");
+}
+#[test]
+fn mul_assign_u64() {
+    let mut b = BigUint::new(2147483648);
+    b *= 1u64 << 32;
+
+    assert_eq!(b.to_string(), "9223372036854775808");
 }
 
 #[test]
