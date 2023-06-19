@@ -3,12 +3,12 @@ use pyo3::prelude::*;
 use pyo3::pyclass::CompareOp::*;
 use pyo3::types::PyInt;
 
-pub use crate::BigUint;
+pub use crate::{BigInt, BigUint};
 
-// TODO: typical python services: __int__
+// TODO: typical python services: __int__, bitwise, bitshifts
 
 #[pymethods]
-impl BigUint {
+impl BigInt {
     #[new]
     pub fn __init__(n: &PyInt) -> PyResult<Self> {
         Ok(n.to_string().as_str().parse()?)
@@ -25,7 +25,13 @@ impl BigUint {
     }
 
     pub fn __abs__(&self) -> Self {
-        self.clone()
+        Self {
+            uint: self.uint.clone(),
+            sign: true,
+        }
+    }
+    pub fn __neg__(&self) -> Self {
+        -self
     }
 
     pub fn __float__(&self) -> f64 {
@@ -54,13 +60,11 @@ impl BigUint {
         self % other
     }
     pub fn __divmod__(&self, other: &Self) -> PyResult<(Self, Self)> {
-        Ok(<BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other)?)
+        Ok(<BigInt as crate::biguint::ops::divrem::RemDiv<BigInt>>::rem_div(self, other)?)
     }
     #[cfg(target_endian = "little")]
     pub fn __truediv__(&self, other: &Self) -> PyResult<f64> {
-        Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
-            BigUint,
-        >>::truediv(self, other)?)
+        Ok(<BigInt as crate::biguint::ops::truediv::TrueDiv<BigInt>>::truediv(self, other)?)
     }
     pub fn __pow__(&self, other: usize, modulus: Option<usize>) -> PyResult<Self> {
         if matches!(modulus, Some(_)) {
@@ -72,28 +76,28 @@ impl BigUint {
         }
     }
 
-    pub fn __lshift__(&self, n: usize) -> Self {
-        self << n
-    }
-    pub fn __rshift__(&self, n: usize) -> Self {
-        self >> n
-    }
-    pub fn __ilshift__(&mut self, n: usize) {
-        *self <<= n;
-    }
-    pub fn __irshift__(&mut self, n: usize) {
-        *self >>= n;
-    }
+    // pub fn __lshift__(&self, n: usize) -> Self {
+    //     self << n
+    // }
+    // pub fn __rshift__(&self, n: usize) -> Self {
+    //     self >> n
+    // }
+    // pub fn __ilshift__(&mut self, n: usize) {
+    //     *self <<= n;
+    // }
+    // pub fn __irshift__(&mut self, n: usize) {
+    //     *self >>= n;
+    // }
 
-    pub fn __and__(&self, other: &Self) -> Self {
-        self & other
-    }
-    pub fn __or__(&self, other: &Self) -> Self {
-        self | other
-    }
-    pub fn __xor__(&self, other: &Self) -> Self {
-        self ^ other
-    }
+    // pub fn __and__(&self, other: &Self) -> Self {
+    //     self & other
+    // }
+    // pub fn __or__(&self, other: &Self) -> Self {
+    //     self | other
+    // }
+    // pub fn __xor__(&self, other: &Self) -> Self {
+    //     self ^ other
+    // }
 
     pub fn __richcmp__(&self, other: &Self, cmp: pyo3::basic::CompareOp) -> bool {
         match cmp {
@@ -107,7 +111,7 @@ impl BigUint {
     }
 
     pub fn __bool__(&self) -> bool {
-        self != &BigUint::default()
+        self.uint != BigUint::default()
     }
 
     pub fn __str__(&self) -> PyResult<String> {

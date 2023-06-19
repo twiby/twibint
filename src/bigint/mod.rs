@@ -1,6 +1,8 @@
 use crate::BigUint;
 use core::cmp::Ordering;
 
+use pyo3::prelude::*;
+
 #[macro_export]
 macro_rules! bigint {
     ( $( $x:expr ),* ) => {
@@ -33,6 +35,7 @@ mod ops;
 mod test;
 
 #[derive(Clone, Debug, Eq)]
+#[pyclass]
 pub struct BigInt {
     pub uint: BigUint,
     pub sign: bool,
