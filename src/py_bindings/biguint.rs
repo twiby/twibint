@@ -6,7 +6,6 @@ use pyo3::types::PyInt;
 pub use crate::BigUint;
 
 // TODO: typical python services: __int__
-// TODO:Division by zero should return an Error, not a None
 
 #[pymethods]
 impl BigUint {
@@ -55,16 +54,12 @@ impl BigUint {
         self % other
     }
     pub fn __divmod__(&self, other: &Self) -> PyResult<(Self, Self)> {
-        match <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other) {
-            Some(val) => Ok(val),
-            None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
-        }
+        Ok(<BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other)?)
     }
     pub fn __truediv__(&self, other: &Self) -> PyResult<f64> {
-        match <BigUint as crate::biguint::ops::truediv::TrueDiv<BigUint>>::truediv(self, other) {
-            Some(val) => Ok(val),
-            None => Err(PyErr::new::<PyValueError, _>("Attempt at division by zero")),
-        }
+        Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
+            BigUint,
+        >>::truediv(self, other)?)
     }
     pub fn __pow__(&self, other: usize, modulus: Option<usize>) -> PyResult<Self> {
         if matches!(modulus, Some(_)) {

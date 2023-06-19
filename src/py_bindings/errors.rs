@@ -1,8 +1,7 @@
-use crate::biguint::froms::FromFloatError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use crate::biguint::froms::UnexpectedCharacterError;
+use crate::errors::{DivisionByZero, FromFloatError, UnexpectedCharacterError};
 
 trait ErrorTypeToString {
     fn str() -> String;
@@ -23,6 +22,17 @@ impl ErrorTypeToString for UnexpectedCharacterError {
 impl From<UnexpectedCharacterError> for pyo3::PyErr {
     fn from(e: UnexpectedCharacterError) -> Self {
         py_value_error::<UnexpectedCharacterError>(format!("{:?}", e).as_str())
+    }
+}
+
+impl ErrorTypeToString for DivisionByZero {
+    fn str() -> String {
+        "DivisionByZero: ".to_string()
+    }
+}
+impl From<DivisionByZero> for pyo3::PyErr {
+    fn from(e: DivisionByZero) -> Self {
+        py_value_error::<DivisionByZero>(format!("{:?}", e).as_str())
     }
 }
 

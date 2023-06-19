@@ -1,14 +1,17 @@
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
 use crate::biguint::ops::divrem::RemDiv;
+use crate::errors::DivisionByZero;
 use crate::{BigInt, BigUint};
+
+type DivisionResult<T> = Result<T, DivisionByZero>;
 
 impl RemDiv<u32> for BigInt {
     type DivOutput = BigInt;
     type RemOutput = u32;
-    fn rem_div(&self, other: &u32) -> Option<(BigInt, u32)> {
+    fn rem_div(&self, other: &u32) -> DivisionResult<(BigInt, u32)> {
         let (q, r) = self.uint.rem_div(other)?;
-        Some((
+        Ok((
             BigInt {
                 uint: q,
                 sign: self.sign,
@@ -16,27 +19,27 @@ impl RemDiv<u32> for BigInt {
             r,
         ))
     }
-    fn div(&self, other: &u32) -> Option<BigInt> {
+    fn div(&self, other: &u32) -> DivisionResult<BigInt> {
         let q = RemDiv::div(&self.uint, other)?;
-        Some(BigInt {
+        Ok(BigInt {
             uint: q,
             sign: self.sign,
         })
     }
-    fn rem(&self, other: &u32) -> Option<u32> {
+    fn rem(&self, other: &u32) -> DivisionResult<u32> {
         let r = RemDiv::rem(&self.uint, other)?;
-        Some(r)
+        Ok(r)
     }
 }
 
 impl RemDiv<i32> for BigInt {
     type DivOutput = BigInt;
     type RemOutput = i32;
-    fn rem_div(&self, other: &i32) -> Option<(BigInt, i32)> {
+    fn rem_div(&self, other: &i32) -> DivisionResult<(BigInt, i32)> {
         let (q, r) = self
             .uint
             .rem_div(&<i32 as TryInto<u32>>::try_into(other.abs()).unwrap())?;
-        Some((
+        Ok((
             BigInt {
                 uint: q,
                 sign: !(self.sign ^ other.is_positive()),
@@ -48,16 +51,16 @@ impl RemDiv<i32> for BigInt {
             },
         ))
     }
-    fn div(&self, other: &i32) -> Option<BigInt> {
+    fn div(&self, other: &i32) -> DivisionResult<BigInt> {
         let q = RemDiv::<u32>::div(&self.uint, &other.abs().try_into().unwrap())?;
-        Some(BigInt {
+        Ok(BigInt {
             uint: q,
             sign: !(self.sign ^ other.is_positive()),
         })
     }
-    fn rem(&self, other: &i32) -> Option<i32> {
+    fn rem(&self, other: &i32) -> DivisionResult<i32> {
         let r = RemDiv::<u32>::rem(&self.uint, &other.abs().try_into().unwrap())?;
-        Some(if self.is_sign_positive() {
+        Ok(if self.is_sign_positive() {
             r.try_into().unwrap()
         } else {
             -<u32 as TryInto<i32>>::try_into(r).unwrap()
@@ -68,9 +71,9 @@ impl RemDiv<i32> for BigInt {
 impl RemDiv<BigInt> for BigInt {
     type DivOutput = BigInt;
     type RemOutput = BigInt;
-    fn rem_div(&self, other: &BigInt) -> Option<(BigInt, BigInt)> {
+    fn rem_div(&self, other: &BigInt) -> DivisionResult<(BigInt, BigInt)> {
         let (q, r) = self.uint.rem_div(&other.uint)?;
-        Some((
+        Ok((
             BigInt {
                 uint: q,
                 sign: !(self.sign ^ other.sign),
@@ -82,16 +85,16 @@ impl RemDiv<BigInt> for BigInt {
             },
         ))
     }
-    fn div(&self, other: &BigInt) -> Option<BigInt> {
+    fn div(&self, other: &BigInt) -> DivisionResult<BigInt> {
         let q = RemDiv::<BigUint>::div(&self.uint, &other.uint)?;
-        Some(BigInt {
+        Ok(BigInt {
             uint: q,
             sign: !(self.sign ^ other.sign),
         })
     }
-    fn rem(&self, other: &BigInt) -> Option<BigInt> {
+    fn rem(&self, other: &BigInt) -> DivisionResult<BigInt> {
         let r = RemDiv::<BigUint>::rem(&self.uint, &other.uint)?;
-        Some(if self.is_sign_positive() {
+        Ok(if self.is_sign_positive() {
             r.into()
         } else {
             -<BigUint as Into<BigInt>>::into(r)

@@ -1,16 +1,19 @@
 use core::cmp::Ordering;
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
+use crate::errors::DivisionByZero;
 use crate::BigUint;
+
+type DivisionResult<T> = Result<T, DivisionByZero>;
 
 pub trait RemDiv<T> {
     type DivOutput;
     type RemOutput;
-    fn rem_div(&self, other: &T) -> Option<(Self::DivOutput, Self::RemOutput)>;
-    fn div(&self, other: &T) -> Option<Self::DivOutput> {
+    fn rem_div(&self, other: &T) -> DivisionResult<(Self::DivOutput, Self::RemOutput)>;
+    fn div(&self, other: &T) -> DivisionResult<Self::DivOutput> {
         self.rem_div(other).map(|ret| ret.0)
     }
-    fn rem(&self, other: &T) -> Option<Self::RemOutput> {
+    fn rem(&self, other: &T) -> DivisionResult<Self::RemOutput> {
         self.rem_div(other).map(|ret| ret.1)
     }
 }
@@ -18,9 +21,9 @@ pub trait RemDiv<T> {
 impl RemDiv<u32> for BigUint {
     type DivOutput = BigUint;
     type RemOutput = u32;
-    fn rem_div(&self, other: &u32) -> Option<(BigUint, u32)> {
+    fn rem_div(&self, other: &u32) -> DivisionResult<(BigUint, u32)> {
         if *other == 0 {
-            return None;
+            return Err(DivisionByZero());
         }
 
         let other_64 = *other as u64;
@@ -38,10 +41,13 @@ impl RemDiv<u32> for BigUint {
         }
 
         ret.remove_trailing_zeros();
-        Some((ret, msb.try_into().unwrap()))
+        Ok((ret, msb.try_into().unwrap()))
     }
 
-    fn rem(&self, other: &u32) -> Option<u32> {
+    fn rem(&self, other: &u32) -> DivisionResult<u32> {
+        if *other == 0 {
+            return Err(DivisionByZero());
+        }
         let other_64 = *other as u64;
         let mut msb = 0u64;
 
@@ -50,7 +56,7 @@ impl RemDiv<u32> for BigUint {
             msb = current % other_64;
         }
 
-        Some(msb.try_into().unwrap())
+        Ok(msb.try_into().unwrap())
     }
 }
 
@@ -122,19 +128,19 @@ impl RemAssign<&BigUint> for u32 {
 impl RemDiv<BigUint> for BigUint {
     type DivOutput = BigUint;
     type RemOutput = BigUint;
-    fn rem_div(&self, other: &BigUint) -> Option<(BigUint, BigUint)> {
+    fn rem_div(&self, other: &BigUint) -> DivisionResult<(BigUint, BigUint)> {
         if other == &BigUint::new(0) {
-            return None;
+            return Err(DivisionByZero());
         }
 
         match self.cmp(other) {
-            Ordering::Equal => return Some((BigUint::new(1), BigUint::new(0))),
-            Ordering::Less => return Some((BigUint::new(0), self.clone())),
+            Ordering::Equal => return Ok((BigUint::new(1), BigUint::new(0))),
+            Ordering::Less => return Ok((BigUint::new(0), self.clone())),
             _ => (),
         }
 
         if self.val.len() == 1 {
-            return Some((
+            return Ok((
                 BigUint::new(self.val[0] / other),
                 BigUint::new(self.val[0] % other),
             ));
@@ -172,7 +178,7 @@ impl RemDiv<BigUint> for BigUint {
             };
         }
 
-        Some((ret, remainder))
+        Ok((ret, remainder))
     }
 }
 impl RemAssign<&BigUint> for BigUint {

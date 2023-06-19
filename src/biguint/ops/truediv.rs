@@ -1,13 +1,14 @@
 use crate::biguint::ops::divrem::RemDiv;
+use crate::errors::DivisionByZero;
 use crate::BigUint;
 
 pub trait TrueDiv<T> {
-    fn truediv(&self, other: &T) -> Option<f64>;
+    fn truediv(&self, other: &T) -> Result<f64, DivisionByZero>;
 }
 
 #[cfg(target_endian = "little")]
 impl TrueDiv<BigUint> for BigUint {
-    fn truediv(&self, n2: &BigUint) -> Option<f64> {
+    fn truediv(&self, n2: &BigUint) -> Result<f64, DivisionByZero> {
         // Compute exponent, biased by 52
         let mut exponent: i64 = 53i64 - (self.nb_bits() as i64) + (n2.nb_bits() as i64);
 
@@ -32,14 +33,14 @@ impl TrueDiv<BigUint> for BigUint {
 
         // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
         if exponent > 52 + 1023 {
-            return Some(0f64);
+            return Ok(0f64);
         } else if exponent <= -4096i64 + 52 + 1023 {
-            return Some(f64::INFINITY);
+            return Ok(f64::INFINITY);
         }
 
         // Get actual mantissa and exponent biased 1023
         let mantissa: u64 = q.try_into().unwrap();
         let exponent_u64: u64 = (52 + 1023 - exponent).try_into().unwrap();
-        Some(f64::from_bits((exponent_u64 << 52) | mantissa))
+        Ok(f64::from_bits((exponent_u64 << 52) | mantissa))
     }
 }
