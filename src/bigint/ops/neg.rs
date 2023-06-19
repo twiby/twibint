@@ -12,7 +12,8 @@ impl Neg for &BigInt {
 }
 impl Neg for BigInt {
     type Output = BigInt;
-    fn neg(self) -> BigInt {
-        -&self
+    fn neg(mut self) -> BigInt {
+        self.sign = !self.sign;
+        self
     }
 }
