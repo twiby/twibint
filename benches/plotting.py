@@ -8,39 +8,65 @@ walker = os.walk("./target/criterion")
 folders = next(walker)[1]
 
 data = {
-	name: {"x": [], "low_y": [], "up_y": []} for name in ["add", "mul"]
+	name: {
+		"new": {"x": [], "low_y": [], "up_y": []},
+		"base": {"x": [], "low_y": [], "up_y": []},
+	} for name in ["add", "mul"]
 }
 
 for f in folders:
 	if f  == "report":
 		continue
-	with open("./target/criterion/" + f + "/new/estimates.json", "r") as file:
-		new_data = json.load(file)
-	lower_bound = new_data["mean"]["confidence_interval"]["lower_bound"]
-	upper_bound = new_data["mean"]["confidence_interval"]["upper_bound"]
 
-	name, x = f.split(" ")
-	if name in data.keys():
-		data[name]["x"].append(int(x));
-		data[name]["low_y"].append(lower_bound);
-		data[name]["up_y"].append(upper_bound);
+	for age in ["new", "base"]:
+		try :
+			with open("./target/criterion/" + f + "/"+age+"/estimates.json", "r") as file:
+				new_data = json.load(file)
+			lower_bound = new_data["mean"]["confidence_interval"]["lower_bound"]
+			upper_bound = new_data["mean"]["confidence_interval"]["upper_bound"]
+
+			name, x = f.split(" ")
+			if name in data.keys():
+				data[name][age]["x"].append(int(x));
+				data[name][age]["low_y"].append(lower_bound);
+				data[name][age]["up_y"].append(upper_bound);
+		except FileNotFoundError:
+			pass
 
 
 for name, points in data.items():
-	indices = np.argsort(points["x"])
-	X = np.array(points["x"])[indices]
-	Y1 = np.array(points["low_y"])[indices]
-	Y2 = np.array(points["up_y"])[indices]
-
 	fig = plt.figure()
 	fig.suptitle(name)
+
+	indices = np.argsort(points["new"]["x"])
+	X = np.array(points["new"]["x"])[indices]
+	Y1 = np.array(points["new"]["low_y"])[indices]
+	Y2 = np.array(points["new"]["up_y"])[indices]
+
 	m,b = np.polyfit(
 		np.log(X), 
 		np.log(Y1), 
 		1)
-	plt.plot(X, Y1, label="lower bound")
-	plt.plot(X, Y2, label="upper bound")
+	plt.plot(X, Y1, "x", label="lower bound")
+	plt.plot(X, Y2, "x", label="upper bound")
 	plt.plot(X, np.exp(b)*(X**m), color="red", label="linear fit "+str(m))
+
+	indices = np.argsort(points["base"]["x"])
+	X = np.array(points["base"]["x"])[indices]
+	Y1 = np.array(points["base"]["low_y"])[indices]
+	Y2 = np.array(points["base"]["up_y"])[indices]
+
+	m,b = np.polyfit(
+		np.log(X), 
+		np.log(Y1), 
+		1)
+	plt.plot(X, Y1, "x", label="lower bound", alpha=0.5)
+	plt.plot(X, Y2, "x", label="upper bound", alpha=0.5)
+	plt.plot(X, np.exp(b)*(X**m), color="red", label="linear fit "+str(m), alpha=0.5)
+
+
+	plt.xlabel("time in ns")
+	plt.ylabel("number of digits (in base 2³²)")
 	plt.yscale("log")
 	plt.xscale("log")
 	plt.legend()
