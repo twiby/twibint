@@ -11,7 +11,7 @@ data = {
 	name: {
 		"new": {"x": [], "low_y": [], "up_y": []},
 		"base": {"x": [], "low_y": [], "up_y": []},
-	} for name in ["add", "mul"]
+	} for name in ["add", "mul", "sub"]
 }
 
 for f in folders:

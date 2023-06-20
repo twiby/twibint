@@ -41,6 +41,30 @@ criterion_group!(
     add<100_000_000>
 );
 
+pub fn sub<const N: usize>(c: &mut Criterion) {
+    let mut name = "sub ".to_string();
+    name.push_str(&N.to_string());
+
+    let n1 = biguint!(gen_n_random_values::<u32>(N + 1));
+    let n2 = biguint!(gen_n_random_values::<u32>(N));
+    c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 - &n2)));
+}
+
+criterion_group!(
+    biguint_sub,
+    sub<1_000>,
+    sub<5_000>,
+    sub<10_000>,
+    sub<50_000>,
+    sub<100_000>,
+    sub<500_000>,
+    sub<1_000_000>,
+    sub<5_000_000>,
+    sub<10_000_000>,
+    sub<50_000_000>,
+    sub<100_000_000>
+);
+
 pub fn mul<const N: usize>(c: &mut Criterion) {
     let mut name = "mul ".to_string();
     name.push_str(&N.to_string());
@@ -62,4 +86,4 @@ criterion_group!(
     mul<50_000>,
 );
 
-criterion_main!(biguint_add, biguint_mul);
+criterion_main!(biguint_add, biguint_sub, biguint_mul);
