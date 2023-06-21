@@ -1,54 +1,39 @@
-fn schoolbook_add_assign_mul(ret: &mut [u32], rhs: &[u32], lhs: &[u32]) {
-    for (idx_1, b) in rhs.iter().enumerate() {
-        let mut carry = 0u64;
+mod add;
+mod mul;
+mod sub;
 
-        for (a, r) in lhs.iter().zip(&mut ret[idx_1..]) {
-            let full = (*a as u64) * (*b as u64) + (*r as u64) + carry;
-            (*r, carry) = (full as u32, (full >> 32));
-        }
+// Below this number of digits, multiplication is schoolbook
+#[cfg(debug_assertions)]
+const KARATSUBA_INTERNAL_THRESHOLD: usize = 2;
+#[cfg(debug_assertions)]
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 2;
 
-        ret[idx_1 + lhs.len()] = carry as u32;
-    }
-}
+#[cfg(not(debug_assertions))]
+const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
+#[cfg(not(debug_assertions))]
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 500;
+
+const KARATSUBA_EXTERNAL_THRESHOLD_SQUARED: usize = KARATSUBA_EXTERNAL_THRESHOLD*KARATSUBA_EXTERNAL_THRESHOLD;
 
 /// Current implementation of multiplication
 pub(super) fn mul(rhs: &[u32], lhs: &[u32]) -> Vec<u32> {
-    let mut ret = vec![0u32; rhs.len() + lhs.len()];
-    schoolbook_add_assign_mul(&mut ret, rhs, lhs);
-    ret
+    if rhs.len()*lhs.len() < KARATSUBA_EXTERNAL_THRESHOLD_SQUARED {
+        let mut ret = vec![0u32; rhs.len() + lhs.len()];
+        mul::schoolbook_add_assign_mul(&mut ret, rhs, lhs);
+        return ret;
+    }
+
+    mul::karatsuba::<KARATSUBA_INTERNAL_THRESHOLD>(rhs, lhs)
 }
 
 /// Current implementation of add_assign, returning the carry
 /// Assumes rhs has at least the size of lhs
-pub(super) fn add_assign(rhs: &mut [u32], lhs: &[u32]) -> u32 {
-    let mut carry = 0u64;
-
-    for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
-        let full = (*a as u64) + (*b as u64) + carry;
-        (*a, carry) = (full as u32, full >> 32);
-    }
-
-    for val in rhs.iter_mut().skip(lhs.len()) {
-        let full = (*val as u64) + carry;
-        (*val, carry) = (full as u32, full >> 32);
-    }
-
-    carry as u32
+pub(super) fn add_assign(rhs: &mut [u32], lhs: &[u32]) -> bool {
+    add::schoolbook_add_assign(rhs, lhs)
 }
 
 /// Current implementation of sub_assign
 /// Assumes rhs > lhs
 pub(super) fn sub_assign(rhs: &mut [u32], lhs: &[u32]) {
-    let mut partial_carry_1: bool;
-    let mut partial_carry_2: bool;
-    let mut carry = false;
-    for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
-        (*a, partial_carry_1) = a.overflowing_sub(*b);
-        (*a, partial_carry_2) = a.overflowing_sub(carry as u32);
-        carry = partial_carry_1 | partial_carry_2;
-    }
-
-    for val in rhs.iter_mut().skip(lhs.len()) {
-        (*val, carry) = val.overflowing_sub(carry as u32);
-    }
+    sub::schoolbook_sub_assign(rhs, lhs);
 }

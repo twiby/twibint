@@ -60,7 +60,7 @@ impl AddAssign<&BigUint> for BigUint {
 
         let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
 
-        self.val.push(carry);
+        self.val.push(carry as u32);
         self.remove_trailing_zeros();
     }
 }

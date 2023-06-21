@@ -590,3 +590,16 @@ fn long_mul() {
     let n3 = n1 * n2;
     assert_eq!(n3.val, ret);
 }
+
+#[test]
+fn maxed_out_mul() {
+    let n1 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
+    let n2 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
+
+    let n3 = &n1 * &n2;
+
+    assert_eq!(
+        n3,
+        biguint!("115792089237316195423570985008687907852589419931798687112530834793049593217025")
+    );
+}
