@@ -39,6 +39,10 @@ impl BigUint {
         *self += &Self::try_from(other)?;
         Ok(())
     }
+    pub fn __radd__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__add__(other)
+    }
+
     pub fn __sub__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self - &Self::try_from(other)?)
     }
@@ -46,15 +50,31 @@ impl BigUint {
         *self -= &Self::try_from(other)?;
         Ok(())
     }
+    pub fn __rsub__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(&Self::try_from(other)? - self)
+    }
+
     pub fn __mul__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self * &Self::try_from(other)?)
     }
+    pub fn __rmul__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__mul__(other)
+    }
+
     pub fn __floordiv__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self / &Self::try_from(other)?)
     }
+    pub fn __rfloordiv__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(&Self::try_from(other)? / self)
+    }
+
     pub fn __mod__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self % &Self::try_from(other)?)
     }
+    pub fn __rmod__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(&Self::try_from(other)? % self)
+    }
+
     pub fn __divmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
         Ok(
             <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(
@@ -63,11 +83,25 @@ impl BigUint {
             )?,
         )
     }
+    pub fn __rdivmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
+        Ok(
+            <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(
+                &Self::try_from(other)?,
+                self,
+            )?,
+        )
+    }
     #[cfg(target_endian = "little")]
     pub fn __truediv__(&self, other: &PyAny) -> PyResult<f64> {
         Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
             BigUint,
         >>::truediv(self, &Self::try_from(other)?)?)
+    }
+    #[cfg(target_endian = "little")]
+    pub fn __rtruediv__(&self, other: &PyAny) -> PyResult<f64> {
+        Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
+            BigUint,
+        >>::truediv(&Self::try_from(other)?, self)?)
     }
     pub fn __pow__(&self, other: usize, modulus: Option<usize>) -> PyResult<Self> {
         if matches!(modulus, Some(_)) {
@@ -95,11 +129,20 @@ impl BigUint {
     pub fn __and__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self & &Self::try_from(other)?)
     }
+    pub fn __rand__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__and__(other)
+    }
     pub fn __or__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self | &Self::try_from(other)?)
     }
+    pub fn __ror__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__or__(other)
+    }
     pub fn __xor__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(self ^ &Self::try_from(other)?)
+    }
+    pub fn __rxor__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__xor__(other)
     }
 
     pub fn __richcmp__(&self, other: &PyAny, cmp: pyo3::basic::CompareOp) -> PyResult<bool> {
