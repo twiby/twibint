@@ -15,6 +15,10 @@ impl TryFrom<&PyAny> for BigInt {
             Ok(BigInt::__init__(int)?)
         } else if let Ok(int) = other.extract::<BigInt>() {
             Ok(int)
+        } else if let Ok(float_64) = other.extract::<f64>() {
+            Ok(float_64.try_into()?)
+        } else if let Ok(float_32) = other.extract::<f32>() {
+            Ok(float_32.try_into()?)
         } else {
             Err(PyErr::new::<PyValueError, _>("Object of unsupported type"))
         }
