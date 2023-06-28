@@ -32,35 +32,42 @@ impl BigUint {
         self.into()
     }
 
-    pub fn __add__(&self, other: &Self) -> Self {
-        self + other
+    pub fn __add__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self + &Self::try_from(other)?)
     }
-    pub fn __iadd__(&mut self, other: &Self) {
-        *self += other
+    pub fn __iadd__(&mut self, other: &PyAny) -> PyResult<()> {
+        *self += &Self::try_from(other)?;
+        Ok(())
     }
-    pub fn __sub__(&self, other: &Self) -> Self {
-        self - other
+    pub fn __sub__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self - &Self::try_from(other)?)
     }
-    pub fn __isub__(&mut self, other: &Self) {
-        *self -= other
+    pub fn __isub__(&mut self, other: &PyAny) -> PyResult<()> {
+        *self -= &Self::try_from(other)?;
+        Ok(())
     }
-    pub fn __mul__(&self, other: &Self) -> Self {
-        self * other
+    pub fn __mul__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self * &Self::try_from(other)?)
     }
-    pub fn __floordiv__(&self, other: &Self) -> Self {
-        self / other
+    pub fn __floordiv__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self / &Self::try_from(other)?)
     }
-    pub fn __mod__(&self, other: &Self) -> Self {
-        self % other
+    pub fn __mod__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self % &Self::try_from(other)?)
     }
-    pub fn __divmod__(&self, other: &Self) -> PyResult<(Self, Self)> {
-        Ok(<BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(self, other)?)
+    pub fn __divmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
+        Ok(
+            <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(
+                self,
+                &Self::try_from(other)?,
+            )?,
+        )
     }
     #[cfg(target_endian = "little")]
-    pub fn __truediv__(&self, other: &Self) -> PyResult<f64> {
+    pub fn __truediv__(&self, other: &PyAny) -> PyResult<f64> {
         Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
             BigUint,
-        >>::truediv(self, other)?)
+        >>::truediv(self, &Self::try_from(other)?)?)
     }
     pub fn __pow__(&self, other: usize, modulus: Option<usize>) -> PyResult<Self> {
         if matches!(modulus, Some(_)) {
@@ -85,25 +92,26 @@ impl BigUint {
         *self >>= n;
     }
 
-    pub fn __and__(&self, other: &Self) -> Self {
-        self & other
+    pub fn __and__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self & &Self::try_from(other)?)
     }
-    pub fn __or__(&self, other: &Self) -> Self {
-        self | other
+    pub fn __or__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self | &Self::try_from(other)?)
     }
-    pub fn __xor__(&self, other: &Self) -> Self {
-        self ^ other
+    pub fn __xor__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self ^ &Self::try_from(other)?)
     }
 
-    pub fn __richcmp__(&self, other: &Self, cmp: pyo3::basic::CompareOp) -> bool {
-        match cmp {
-            Lt => self < other,
-            Le => self <= other,
-            Eq => self == other,
-            Ne => self != other,
-            Gt => self > other,
-            Ge => self >= other,
-        }
+    pub fn __richcmp__(&self, other: &PyAny, cmp: pyo3::basic::CompareOp) -> PyResult<bool> {
+        let int = Self::try_from(other)?;
+        Ok(match cmp {
+            Lt => self < &int,
+            Le => self <= &int,
+            Eq => self == &int,
+            Ne => self != &int,
+            Gt => self > &int,
+            Ge => self >= &int,
+        })
     }
 
     pub fn __bool__(&self) -> bool {
