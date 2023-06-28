@@ -1,7 +1,6 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pyclass::CompareOp::*;
-use pyo3::types::PyInt;
 
 pub use crate::{BigInt, BigUint};
 
@@ -10,8 +9,8 @@ pub use crate::{BigInt, BigUint};
 #[pymethods]
 impl BigInt {
     #[new]
-    pub fn __init__(n: &PyInt) -> PyResult<Self> {
-        Ok(n.to_string().as_str().parse()?)
+    pub fn __init__(n: &PyAny) -> PyResult<Self> {
+        Ok(Self::try_from(n)?)
     }
     #[cfg(target_endian = "little")]
     #[staticmethod]

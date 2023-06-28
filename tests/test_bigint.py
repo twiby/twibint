@@ -1,8 +1,14 @@
-from bigint import BigInt
+from bigint import BigInt, BigUint
 
 A = 123456789101112131415161718
 B = -987654321919293949596979899
 
+def test_constructor():
+	assert BigInt(A) == BigInt(str(A))
+	assert BigInt(A) == A
+	assert BigInt(float(A)) == int(float(A))
+	assert BigInt(BigInt(A)) == BigInt(A)
+	assert BigInt(BigUint(A)) == BigInt(A)
 def test_add():
 	assert BigInt(A) + BigInt(B) == BigInt(A + B)
 	assert BigInt(A) + B == BigInt(A + B)
