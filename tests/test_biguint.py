@@ -7,6 +7,7 @@ def test_add():
 	assert BigUint(A) + BigUint(B) == BigUint(A + B)
 	assert BigUint(A) + B == BigUint(A + B)
 	assert A + BigUint(B) == BigUint(A + B)
+	assert float(150) + BigUint(B) == 150 + B
 def test_sub():
 	assert BigUint(B) - BigUint(A) == BigUint(B - A)
 	assert BigUint(B) - A == BigUint(B - A)
