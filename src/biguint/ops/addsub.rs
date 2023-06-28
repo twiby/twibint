@@ -54,25 +54,23 @@ impl AddAssign<BigUint> for BigUint {
 }
 impl AddAssign<&BigUint> for BigUint {
     fn add_assign(&mut self, other: &BigUint) {
-        while self.val.len() < other.val.len() {
-            self.val.push(0);
+        if self.val.len() < other.val.len() {
+            self.val.resize(other.val.len(), 0u32)
         }
 
-        let mut partial_carry_1: bool;
-        let mut partial_carry_2: bool;
-        let mut full_carry = false;
+        let mut carry = 0u64;
 
         for (a, b) in self.val.iter_mut().zip(other.val.iter()) {
-            (*a, partial_carry_1) = a.overflowing_add(*b);
-            (*a, partial_carry_2) = a.overflowing_add(full_carry as u32);
-            full_carry = partial_carry_1 | partial_carry_2;
+            let full = (*a as u64) + (*b as u64) + carry;
+            (*a, carry) = (full as u32, full >> 32);
         }
 
         for val in self.val.iter_mut().skip(other.val.len()) {
-            (*val, full_carry) = val.overflowing_add(full_carry as u32);
+            let full = (*val as u64) + carry;
+            (*val, carry) = (full as u32, full >> 32);
         }
 
-        self.val.push(full_carry as u32);
+        self.val.push(carry as u32);
         self.remove_trailing_zeros();
     }
 }
