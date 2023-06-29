@@ -63,9 +63,8 @@ impl BigUint {
 
     #[inline]
     pub(crate) fn remove_trailing_zeros(&mut self) {
-        while self.val.len() > 1 && self.val.last() == Some(&0) {
-            self.val.pop();
-        }
+        let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == 0).count();
+        self.val.resize(std::cmp::max(count, 1), 0u32);
     }
 }
 
