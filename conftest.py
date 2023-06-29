@@ -8,8 +8,7 @@ def pytest_configure(config):
     subprocess.run([
         sys.executable, 
         "-m", 
-        "pip", 
-        "install", 
-        "--force-reinstall", 
-        "."], 
+        "maturin", 
+        "develop", 
+        "-r"], 
         cwd = directory)
