@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod test;
 
-pub struct Digits {
+/// Structure only to handle a few situations on base 10 digits
+/// Useful when producing/handling strings of human readable base 10 digits
+pub(crate) struct Digits {
     val: Vec<u8>,
 }
 
