@@ -164,9 +164,12 @@ impl BigInt {
     }
 
     pub fn __str__(&self) -> PyResult<String> {
-        return Ok(self.to_string());
+        Ok(self.to_string())
     }
     pub fn __repr__(&self) -> PyResult<String> {
-        return Ok(format!("{:?}", self));
+        Ok(format!("{:?}", self))
+    }
+    pub fn __len__(&self) -> usize {
+        self.uint.val.len()
     }
 }

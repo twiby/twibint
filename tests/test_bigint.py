@@ -1,14 +1,20 @@
+from math import log
 from bigint import BigInt, BigUint
 
 A = 123456789101112131415161718
 B = -987654321919293949596979899
 
+def test_len():
+	assert len(BigInt(A)) == int(log(A, 2**32)) + 1
+	assert len(BigInt(B)) == int(log(-B, 2**32)) + 1
+	assert len(BigInt(2**64)) == int(log(2**64, 2**32)) + 1
 def test_constructor():
 	assert BigInt(A) == BigInt(str(A))
 	assert BigInt(A) == A
 	assert BigInt(float(A)) == int(float(A))
 	assert BigInt(BigInt(A)) == BigInt(A)
 	assert BigInt(BigUint(A)) == BigInt(A)
+
 def test_add():
 	assert BigInt(A) + BigInt(B) == BigInt(A + B)
 	assert BigInt(A) + B == BigInt(A + B)
