@@ -23,51 +23,63 @@ pub(super) fn karatsuba<const THRESHOLD: usize>(rhs: &[u32], lhs: &[u32]) -> Vec
     y.resize(target_length, 0);
 
     let mut ret = vec![0u32; target_length << 1];
-    _karatsuba::<THRESHOLD>(&mut ret, &x, &y);
+    let mut buff = vec![0u32; target_length << 1];
+    _karatsuba::<THRESHOLD>(&mut ret, &x, &y, &mut buff);
     ret
 }
-fn _karatsuba<const THRESHOLD: usize>(ret: &mut [u32], rhs: &[u32], lhs: &[u32]) {
-    assert!(rhs.len() == lhs.len());
-    assert!(rhs.len().is_power_of_two());
-    assert_eq!(ret.len(), 2 * rhs.len());
+fn _karatsuba<const THRESHOLD: usize>(ret: &mut [u32], rhs: &[u32], lhs: &[u32], buff: &mut [u32]) {
+    debug_assert!(rhs.len() == lhs.len());
+    debug_assert!(rhs.len().is_power_of_two());
+    debug_assert_eq!(ret.len(), 2 * rhs.len());
+    debug_assert_eq!(buff.len(), 2 * rhs.len());
     for i in 0..ret.len() {
-        assert_eq!(ret[i], 0u32);
+        debug_assert_eq!(ret[i], 0u32);
+    }
+    for i in 0..buff.len() {
+        debug_assert_eq!(buff[i], 0u32);
     }
 
-    // Early exit
-    if rhs.len() < THRESHOLD {
-        schoolbook_add_assign_mul(ret, rhs, lhs);
-        return;
-    }
     let size = rhs.len();
     let half_size = size >> 1;
 
-    let x0: &[u32] = &rhs[..half_size];
-    let y0: &[u32] = &lhs[..half_size];
-    let x1: &[u32] = &rhs[half_size..];
-    let y1: &[u32] = &lhs[half_size..];
+    // Early exit
+    if size < THRESHOLD {
+        schoolbook_add_assign_mul(ret, rhs, lhs);
+        return;
+    }
 
-    // z0 and z2
-    _karatsuba::<THRESHOLD>(&mut ret[..size], &x0, &y0);
-    _karatsuba::<THRESHOLD>(&mut ret[size..], &x1, &y1);
+    let (x0, x1) = rhs.split_at(half_size);
+    let (y0, y1) = lhs.split_at(half_size);
+
+    // Compute (x0+x1) and (y0+y1), using ret as a buffer,
+    // but specifically handle their last bit
+    let (x_temp, y_temp) = ret[..size].split_at_mut(half_size);
+    x_temp.copy_from_slice(x0);
+    y_temp.copy_from_slice(y0);
+    let x_carry = super::add::schoolbook_add_assign(x_temp, x1);
+    let y_carry = super::add::schoolbook_add_assign(y_temp, y1);
 
     // compute z1 in a separate buffer
-    let mut x_temp = x0.to_vec();
-    let mut y_temp = y0.to_vec();
-    let x_carry = super::add::schoolbook_add_assign(&mut x_temp, &x1);
-    let y_carry = super::add::schoolbook_add_assign(&mut y_temp, &y1);
-    let mut z1 = vec![0u32; size + 1];
-    _karatsuba::<THRESHOLD>(&mut z1[..size], &x_temp, &y_temp);
+    // but specifically handle its last bit
+    let (z1, new_buff) = buff.split_at_mut(size);
+    let mut z1_last_bit = 0u32;
+    _karatsuba::<THRESHOLD>(&mut z1[..size], x_temp, y_temp, new_buff);
     if x_carry {
-        super::add::schoolbook_add_assign(&mut z1[half_size..], &y_temp);
+        z1_last_bit += super::add::schoolbook_add_assign(&mut z1[half_size..], &y_temp) as u32;
     }
     if y_carry {
-        super::add::schoolbook_add_assign(&mut z1[half_size..], &x_temp);
+        z1_last_bit += super::add::schoolbook_add_assign(&mut z1[half_size..], &x_temp) as u32;
     }
-    if x_carry && y_carry {
-        z1[size] += 1;
-    }
+    z1_last_bit += (x_carry && y_carry) as u32;
 
+    // z0 and z2
+    ret[..size].fill(0);
+    new_buff.fill(0);
+    _karatsuba::<THRESHOLD>(&mut ret[..size], x0, y0, new_buff);
+    new_buff.fill(0);
+    _karatsuba::<THRESHOLD>(&mut ret[size..], x1, y1, new_buff);
+
+    // subtract z0 and z2 from z1
     let mut partial_carry_1: bool;
     let mut partial_carry_2: bool;
     let mut partial_carry_3: bool;
@@ -78,8 +90,9 @@ fn _karatsuba<const THRESHOLD: usize>(ret: &mut [u32], rhs: &[u32], lhs: &[u32])
         (z1[i], partial_carry_3) = z1[i].overflowing_sub(carry);
         carry = (partial_carry_1 as u32) + (partial_carry_2 as u32) + (partial_carry_3 as u32);
     }
-    (z1[size], _) = z1[size].overflowing_sub(carry);
+    (z1_last_bit, _) = z1_last_bit.overflowing_sub(carry);
 
     // add z1
-    super::add::schoolbook_add_assign(&mut ret[half_size..], &z1);
+    super::add::schoolbook_add_assign(&mut ret[half_size..], z1);
+    super::add::schoolbook_add_assign(&mut ret[half_size + size..], &[z1_last_bit]);
 }
