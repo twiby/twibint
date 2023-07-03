@@ -1,4 +1,5 @@
 mod errors;
+mod traits;
 #[macro_use]
 mod biguint;
 #[macro_use]

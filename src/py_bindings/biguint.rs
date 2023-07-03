@@ -113,23 +113,19 @@ impl BigUint {
     /// This will raise an error if the operand is not compatible with a BigUint,
     /// or in the case of a divison by zero.
     pub fn __divmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
-        Ok(
-            <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(
-                self,
-                &Self::try_from(other)?,
-            )?,
-        )
+        Ok(<BigUint as crate::traits::RemDiv<BigUint>>::rem_div(
+            self,
+            &Self::try_from(other)?,
+        )?)
     }
     /// Python binding to the reverse `divmod` operation. \
     /// This will raise an error if the operand is not compatible with a BigUint,
     /// or in the case of a divison by zero.
     pub fn __rdivmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
-        Ok(
-            <BigUint as crate::biguint::ops::divrem::RemDiv<BigUint>>::rem_div(
-                &Self::try_from(other)?,
-                self,
-            )?,
-        )
+        Ok(<BigUint as crate::traits::RemDiv<BigUint>>::rem_div(
+            &Self::try_from(other)?,
+            self,
+        )?)
     }
 
     /// Python binding to the `/` operation (returns a double precision float).
@@ -138,9 +134,10 @@ impl BigUint {
     /// or in the case of a divison by zero.
     #[cfg(target_endian = "little")]
     pub fn __truediv__(&self, other: &PyAny) -> PyResult<f64> {
-        Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
-            BigUint,
-        >>::truediv(self, &Self::try_from(other)?)?)
+        Ok(<BigUint as crate::traits::TrueDiv<BigUint>>::truediv(
+            self,
+            &Self::try_from(other)?,
+        )?)
     }
     /// Python binding to the reverse `/` operation (returns a double precision float).
     /// Only implemented for systems with a little endian float format. \
@@ -148,9 +145,10 @@ impl BigUint {
     /// or in the case of a divison by zero.
     #[cfg(target_endian = "little")]
     pub fn __rtruediv__(&self, other: &PyAny) -> PyResult<f64> {
-        Ok(<BigUint as crate::biguint::ops::truediv::TrueDiv<
-            BigUint,
-        >>::truediv(&Self::try_from(other)?, self)?)
+        Ok(<BigUint as crate::traits::TrueDiv<BigUint>>::truediv(
+            &Self::try_from(other)?,
+            self,
+        )?)
     }
 
     /// Python binding to the `**` operation. \
@@ -161,7 +159,7 @@ impl BigUint {
                 "Modulus argument of pow function not supported",
             ))
         } else {
-            Ok(self.pow(other))
+            Ok(<BigUint as crate::traits::Pow>::pow(self, other))
         }
     }
 

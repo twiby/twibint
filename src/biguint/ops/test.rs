@@ -1,4 +1,4 @@
-use crate::biguint::ops::truediv::TrueDiv;
+use crate::traits::{Pow, TrueDiv};
 use crate::BigUint;
 
 #[test]
