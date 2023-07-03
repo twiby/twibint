@@ -22,3 +22,19 @@ impl<T: std::fmt::Display> std::fmt::Display for FromFloatError<T> {
         }
     }
 }
+
+impl std::fmt::Display for UnexpectedCharacterError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "Got an unexpected character when reading string: {}",
+            self.0
+        )
+    }
+}
+
+impl std::fmt::Display for DivisionByZero {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Attempt at division by zero !")
+    }
+}

@@ -60,14 +60,23 @@ def test_and():
 	assert (BigUint(A) & BigUint(B)) == BigUint(A & B)
 	assert (A & BigUint(B)) == BigUint(A & B)
 	assert (BigUint(A) & B) == BigUint(A & B)
+	a = BigUint(A)
+	a &= B
+	assert a == A & B
 def test_xor():
 	assert (BigUint(A) ^ BigUint(B)) == BigUint(A ^ B)
 	assert (A ^ BigUint(B)) == BigUint(A ^ B)
 	assert (BigUint(A) ^ B) == BigUint(A ^ B)
+	a = BigUint(A)
+	a ^= B
+	assert a == A ^ B
 def test_or():
 	assert (BigUint(A) | BigUint(B)) == BigUint(A | B)
 	assert (A | BigUint(B)) == BigUint(A | B)
 	assert (BigUint(A) | B) == BigUint(A | B)
+	a = BigUint(A)
+	a |= B
+	assert a == A | B
 
 def test_float():
 	assert float(BigUint(A)) == float(A)
