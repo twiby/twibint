@@ -1,12 +1,20 @@
+//! errors: declares all error types used throughout the crate
+
+/// UnexpectedCharacterError: might be returned when building
+/// from a string.
 #[derive(Debug)]
 pub struct UnexpectedCharacterError(pub char);
 
+/// FromFloatError: might be returned when building
+/// from a float.
 #[derive(Debug)]
 pub enum FromFloatError<T> {
     NotNormal(T),
     Negative(T),
 }
 
+/// DivisionByZero: might be returned when calling the division
+/// or rem operations
 #[derive(Debug)]
 pub struct DivisionByZero();
 
