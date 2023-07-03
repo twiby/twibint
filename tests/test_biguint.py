@@ -72,7 +72,7 @@ def test_or():
 def test_float():
 	assert float(BigUint(A)) == float(A)
 def test_from_float():
-	assert BigUint.from_f64(float(A)) == BigUint(int(float(A)))
+	assert BigUint(float(A)) == BigUint(int(float(A)))
 
 def test_eq():
 	assert BigUint(A) + BigUint(B) == BigUint(A + B)

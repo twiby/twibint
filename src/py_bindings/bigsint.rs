@@ -12,16 +12,6 @@ impl BigInt {
     pub fn __init__(n: &PyAny) -> PyResult<Self> {
         Ok(Self::try_from(n)?)
     }
-    #[cfg(target_endian = "little")]
-    #[staticmethod]
-    pub fn from_f32(n: f32) -> PyResult<Self> {
-        Ok(n.try_into()?)
-    }
-    #[cfg(target_endian = "little")]
-    #[staticmethod]
-    pub fn from_f64(n: f64) -> PyResult<Self> {
-        Ok(n.try_into()?)
-    }
 
     pub fn __abs__(&self) -> Self {
         Self {
