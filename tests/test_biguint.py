@@ -101,5 +101,6 @@ def test_gt():
 	assert BigUint(A + B) > A
 
 def test_bool():
+	assert bool(BigUint(5)) == bool(1)
 	assert bool(BigUint(1)) == bool(1)
 	assert bool(BigUint(0)) == bool(0)
