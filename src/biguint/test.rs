@@ -79,6 +79,11 @@ fn bits() {
     assert_eq!(b3.nb_bits(), 32);
     assert_eq!(b4.nb_bits(), 31);
 
+    assert!(!b1.bit(100));
+    assert!(!b2.bit(100));
+    assert!(!b3.bit(100));
+    assert!(!b4.bit(100));
+
     for b in 0..b1.nb_bits() {
         assert!(!b1.bit(b));
     }

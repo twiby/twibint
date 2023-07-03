@@ -1,5 +1,10 @@
+//! (private) fmt: private module containing implementation of traits
+//! pertaining to I/O formatting.
+
 use crate::BigUint;
 
+// TODO: LowerExp and UpperExp could actually be implemented for values
+// outside the range of a f64 (not sure of the actual use case).
 impl std::fmt::LowerExp for BigUint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);

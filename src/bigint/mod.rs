@@ -41,6 +41,8 @@ pub struct BigInt {
     pub sign: bool,
 }
 
+// TODO: implement bitshifts and bitwse operations
+
 impl BigInt {
     pub fn new(val: i32) -> BigInt {
         BigInt {
