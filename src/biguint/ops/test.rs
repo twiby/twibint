@@ -573,3 +573,33 @@ fn pow() {
     let n2 = n.pow(15);
     assert_eq!(n2, biguint!("40564819207303340847894502572032"));
 }
+
+#[test]
+fn long_mul() {
+    let n1 = biguint!(vec![1u32; 100]);
+    let n2 = biguint!(vec![1u32; 100]);
+
+    let mut ret = Vec::<u32>::with_capacity(2 * 100 - 1);
+    for i in 0..100 {
+        ret.push(i + 1);
+    }
+    for i in (0..99).rev() {
+        ret.push(i + 1);
+    }
+
+    let n3 = n1 * n2;
+    assert_eq!(n3.val, ret);
+}
+
+#[test]
+fn maxed_out_mul() {
+    let n1 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
+    let n2 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
+
+    let n3 = &n1 * &n2;
+
+    assert_eq!(
+        n3,
+        biguint!("115792089237316195423570985008687907852589419931798687112530834793049593217025")
+    );
+}

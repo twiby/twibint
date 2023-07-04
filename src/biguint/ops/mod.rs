@@ -9,5 +9,7 @@ pub(crate) mod pow;
 pub(crate) mod shift;
 pub(crate) mod truediv;
 
+mod implem_choices;
+
 #[cfg(test)]
 mod test;

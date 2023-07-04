@@ -58,17 +58,7 @@ impl AddAssign<&BigUint> for BigUint {
             self.val.resize(other.val.len(), 0u32)
         }
 
-        let mut carry = 0u64;
-
-        for (a, b) in self.val.iter_mut().zip(other.val.iter()) {
-            let full = (*a as u64) + (*b as u64) + carry;
-            (*a, carry) = (full as u32, full >> 32);
-        }
-
-        for val in self.val.iter_mut().skip(other.val.len()) {
-            let full = (*val as u64) + carry;
-            (*val, carry) = (full as u32, full >> 32);
-        }
+        let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
 
         self.val.push(carry as u32);
         self.remove_trailing_zeros();
@@ -91,18 +81,7 @@ impl SubAssign<&BigUint> for BigUint {
             panic!("Attempt at subtraction with underflow");
         }
 
-        let mut partial_carry_1: bool;
-        let mut partial_carry_2: bool;
-        let mut carry = false;
-        for (a, b) in self.val.iter_mut().zip(other.val.iter()) {
-            (*a, partial_carry_1) = a.overflowing_sub(*b);
-            (*a, partial_carry_2) = a.overflowing_sub(carry as u32);
-            carry = partial_carry_1 | partial_carry_2;
-        }
-
-        for val in self.val.iter_mut().skip(other.val.len()) {
-            (*val, carry) = val.overflowing_sub(carry as u32);
-        }
+        super::implem_choices::sub_assign(&mut self.val, &other.val);
 
         self.remove_trailing_zeros();
     }
