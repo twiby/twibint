@@ -3,6 +3,7 @@
 use core::cmp::Ordering;
 use digits_vec::Digits;
 
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 /// macro that allows easy construction of a BigUint from any type T for
@@ -35,7 +36,7 @@ mod test;
 /// The internal representation is a Vec of u32 as a radix representation. For zero,
 /// we cheat a little and use a vector with a single element: 0.
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[pyclass]
+#[cfg_attr(feature = "pyo3", pyclass)]
 pub struct BigUint {
     pub val: Vec<u32>,
 }

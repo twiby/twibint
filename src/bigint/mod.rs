@@ -3,6 +3,7 @@
 use crate::BigUint;
 use core::cmp::Ordering;
 
+#[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
 /// macro that allows easy construction of a BigInt from any type T for
@@ -33,7 +34,7 @@ mod test;
 /// The internal representation has 2 members: a BigUint for the absolute value, and
 /// a boolean for the sign.
 #[derive(Clone, Debug, Eq)]
-#[pyclass]
+#[cfg_attr(feature = "pyo3", pyclass)]
 pub struct BigInt {
     pub uint: BigUint,
     pub sign: bool,

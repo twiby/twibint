@@ -10,4 +10,5 @@ mod errors;
 pub use crate::bigint::BigInt;
 pub use crate::biguint::BigUint;
 
+#[cfg(feature = "pyo3")]
 mod py_bindings;
