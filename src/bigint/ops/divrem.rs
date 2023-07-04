@@ -1,10 +1,7 @@
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
-use crate::biguint::ops::divrem::RemDiv;
-use crate::errors::DivisionByZero;
+use crate::traits::{DivisionResult, RemDiv};
 use crate::{BigInt, BigUint};
-
-type DivisionResult<T> = Result<T, DivisionByZero>;
 
 impl RemDiv<u32> for BigInt {
     type DivOutput = BigInt;

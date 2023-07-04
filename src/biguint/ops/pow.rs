@@ -1,7 +1,8 @@
+use crate::traits::Pow;
 use crate::BigUint;
 
-impl BigUint {
-    pub fn pow(&self, mut exp: usize) -> BigUint {
+impl Pow for BigUint {
+    fn pow(&self, mut exp: usize) -> BigUint {
         if exp == 0 {
             return biguint!(1u32);
         }

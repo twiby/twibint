@@ -1,14 +1,18 @@
+//! (private) digits_vec: private module for a base-10 representation of unsigned
+//! integers. Useful for converting to or from strings.
+
 #[cfg(test)]
 mod test;
 
-/// Structure only to handle a few situations on base 10 digits
+/// Private structure only to handle a few situations on base 10 digits. \
 /// Useful when producing/handling strings of human readable base 10 digits
 pub(crate) struct Digits {
     val: Vec<u8>,
 }
 
 impl Digits {
-    pub fn new(mut val: usize) -> Digits {
+    /// Constructor from native unsigned integers
+    pub(crate) fn new(mut val: usize) -> Digits {
         let mut ret = Digits { val: Vec::new() };
 
         while val > 0 {
@@ -21,7 +25,11 @@ impl Digits {
         return ret;
     }
 
-    pub fn add_n_at_k(&mut self, n: u8, k: usize) {
+    /// Add the value n to the kth digit
+    ///
+    /// Assumes n belong to 0..10, and k is lower than or equal to
+    /// the number of base-10 digits.
+    pub(crate) fn add_n_at_k(&mut self, n: u8, k: usize) {
         if n == 0 {
             return;
         } else if k == self.val.len() {
@@ -33,7 +41,8 @@ impl Digits {
         }
     }
 
-    pub fn times_2(&mut self) {
+    /// Multiplies the integer by 2
+    pub(crate) fn times_2(&mut self) {
         let digits = self.val.clone();
         for i in 0..digits.len() {
             self.add_n_at_k(digits[i], i);
@@ -43,15 +52,10 @@ impl Digits {
 
 impl From<&str> for Digits {
     fn from(other: &str) -> Digits {
-        let mut ret = Digits::new(0);
-
-        for c in other.chars().rev() {
-            ret.val.push(c.to_digit(10).unwrap().try_into().unwrap());
-        }
-
-        ret
+        other.parse().unwrap()
     }
 }
+
 impl std::str::FromStr for Digits {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {

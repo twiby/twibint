@@ -71,7 +71,7 @@ impl ShrAssign<usize> for BigUint {
 
         // First apply whole word shifts (by decreasing b by steps of 32)
         let u32_shifts = b / 32;
-        self.val = self.val[u32_shifts..].to_vec();
+        self.val.drain(..u32_shifts);
         b %= 32;
 
         // Early exit

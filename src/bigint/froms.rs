@@ -1,3 +1,8 @@
+//! (private) froms: private module containing all`From<T>`implementations
+//!
+//! These implementations are meant to be the main way to construct a BigInt,
+//! or export its value into another type.
+
 use crate::errors::FromFloatError;
 use crate::errors::UnexpectedCharacterError;
 use crate::{BigInt, BigUint};

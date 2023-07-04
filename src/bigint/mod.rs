@@ -1,8 +1,13 @@
+//! bigint: declares the BigInt type and implements all its operations.
+
 use crate::BigUint;
 use core::cmp::Ordering;
 
 use pyo3::prelude::*;
 
+/// macro that allows easy construction of a BigInt from any type T for
+/// which From<T> is implemented. Particularly useful for base 10 digit
+/// string: `let uint = biguint!["-123456789101112131415"];`
 #[macro_export]
 macro_rules! bigint {
     ( $( $x:expr ),* ) => {
@@ -14,19 +19,6 @@ macro_rules! bigint {
     };
 }
 
-#[macro_export]
-macro_rules! bigintvec {
-    ( $( $x:expr ),* ) => {
-        {
-            let mut temp_vec = Vec::new();
-            $(
-                temp_vec.push($x);
-            )*
-            BigInt::from(temp_vec)
-        }
-    };
-}
-
 mod fmt;
 mod froms;
 mod ops;
@@ -34,6 +26,12 @@ mod ops;
 #[cfg(test)]
 mod test;
 
+// TODO: implement ilog2 and that sort of things
+
+/// Representation of an signed integer with an infinite number of bits.
+///
+/// The internal representation has 2 members: a BigUint for the absolute value, and
+/// a boolean for the sign.
 #[derive(Clone, Debug, Eq)]
 #[pyclass]
 pub struct BigInt {
@@ -41,7 +39,12 @@ pub struct BigInt {
     pub sign: bool,
 }
 
+// TODO: implement bitshifts and bitwse operations
+
 impl BigInt {
+    /// Trivial constructor: from a single `i32` \
+    /// Integers higher than `i32::MAX` or lowar than `i32::MIN` are supposed
+    /// to be constructed using the various `From<T>` implementations.
     pub fn new(val: i32) -> BigInt {
         BigInt {
             uint: BigUint::new(val.abs().try_into().unwrap()),
@@ -49,14 +52,17 @@ impl BigInt {
         }
     }
 
+    /// Returns true if the integer is strictly higher than 0, false otherwise
     pub fn is_sign_positive(&self) -> bool {
         self.uint != Default::default() && self.sign
     }
+    /// Returns true if the integer is strictly lower than 0, false otherwise
     pub fn is_sign_negative(&self) -> bool {
-        self.uint != Default::default() && self.sign
+        self.uint != Default::default() && !self.sign
     }
 }
 
+/// Default implementation for BigUint: returns 0 with positive sign.
 impl Default for BigInt {
     fn default() -> BigInt {
         BigInt {
@@ -93,6 +99,10 @@ impl Ord for BigInt {
     }
 }
 
+/// Test for equality. Returns true if the integers are equal.
+///
+/// In particular, handles the case where the 2 operands are 0, but with opposite
+/// sign. In that case the test still returns true.
 impl PartialEq for BigInt {
     fn eq(&self, other: &Self) -> bool {
         self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![0]))

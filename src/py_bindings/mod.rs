@@ -1,15 +1,40 @@
+//! py_bindings: bindings to build a Python module.
+//!
+//! This module binds much of the crate's features to Python objects
+//! and methods. Rust errors flow as Python errors, with ValueError type.
+//! Any function/method called from Python for a BigInt or BigUint object
+//! can be called on another object if a BigInt/BigUint can be built
+//! from it.
+//!
+//! For the low-level binding, this module is using the pyo3 framework,
+//! which does much of the heavy lifting.
+
 use crate::{BigInt, BigUint};
 
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyInt, PyString};
 
+/// Bindings for the BigInt type
 mod bigsint;
+
+/// Bindings for the BigUint type
 mod biguint;
+
+/// Bindings for error types
 mod errors;
 
+/// This will allow calling a Python method for a BigInt on any object.
+/// This trait implentation will then be called to build a BigInt from it.
 impl TryFrom<&PyAny> for BigInt {
+    /// This will be raised as a ValueError in the Python runtime.
     type Error = PyErr;
+
+    /// Operands supported: \
+    ///     - python int \
+    ///     - python string \
+    ///     - BigInt or BigUint \
+    ///     - float (32 or 64 bits)
     fn try_from(other: &PyAny) -> PyResult<BigInt> {
         // Python int
         if let Ok(int) = other.downcast::<PyInt>() {
@@ -35,8 +60,14 @@ impl TryFrom<&PyAny> for BigInt {
     }
 }
 
+/// This will allow calling a Python method for a BigUint on any object.
+/// This trait implentation will then be called to build a BigUint from it.
 impl TryFrom<&PyAny> for BigUint {
+    /// This will be raised as a ValueError in the Python runtime.
     type Error = PyErr;
+
+    /// Operands supported: \
+    ///     - Any supported by BigInt, if the produced BigInt is positive.
     fn try_from(other: &PyAny) -> PyResult<BigUint> {
         match BigInt::try_from(other)? {
             BigInt { sign: true, uint } => Ok(uint),
@@ -47,9 +78,14 @@ impl TryFrom<&PyAny> for BigUint {
     }
 }
 
+/// Declaring our Python module.
+///
+/// This module will contain 2 classes: \
+///     - BigUint \
+///     - BigInt
 #[pymodule]
 fn bigint(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<biguint::BigUint>()?;
-    m.add_class::<bigsint::BigInt>()?;
+    m.add_class::<crate::BigUint>()?;
+    m.add_class::<crate::BigInt>()?;
     return Ok(());
 }

@@ -1,10 +1,6 @@
-use crate::biguint::ops::divrem::RemDiv;
 use crate::errors::DivisionByZero;
+use crate::traits::{RemDiv, TrueDiv};
 use crate::BigUint;
-
-pub trait TrueDiv<T> {
-    fn truediv(&self, other: &T) -> Result<f64, DivisionByZero>;
-}
 
 #[cfg(target_endian = "little")]
 impl TrueDiv<BigUint> for BigUint {

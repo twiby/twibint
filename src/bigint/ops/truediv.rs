@@ -1,5 +1,5 @@
-use crate::biguint::ops::truediv::TrueDiv;
 use crate::errors::DivisionByZero;
+use crate::traits::TrueDiv;
 use crate::BigInt;
 
 #[cfg(target_endian = "little")]

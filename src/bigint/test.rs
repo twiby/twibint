@@ -10,28 +10,28 @@ fn creation() {
     assert_eq!(
         n1,
         BigInt {
-            uint: biguintvec![128],
+            uint: biguint![vec![128]],
             sign: true
         }
     );
     assert_eq!(
         n2,
         BigInt {
-            uint: biguintvec![129],
+            uint: biguint![vec![129]],
             sign: false
         }
     );
     assert_eq!(
         n3,
         BigInt {
-            uint: biguintvec![129],
+            uint: biguint![vec![129]],
             sign: true
         }
     );
     assert_eq!(
         n4,
         BigInt {
-            uint: biguintvec![128],
+            uint: biguint![vec![128]],
             sign: false
         }
     );
@@ -45,11 +45,33 @@ fn creation() {
 }
 
 #[test]
+fn sign() {
+    let n1 = bigint!(1i32);
+    let n2 = bigint!(0i32);
+    let n3 = bigint!(-1i32);
+    let n4 = BigInt {
+        uint: BigUint::default(),
+        sign: false,
+    };
+
+    assert!(n1.is_sign_positive());
+    assert!(!n1.is_sign_negative());
+    assert!(!n2.is_sign_positive());
+    assert!(!n2.is_sign_negative());
+    assert!(!n4.is_sign_positive());
+    assert!(!n4.is_sign_negative());
+    assert!(!n3.is_sign_positive());
+    assert!(n3.is_sign_negative());
+
+    assert_eq!(n2, n4);
+}
+
+#[test]
 fn hash() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigInt, String>::new();
 
-    let n1 = bigintvec![1, 2, 3];
+    let n1 = bigint![vec![1, 2, 3]];
     let mut n2 = n1.clone();
     n2.sign = false;
 
@@ -64,7 +86,7 @@ fn hash() {
 
 #[test]
 fn f64() {
-    let mut a = bigintvec![u32::MAX, u32::MAX];
+    let mut a = bigint![vec![u32::MAX, u32::MAX]];
     a.sign = false;
     let f: f64 = From::from(&a);
     assert_eq!(f, -1.8446744073709552e+19);
@@ -74,7 +96,7 @@ fn f64() {
 
 #[test]
 fn f32() {
-    let mut a = bigintvec![u32::MAX, u32::MAX];
+    let mut a = bigint![vec![u32::MAX, u32::MAX]];
     a.sign = false;
     let f: f32 = From::from(&a);
     assert_eq!(f, -1.8446744e+19);
@@ -82,7 +104,7 @@ fn f32() {
 
 #[test]
 fn binary() {
-    let mut a = bigintvec![256, 1024];
+    let mut a = bigint![vec![256, 1024]];
     assert_eq!(
         format!("{:b}", a),
         "0000000000000000000001000000000000000000000000000000000100000000"
@@ -96,7 +118,7 @@ fn binary() {
 
 #[test]
 fn hex() {
-    let mut a = bigintvec![256, 1024];
+    let mut a = bigint![vec![256, 1024]];
     assert_eq!(format!("{:x}", a), "0000040000000100");
     a.sign = false;
     assert_eq!(format!("{:x}", a), "-0000040000000100");

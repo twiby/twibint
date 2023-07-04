@@ -1,3 +1,6 @@
+//! (private) fmt: private module containing implementation of traits
+//! pertaining to I/O formatting.
+
 use crate::BigInt;
 
 impl std::fmt::LowerExp for BigInt {

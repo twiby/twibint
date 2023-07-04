@@ -65,7 +65,7 @@ def test_pow():
 def test_float():
 	assert float(BigInt(A)) == float(A)
 def test_from_float():
-	assert BigInt.from_f64(float(A)) == BigInt(int(float(A)))
+	assert BigInt(float(A)) == BigInt(int(float(A)))
 
 def test_eq():
 	assert BigInt(A) + BigInt(B) == BigInt(A + B)

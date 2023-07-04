@@ -60,19 +60,28 @@ def test_and():
 	assert (BigUint(A) & BigUint(B)) == BigUint(A & B)
 	assert (A & BigUint(B)) == BigUint(A & B)
 	assert (BigUint(A) & B) == BigUint(A & B)
+	a = BigUint(A)
+	a &= B
+	assert a == A & B
 def test_xor():
 	assert (BigUint(A) ^ BigUint(B)) == BigUint(A ^ B)
 	assert (A ^ BigUint(B)) == BigUint(A ^ B)
 	assert (BigUint(A) ^ B) == BigUint(A ^ B)
+	a = BigUint(A)
+	a ^= B
+	assert a == A ^ B
 def test_or():
 	assert (BigUint(A) | BigUint(B)) == BigUint(A | B)
 	assert (A | BigUint(B)) == BigUint(A | B)
 	assert (BigUint(A) | B) == BigUint(A | B)
+	a = BigUint(A)
+	a |= B
+	assert a == A | B
 
 def test_float():
 	assert float(BigUint(A)) == float(A)
 def test_from_float():
-	assert BigUint.from_f64(float(A)) == BigUint(int(float(A)))
+	assert BigUint(float(A)) == BigUint(int(float(A)))
 
 def test_eq():
 	assert BigUint(A) + BigUint(B) == BigUint(A + B)
@@ -92,5 +101,6 @@ def test_gt():
 	assert BigUint(A + B) > A
 
 def test_bool():
+	assert bool(BigUint(5)) == bool(1)
 	assert bool(BigUint(1)) == bool(1)
 	assert bool(BigUint(0)) == bool(0)

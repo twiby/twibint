@@ -1,8 +1,14 @@
+//! (private) froms: private module containing all `From<T>`implementations
+//!
+//! These implementations are meant to be the main to construct a BigUint,
+//! or export its value into another type.
+
 use crate::biguint::Digits;
 use crate::errors::FromFloatError;
 use crate::errors::UnexpectedCharacterError;
 use crate::BigUint;
 
+// TODO: use actual f64 bit layout
 impl From<&BigUint> for f64 {
     fn from(int: &BigUint) -> f64 {
         let mut base = 1f64;
@@ -15,6 +21,7 @@ impl From<&BigUint> for f64 {
     }
 }
 
+// TODO: use actual f32 bit layout
 impl From<&BigUint> for f32 {
     fn from(int: &BigUint) -> f32 {
         let mut base = 1f32;
@@ -85,7 +92,7 @@ impl From<Vec<u32>> for BigUint {
 
 impl From<&str> for BigUint {
     fn from(s: &str) -> BigUint {
-        <BigUint as std::str::FromStr>::from_str(s).unwrap()
+        s.parse().unwrap()
     }
 }
 impl From<String> for BigUint {
