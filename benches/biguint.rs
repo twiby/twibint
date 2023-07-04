@@ -29,15 +29,15 @@ pub fn add<const N: usize>(c: &mut Criterion) {
 criterion_group!(
     biguint_add,
     add<1_000>,
-    add<5_000>,
+    add<3_000>,
     add<10_000>,
-    add<50_000>,
+    add<30_000>,
     add<100_000>,
-    add<500_000>,
+    add<300_000>,
     add<1_000_000>,
-    add<5_000_000>,
+    add<3_000_000>,
     add<10_000_000>,
-    add<50_000_000>,
+    add<30_000_000>,
     add<100_000_000>
 );
 
@@ -53,15 +53,15 @@ pub fn sub<const N: usize>(c: &mut Criterion) {
 criterion_group!(
     biguint_sub,
     sub<1_000>,
-    sub<5_000>,
+    sub<3_000>,
     sub<10_000>,
-    sub<50_000>,
+    sub<30_000>,
     sub<100_000>,
-    sub<500_000>,
+    sub<300_000>,
     sub<1_000_000>,
-    sub<5_000_000>,
+    sub<3_000_000>,
     sub<10_000_000>,
-    sub<50_000_000>,
+    sub<30_000_000>,
     sub<100_000_000>
 );
 
@@ -77,13 +77,13 @@ pub fn mul<const N: usize>(c: &mut Criterion) {
 criterion_group!(
     biguint_mul,
     mul<10>,
-    mul<50>,
+    mul<30>,
     mul<100>,
-    mul<500>,
+    mul<300>,
     mul<1_000>,
-    mul<5_000>,
+    mul<3_000>,
     mul<10_000>,
-    mul<50_000>,
+    mul<30_000>,
 );
 
 criterion_main!(biguint_add, biguint_sub, biguint_mul);
