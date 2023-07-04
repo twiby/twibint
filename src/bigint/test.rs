@@ -45,6 +45,28 @@ fn creation() {
 }
 
 #[test]
+fn sign() {
+    let n1 = bigint!(1i32);
+    let n2 = bigint!(0i32);
+    let n3 = bigint!(-1i32);
+    let n4 = BigInt {
+        uint: BigUint::default(),
+        sign: false,
+    };
+
+    assert!(n1.is_sign_positive());
+    assert!(!n1.is_sign_negative());
+    assert!(!n2.is_sign_positive());
+    assert!(!n2.is_sign_negative());
+    assert!(!n4.is_sign_positive());
+    assert!(!n4.is_sign_negative());
+    assert!(!n3.is_sign_positive());
+    assert!(n3.is_sign_negative());
+
+    assert_eq!(n2, n4);
+}
+
+#[test]
 fn hash() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigInt, String>::new();
