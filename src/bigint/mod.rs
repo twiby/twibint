@@ -14,19 +14,6 @@ macro_rules! bigint {
     };
 }
 
-#[macro_export]
-macro_rules! bigintvec {
-    ( $( $x:expr ),* ) => {
-        {
-            let mut temp_vec = Vec::new();
-            $(
-                temp_vec.push($x);
-            )*
-            BigInt::from(temp_vec)
-        }
-    };
-}
-
 mod fmt;
 mod froms;
 mod ops;

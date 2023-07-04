@@ -5,24 +5,6 @@ use digits_vec::Digits;
 
 use pyo3::prelude::*;
 
-/// macro that allows easy construction of a BigUint from an array of its
-/// radix representation: `let uint = biguintvec![u32::MAX, 5, 12];`
-///
-/// Dangerous because it relies on internal details: the base of the radix representation..
-/// Code based on this will break if the base changes.
-#[macro_export]
-macro_rules! biguintvec {
-    ( $( $x:expr ),* ) => {
-        {
-            let mut temp_vec = Vec::new();
-            $(
-                temp_vec.push($x);
-            )*
-            BigUint::from(temp_vec)
-        }
-    };
-}
-
 /// macro that allows easy construction of a BigUint from any type T for
 /// which From<T> is implemented. Particularly useful for base 10 digit
 /// string: `let uint = biguint!["123456789101112131415"];`
