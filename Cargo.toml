@@ -14,7 +14,12 @@ optional = true
 [dev-dependencies]
 criterion = "0.5"
 rand = "0.8"
+num-bigint = "0.4.3"
 
 [[bench]]
 name = "biguint"
+harness = false
+
+[[bench]]
+name = "num-bigint"
 harness = false
