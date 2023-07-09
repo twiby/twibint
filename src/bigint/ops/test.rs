@@ -185,8 +185,19 @@ fn truediv() {
 
 #[test]
 fn not() {
-    let n1 = bigint!("-10");
-    let n2 = bigint!("9");
+    let n1 = bigint!(-10);
+    let n2 = bigint!(9);
     assert_eq!(!&n1, n2);
-    assert_eq!(!&n2, n1);
+    assert_eq!(!n2, n1);
+}
+
+#[test]
+fn xor() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(8);
+
+    assert_eq!(&n1 ^ &n2, bigint!(2));
+    assert_eq!(&-&n1 ^ &-&n2, bigint!(14));
+    assert_eq!(&n1 ^ &-&n2, bigint!(-14));
+    assert_eq!(&-&n1 ^ &n2, bigint!(-2));
 }

@@ -57,8 +57,11 @@ def test_pow():
 
 # def test_and():
 # 	assert (BigInt(A) & BigInt(B)) == BigInt(A & B)
-# def test_xor():
-# 	assert (BigInt(A) ^ BigInt(B)) == BigInt(A ^ B)
+def test_xor():
+	assert (BigInt(A) ^ BigInt(B)) == BigInt(A ^ B)
+	assert (BigInt(-A) ^ BigInt(B)) == BigInt((-A) ^ B)
+	assert (BigInt(A) ^ BigInt(-B)) == BigInt(A ^ (-B))
+	assert (BigInt(-A) ^ BigInt(-B)) == BigInt((-A) ^ (-B))
 # def test_or():
 # 	assert (BigInt(A) | BigInt(B)) == BigInt(A | B)
 def test_not():

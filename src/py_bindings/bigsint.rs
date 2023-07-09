@@ -187,15 +187,31 @@ impl BigInt {
     // pub fn __or__(&self, other: &Self) -> Self {
     //     self | other
     // }
-    // pub fn __xor__(&self, other: &Self) -> Self {
-    //     self ^ other
-    // }
+
+    /// Python binding to the `^` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __xor__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self ^ &Self::try_from(other)?)
+    }
+    /// Python binding to the `^=` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __ixor__(&mut self, other: &PyAny) -> PyResult<()> {
+        *self ^= &Self::try_from(other)?;
+        Ok(())
+    }
+    /// Python binding to the reverse `^` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __rxor__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__xor__(other)
+    }
+
+    /// Python binding to the invert `~` operation.
     pub fn __invert__(&self) -> Self {
         !self
     }
 
     /// Python binding to all the comparators: `==`, `!=`, `<`, `<=`, `>`, and `>=`
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __richcmp__(&self, other: &PyAny, cmp: pyo3::basic::CompareOp) -> PyResult<bool> {
         let int = Self::try_from(other)?;
         Ok(match cmp {
