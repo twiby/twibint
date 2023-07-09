@@ -201,3 +201,25 @@ fn xor() {
     assert_eq!(&n1 ^ &-&n2, bigint!(-14));
     assert_eq!(&-&n1 ^ &n2, bigint!(-2));
 }
+
+#[test]
+fn and() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(3);
+
+    assert_eq!(&n1 & &n2, bigint!(2));
+    assert_eq!(&-&n1 & &-&n2, bigint!(-12));
+    assert_eq!(&n1 & &-&n2, bigint!(8));
+    assert_eq!(&-&n1 & &n2, bigint!(2));
+}
+
+#[test]
+fn or() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(3);
+
+    assert_eq!(&n1 | &n2, bigint!(11));
+    assert_eq!(&-&n1 | &-&n2, bigint!(-1));
+    assert_eq!(&n1 | &-&n2, bigint!(-1));
+    assert_eq!(&-&n1 | &n2, bigint!(-9));
+}

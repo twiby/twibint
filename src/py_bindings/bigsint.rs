@@ -181,12 +181,39 @@ impl BigInt {
     //     *self >>= n;
     // }
 
-    // pub fn __and__(&self, other: &Self) -> Self {
-    //     self & other
-    // }
-    // pub fn __or__(&self, other: &Self) -> Self {
-    //     self | other
-    // }
+    /// Python binding to the `&` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __and__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self & &Self::try_from(other)?)
+    }
+    /// Python binding to the `&=` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __iand__(&mut self, other: &PyAny) -> PyResult<()> {
+        *self &= &Self::try_from(other)?;
+        Ok(())
+    }
+    /// Python binding to the reverse `&` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __rand__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__and__(other)
+    }
+
+    /// Python binding to the `|` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __or__(&self, other: &PyAny) -> PyResult<Self> {
+        Ok(self | &Self::try_from(other)?)
+    }
+    /// Python binding to the `|=` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __ior__(&mut self, other: &PyAny) -> PyResult<()> {
+        *self |= &Self::try_from(other)?;
+        Ok(())
+    }
+    /// Python binding to the reverse `|` operation.
+    /// This will raise an error if the operand is not compatible with a BigInt.
+    pub fn __ror__(&self, other: &PyAny) -> PyResult<Self> {
+        self.__or__(other)
+    }
 
     /// Python binding to the `^` operation.
     /// This will raise an error if the operand is not compatible with a BigInt.
