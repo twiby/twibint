@@ -40,8 +40,6 @@ pub struct BigInt {
     pub sign: bool,
 }
 
-// TODO: implement bitshifts and bitwse operations
-
 impl BigInt {
     /// Trivial constructor: from a single `i32` \
     /// Integers higher than `i32::MAX` or lowar than `i32::MIN` are supposed

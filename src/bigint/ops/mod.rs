@@ -2,10 +2,12 @@
 //! implementations. This is broken down into various submodules.
 
 mod addsub;
+mod bitwise;
 mod divrem;
 mod mul;
 mod neg;
 mod pow;
+mod shift;
 mod truediv;
 
 #[cfg(test)]

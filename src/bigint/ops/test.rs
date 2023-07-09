@@ -182,3 +182,69 @@ fn truediv() {
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 }
+
+#[test]
+fn not() {
+    let n1 = bigint!(-10);
+    let n2 = bigint!(9);
+    assert_eq!(!&n1, n2);
+    assert_eq!(!n2, n1);
+}
+
+#[test]
+fn xor() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(8);
+
+    assert_eq!(&n1 ^ &n2, bigint!(2));
+    assert_eq!(&-&n1 ^ &-&n2, bigint!(14));
+    assert_eq!(&n1 ^ &-&n2, bigint!(-14));
+    assert_eq!(&-&n1 ^ &n2, bigint!(-2));
+}
+
+#[test]
+fn and() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(3);
+
+    assert_eq!(&n1 & &n2, bigint!(2));
+    assert_eq!(&-&n1 & &-&n2, bigint!(-12));
+    assert_eq!(&n1 & &-&n2, bigint!(8));
+    assert_eq!(&-&n1 & &n2, bigint!(2));
+}
+
+#[test]
+fn or() {
+    let n1 = bigint!(10);
+    let n2 = bigint!(3);
+
+    assert_eq!(&n1 | &n2, bigint!(11));
+    assert_eq!(&-&n1 | &-&n2, bigint!(-1));
+    assert_eq!(&n1 | &-&n2, bigint!(-1));
+    assert_eq!(&-&n1 | &n2, bigint!(-9));
+}
+
+#[test]
+fn shifts() {
+    assert_eq!(bigint!(10) >> 2, bigint!(2));
+    assert_eq!(bigint!(-10) >> 2, bigint!(-3));
+
+    let mut n = bigint!(10);
+    n >>= 2;
+    assert_eq!(n, bigint!(2));
+
+    let mut n = bigint!(-10);
+    n >>= 2;
+    assert_eq!(n, bigint!(-3));
+
+    assert_eq!(bigint!(10) << 2, bigint!(40));
+    assert_eq!(bigint!(-10) << 2, bigint!(-40));
+
+    let mut n = bigint!(10);
+    n <<= 2;
+    assert_eq!(n, bigint!(40));
+
+    let mut n = bigint!(-10);
+    n <<= 2;
+    assert_eq!(n, bigint!(-40));
+}

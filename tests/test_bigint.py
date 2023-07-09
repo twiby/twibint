@@ -50,17 +50,31 @@ def test_pow():
 	assert BigInt(A) ** 2 == BigInt(A ** 2)
 	assert BigInt(B) ** 2 == BigInt(B ** 2)
 
-# def test_shr():
-# 	assert (BigInt(A) >> 10 == BigInt(A >> 10))
-# def test_shl():
-# 	assert (BigInt(A) << 10 == BigInt(A << 10))
+def test_shr():
+	assert (BigInt(A) >> 10 == BigInt(A >> 10))
+	assert (BigInt(B) >> 10 == BigInt(B >> 10))
+def test_shl():
+	assert (BigInt(A) << 10 == BigInt(A << 10))
+	assert (BigInt(B) << 10 == BigInt(B << 10))
 
-# def test_and():
-# 	assert (BigInt(A) & BigInt(B)) == BigInt(A & B)
-# def test_xor():
-# 	assert (BigInt(A) ^ BigInt(B)) == BigInt(A ^ B)
-# def test_or():
-# 	assert (BigInt(A) | BigInt(B)) == BigInt(A | B)
+def test_xor():
+	assert (BigInt(A) ^ BigInt(B)) == BigInt(A ^ B)
+	assert (BigInt(-A) ^ BigInt(B)) == BigInt((-A) ^ B)
+	assert (BigInt(A) ^ BigInt(-B)) == BigInt(A ^ (-B))
+	assert (BigInt(-A) ^ BigInt(-B)) == BigInt((-A) ^ (-B))
+def test_or():
+	assert (BigInt(A) | BigInt(B)) == BigInt(A | B)
+	assert (BigInt(-A) | BigInt(B)) == BigInt((-A) | B)
+	assert (BigInt(A) | BigInt(-B)) == BigInt(A | (-B))
+	assert (BigInt(-A) | BigInt(-B)) == BigInt((-A) | (-B))
+def test_and():
+	assert (BigInt(A) & BigInt(B)) == BigInt(A & B)
+	assert (BigInt(-A) & BigInt(B)) == BigInt((-A) & B)
+	assert (BigInt(A) & BigInt(-B)) == BigInt(A & (-B))
+	assert (BigInt(-A) & BigInt(-B)) == BigInt((-A) & (-B))
+def test_not():
+	assert ~BigInt(A) == ~A
+	assert ~BigInt(B) == ~B
 
 def test_float():
 	assert float(BigInt(A)) == float(A)
