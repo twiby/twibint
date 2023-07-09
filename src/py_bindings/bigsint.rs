@@ -190,6 +190,9 @@ impl BigInt {
     // pub fn __xor__(&self, other: &Self) -> Self {
     //     self ^ other
     // }
+    pub fn __invert__(&self) -> Self {
+        !self
+    }
 
     /// Python binding to all the comparators: `==`, `!=`, `<`, `<=`, `>`, and `>=`
     /// This will raise an error if the operand is not compatible with a BigUint.

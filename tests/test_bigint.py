@@ -61,6 +61,9 @@ def test_pow():
 # 	assert (BigInt(A) ^ BigInt(B)) == BigInt(A ^ B)
 # def test_or():
 # 	assert (BigInt(A) | BigInt(B)) == BigInt(A | B)
+def test_not():
+	assert ~BigInt(A) == ~A
+	assert ~BigInt(B) == ~B
 
 def test_float():
 	assert float(BigInt(A)) == float(A)
