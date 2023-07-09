@@ -7,6 +7,7 @@ mod divrem;
 mod mul;
 mod neg;
 mod pow;
+mod shift;
 mod truediv;
 
 #[cfg(test)]

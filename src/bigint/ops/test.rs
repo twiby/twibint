@@ -223,3 +223,28 @@ fn or() {
     assert_eq!(&n1 | &-&n2, bigint!(-1));
     assert_eq!(&-&n1 | &n2, bigint!(-9));
 }
+
+#[test]
+fn shifts() {
+    assert_eq!(bigint!(10) >> 2, bigint!(2));
+    assert_eq!(bigint!(-10) >> 2, bigint!(-3));
+
+    let mut n = bigint!(10);
+    n >>= 2;
+    assert_eq!(n, bigint!(2));
+
+    let mut n = bigint!(-10);
+    n >>= 2;
+    assert_eq!(n, bigint!(-3));
+
+    assert_eq!(bigint!(10) << 2, bigint!(40));
+    assert_eq!(bigint!(-10) << 2, bigint!(-40));
+
+    let mut n = bigint!(10);
+    n <<= 2;
+    assert_eq!(n, bigint!(40));
+
+    let mut n = bigint!(-10);
+    n <<= 2;
+    assert_eq!(n, bigint!(-40));
+}

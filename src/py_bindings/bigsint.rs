@@ -4,7 +4,7 @@ use pyo3::pyclass::CompareOp::*;
 
 use crate::{BigInt, BigUint};
 
-// TODO: typical python services: __int__, bitwise, bitshifts
+// TODO: typical python services: __int__
 
 #[pymethods]
 impl BigInt {
@@ -168,18 +168,22 @@ impl BigInt {
         }
     }
 
-    // pub fn __lshift__(&self, n: usize) -> Self {
-    //     self << n
-    // }
-    // pub fn __rshift__(&self, n: usize) -> Self {
-    //     self >> n
-    // }
-    // pub fn __ilshift__(&mut self, n: usize) {
-    //     *self <<= n;
-    // }
-    // pub fn __irshift__(&mut self, n: usize) {
-    //     *self >>= n;
-    // }
+    /// Python binding to the `<<` operation
+    pub fn __lshift__(&self, n: usize) -> Self {
+        self << n
+    }
+    /// Python binding to the `>>` operation
+    pub fn __rshift__(&self, n: usize) -> Self {
+        self >> n
+    }
+    /// Python binding to the `<<=` operation
+    pub fn __ilshift__(&mut self, n: usize) {
+        *self <<= n;
+    }
+    /// Python binding to the `>>=` operation
+    pub fn __irshift__(&mut self, n: usize) {
+        *self >>= n;
+    }
 
     /// Python binding to the `&` operation.
     /// This will raise an error if the operand is not compatible with a BigInt.
