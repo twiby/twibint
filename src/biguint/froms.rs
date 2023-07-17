@@ -8,29 +8,53 @@ use crate::errors::FromFloatError;
 use crate::errors::UnexpectedCharacterError;
 use crate::BigUint;
 
-// TODO: use actual f64 bit layout
 impl From<&BigUint> for f64 {
     fn from(int: &BigUint) -> f64 {
-        let mut base = 1f64;
-        let mut ret = 0f64;
-        for a in &int.val {
-            ret += (*a as f64) * base;
-            base *= (1u64 << 32) as f64;
+        let mut exponent = 0i64;
+
+        // Get the correct 52 bits of mantissa
+        let extra_bits = int.nb_bits() - 53;
+        let mut cleaned = (int >> extra_bits) + (int.bit(extra_bits - 1) as u32);
+
+        exponent -= extra_bits as i64;
+        cleaned.val[1] ^= 1u32 << 20;
+
+        // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
+        if exponent > 52 + 1023 {
+            return 0f64;
+        } else if exponent <= -4096i64 + 52 + 1023 {
+            return f64::INFINITY;
         }
-        ret
+
+        // Get actual mantissa and exponent biased 1023
+        let mantissa: u64 = cleaned.try_into().unwrap();
+        let exponent_u64: u64 = (52 + 1023 - exponent).try_into().unwrap();
+        f64::from_bits((exponent_u64 << 52) | mantissa)
     }
 }
 
-// TODO: use actual f32 bit layout
 impl From<&BigUint> for f32 {
     fn from(int: &BigUint) -> f32 {
-        let mut base = 1f32;
-        let mut ret = 0f32;
-        for a in &int.val {
-            ret += (*a as f32) * base;
-            base *= (1u64 << 32) as f32;
+        let mut exponent = 0i32;
+
+        // Get the correct 23 bits of mantissa
+        let extra_bits = int.nb_bits() - 24;
+        let mut cleaned = (int >> extra_bits) + (int.bit(extra_bits - 1) as u32);
+
+        exponent -= extra_bits as i32;
+        cleaned.val[0] ^= 1u32 << 23;
+
+        // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
+        if exponent > 23 + 127 {
+            return 0f32;
+        } else if exponent <= -512 + 23 + 127 {
+            return f32::INFINITY;
         }
-        ret
+
+        // Get actual mantissa and exponent biased 127
+        let mantissa: u32 = cleaned.try_into().unwrap();
+        let exponent_u32: u32 = (23 + 127 - exponent).try_into().unwrap();
+        f32::from_bits((exponent_u32 << 23) | mantissa)
     }
 }
 
@@ -117,22 +141,38 @@ impl From<u32> for BigUint {
 }
 
 #[derive(Debug)]
-pub struct IntoU64Error {}
+pub struct IntoUintError {}
 impl TryFrom<&BigUint> for u64 {
-    type Error = IntoU64Error;
-    fn try_from(uint: &BigUint) -> Result<u64, IntoU64Error> {
+    type Error = IntoUintError;
+    fn try_from(uint: &BigUint) -> Result<u64, IntoUintError> {
         match uint.val.len() {
             0 => unreachable!(),
             1 => Ok(uint.val[0].into()),
             2 => Ok(uint.val[0] as u64 + ((uint.val[1] as u64) << 32)),
-            _ => Err(IntoU64Error {}),
+            _ => Err(IntoUintError {}),
         }
     }
 }
 impl TryFrom<BigUint> for u64 {
-    type Error = IntoU64Error;
-    fn try_from(uint: BigUint) -> Result<u64, IntoU64Error> {
+    type Error = IntoUintError;
+    fn try_from(uint: BigUint) -> Result<u64, IntoUintError> {
         u64::try_from(&uint)
+    }
+}
+impl TryFrom<&BigUint> for u32 {
+    type Error = IntoUintError;
+    fn try_from(uint: &BigUint) -> Result<u32, IntoUintError> {
+        match uint.val.len() {
+            0 => unreachable!(),
+            1 => Ok(uint.val[0]),
+            _ => Err(IntoUintError {}),
+        }
+    }
+}
+impl TryFrom<BigUint> for u32 {
+    type Error = IntoUintError;
+    fn try_from(uint: BigUint) -> Result<u32, IntoUintError> {
+        u32::try_from(&uint)
     }
 }
 

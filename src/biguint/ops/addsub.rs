@@ -30,8 +30,17 @@ impl Add<&BigUint> for &BigUint {
 impl Add<BigUint> for BigUint {
     type Output = BigUint;
 
-    fn add(self, other: BigUint) -> Self::Output {
-        &self + &other
+    fn add(mut self, other: BigUint) -> Self::Output {
+        self += &other;
+        self
+    }
+}
+impl Add<u32> for BigUint {
+    type Output = BigUint;
+
+    fn add(mut self, other: u32) -> Self::Output {
+        self += &other;
+        self
     }
 }
 
