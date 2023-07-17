@@ -83,9 +83,13 @@ impl TryFrom<&PyAny> for BigUint {
 /// This module will contain 2 classes: \
 ///     - BigUint \
 ///     - BigInt
+///
+/// This module contains 1 function: \
+///     - gen_random_biguint
 #[pymodule]
 fn bigint(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<crate::BigUint>()?;
     m.add_class::<crate::BigInt>()?;
+    m.add_function(wrap_pyfunction!(crate::gen_random_biguint, m)?)?;
     return Ok(());
 }

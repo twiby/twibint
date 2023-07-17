@@ -11,9 +11,11 @@ version = "0.19.0"
 features = ["extension-module"]
 optional = true
 
+[dependencies.rand]
+version = "0.8"
+
 [dev-dependencies]
 criterion = "0.5"
-rand = "0.8"
 num-bigint = "0.4.3"
 
 [[bench]]

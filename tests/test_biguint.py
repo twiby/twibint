@@ -1,5 +1,5 @@
 from math import log
-from bigint import BigInt, BigUint
+from bigint import BigInt, BigUint, gen_random_biguint
 
 A = 123456789101112131415161718
 B = 987654321919293949596979899
@@ -108,3 +108,7 @@ def test_bool():
 	assert bool(BigUint(5)) == bool(1)
 	assert bool(BigUint(1)) == bool(1)
 	assert bool(BigUint(0)) == bool(0)
+
+def test_rand():
+	C = gen_random_biguint(100)
+	assert True

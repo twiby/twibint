@@ -1,28 +1,13 @@
 use bigint::*;
 
-use rand::distributions::Standard;
-use rand::prelude::Distribution;
-use rand::{thread_rng, Rng};
-
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-
-fn gen_n_random_values<T>(n: usize) -> Vec<T>
-where
-    Standard: Distribution<T>,
-{
-    let mut ret = Vec::<T>::with_capacity(n);
-    for _ in 0..n {
-        ret.push(thread_rng().gen::<T>());
-    }
-    ret
-}
 
 pub fn add<const N: usize>(c: &mut Criterion) {
     let mut name = "add ".to_string();
     name.push_str(&N.to_string());
 
-    let n1 = biguint!(gen_n_random_values::<u32>(N));
-    let n2 = biguint!(gen_n_random_values::<u32>(N));
+    let n1 = gen_random_biguint(N);
+    let n2 = gen_random_biguint(N);
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 + &n2)));
 }
 
@@ -45,8 +30,8 @@ pub fn sub<const N: usize>(c: &mut Criterion) {
     let mut name = "sub ".to_string();
     name.push_str(&N.to_string());
 
-    let n1 = biguint!(gen_n_random_values::<u32>(N + 1));
-    let n2 = biguint!(gen_n_random_values::<u32>(N));
+    let n1 = gen_random_biguint(N + 1);
+    let n2 = gen_random_biguint(N);
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 - &n2)));
 }
 
@@ -69,8 +54,8 @@ pub fn mul<const N: usize>(c: &mut Criterion) {
     let mut name = "mul ".to_string();
     name.push_str(&N.to_string());
 
-    let n1 = biguint!(gen_n_random_values::<u32>(N));
-    let n2 = biguint!(gen_n_random_values::<u32>(N));
+    let n1 = gen_random_biguint(N);
+    let n2 = gen_random_biguint(N);
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 * &n2)));
 }
 

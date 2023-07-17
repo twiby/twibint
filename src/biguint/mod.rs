@@ -6,20 +6,6 @@ use digits_vec::Digits;
 #[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
-/// macro that allows easy construction of a BigUint from any type T for
-/// which From<T> is implemented. Particularly useful for base 10 digit
-/// string: `let uint = biguint!["123456789101112131415"];`
-#[macro_export]
-macro_rules! biguint {
-    ( $( $x:expr ),* ) => {
-        {
-            $(
-                BigUint::from($x)
-            )*
-        }
-    };
-}
-
 mod digits_vec;
 pub(crate) mod fmt;
 pub(crate) mod froms;
