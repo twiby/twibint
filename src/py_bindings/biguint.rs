@@ -4,8 +4,6 @@ use pyo3::pyclass::CompareOp::*;
 
 use crate::BigUint;
 
-// TODO: typical python services: __int__
-
 #[pymethods]
 impl BigUint {
     #[new]
@@ -24,6 +22,22 @@ impl BigUint {
     /// precision floating point number)
     pub fn __float__(&self) -> f64 {
         self.into()
+    }
+
+    /// Python binding to convert to a int
+    // TODO: not efficient at all, fail between 10000 and 100000 digits
+    pub fn __int__(&self, py: Python<'_>) -> PyResult<PyObject> {
+        // Highest bits
+        let py_obj = self.val[self.val.len() - 1].to_object(py);
+        let py_int = py_obj.downcast::<pyo3::types::PyInt>(py)?;
+        let mut py_any: &PyAny = py_int.as_ref();
+
+        // Move to lower bits, shifting and adding each time
+        for val in self.val.iter().rev().skip(1) {
+            py_any = py_any.call_method1("__lshift__", (32,))?;
+            py_any = py_any.call_method1("__or__", (*val,))?;
+        }
+        Ok(py_any.to_object(py))
     }
 
     /// Python binding for the `+` operation. \

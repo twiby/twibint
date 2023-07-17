@@ -4,8 +4,6 @@ use pyo3::pyclass::CompareOp::*;
 
 use crate::{BigInt, BigUint};
 
-// TODO: typical python services: __int__
-
 #[pymethods]
 impl BigInt {
     #[new]
@@ -32,6 +30,19 @@ impl BigInt {
     /// precision floating point number)
     pub fn __float__(&self) -> f64 {
         self.into()
+    }
+
+    /// Python binding to convert to a int
+    pub fn __int__(&self, py: Python<'_>) -> PyResult<PyObject> {
+        if self.sign {
+            self.uint.__int__(py)
+        } else {
+            let py_obj = self.uint.__int__(py)?;
+            let py_int = py_obj.downcast::<pyo3::types::PyInt>(py)?;
+            let mut py_any: &PyAny = py_int.as_ref();
+            py_any = py_any.call_method0("__neg__")?;
+            Ok(py_any.to_object(py))
+        }
     }
 
     /// Python binding for the `+` operation. \

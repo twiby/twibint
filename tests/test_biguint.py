@@ -80,6 +80,10 @@ def test_or():
 
 def test_float():
 	assert float(BigUint(A)) == float(A)
+	assert float(BigUint(B)) == float(B)
+def test_int():
+	assert int(BigUint(A)) == A
+	assert int(BigUint(B)) == B
 def test_from_float():
 	assert BigUint(float(A)) == BigUint(int(float(A)))
 

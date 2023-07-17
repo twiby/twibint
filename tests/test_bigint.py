@@ -78,8 +78,13 @@ def test_not():
 
 def test_float():
 	assert float(BigInt(A)) == float(A)
+	assert float(BigInt(B)) == float(B)
 def test_from_float():
 	assert BigInt(float(A)) == BigInt(int(float(A)))
+	assert BigInt(float(B)) == BigInt(int(float(B)))
+def test_int():
+	assert int(BigInt(A)) == A
+	assert int(BigInt(B)) == B
 
 def test_eq():
 	assert BigInt(A) + BigInt(B) == BigInt(A + B)
