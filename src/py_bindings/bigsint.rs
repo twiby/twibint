@@ -37,11 +37,7 @@ impl BigInt {
         if self.sign {
             self.uint.__int__(py)
         } else {
-            let py_obj = self.uint.__int__(py)?;
-            let py_int = py_obj.downcast::<pyo3::types::PyInt>(py)?;
-            let mut py_any: &PyAny = py_int.as_ref();
-            py_any = py_any.call_method0("__neg__")?;
-            Ok(py_any.to_object(py))
+            Ok(self.uint.__int__(py)?.call_method0(py, "__neg__")?)
         }
     }
 

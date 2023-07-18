@@ -27,17 +27,17 @@ impl BigUint {
     /// Python binding to convert to a int
     // TODO: not efficient at all, fail between 10000 and 100000 digits
     pub fn __int__(&self, py: Python<'_>) -> PyResult<PyObject> {
-        // Highest bits
-        let py_obj = self.val[self.val.len() - 1].to_object(py);
-        let py_int = py_obj.downcast::<pyo3::types::PyInt>(py)?;
-        let mut py_any: &PyAny = py_int.as_ref();
+        // Lowest bits
+        let mut py_obj = self.val[0].to_object(py);
 
-        // Move to lower bits, shifting and adding each time
-        for val in self.val.iter().rev().skip(1) {
-            py_any = py_any.call_method1("__lshift__", (32,))?;
-            py_any = py_any.call_method1("__or__", (*val,))?;
+        // Move to highest bits, shifting and adding each time
+        for (i, val) in self.val.iter().enumerate().skip(1) {
+            let lhs = val
+                .to_object(py)
+                .call_method1(py, "__lshift__", (32 * i,))?;
+            py_obj = py_obj.call_method1(py, "__or__", (lhs,))?;
         }
-        Ok(py_any.to_object(py))
+        Ok(py_obj)
     }
 
     /// Python binding for the `+` operation. \
