@@ -16,7 +16,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyInt, PyString};
 
 /// Bindings for the BigInt type
-mod bigsint;
+mod bigint;
 
 /// Bindings for the BigUint type
 mod biguint;
@@ -87,7 +87,7 @@ impl TryFrom<&PyAny> for BigUint {
 /// This module contains 1 function: \
 ///     - gen_random_biguint
 #[pymodule]
-fn bigint(_py: Python, m: &PyModule) -> PyResult<()> {
+fn twibint(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<crate::BigUint>()?;
     m.add_class::<crate::BigInt>()?;
     m.add_function(wrap_pyfunction!(crate::gen_random_biguint, m)?)?;

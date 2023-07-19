@@ -1,5 +1,5 @@
 from math import log
-from bigint import BigInt, BigUint
+from twibint import BigInt, BigUint
 
 A = 123456789101112131415161718
 B = -987654321919293949596979899

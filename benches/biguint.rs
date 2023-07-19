@@ -1,4 +1,4 @@
-use bigint::*;
+use twibint::*;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
