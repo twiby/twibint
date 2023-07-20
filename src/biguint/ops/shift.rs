@@ -19,6 +19,10 @@ impl Shl<usize> for BigUint {
 }
 impl ShlAssign<usize> for BigUint {
     fn shl_assign(&mut self, mut b: usize) {
+        if self == &BigUint::new(0) {
+            return;
+        }
+
         // First apply whole word shifts (by decreasing b by steps of 32)
         let u32_shifts = b / 32;
         let mut temp = vec![0u32; u32_shifts];

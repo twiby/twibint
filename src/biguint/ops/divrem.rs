@@ -5,6 +5,8 @@ use crate::errors::DivisionByZero;
 use crate::traits::{DivisionResult, RemDiv};
 use crate::BigUint;
 
+use crate::biguint::ops::implem_choices::add_assign;
+
 impl RemDiv<u32> for BigUint {
     type DivOutput = BigUint;
     type RemOutput = u32;
@@ -116,55 +118,65 @@ impl RemDiv<BigUint> for BigUint {
     type DivOutput = BigUint;
     type RemOutput = BigUint;
     fn rem_div(&self, other: &BigUint) -> DivisionResult<(BigUint, BigUint)> {
+        // Division by zero error
         if other == &BigUint::new(0) {
             return Err(DivisionByZero());
         }
 
+        // Early exit
         match self.cmp(other) {
             Ordering::Equal => return Ok((BigUint::new(1), BigUint::new(0))),
             Ordering::Less => return Ok((BigUint::new(0), self.clone())),
             _ => (),
         }
 
-        if self.val.len() == 1 {
-            return Ok((
-                BigUint::new(self.val[0] / other),
-                BigUint::new(self.val[0] % other),
-            ));
-        }
-
-        assert!(self.val.len() >= other.val.len());
-
-        let mut ret = BigUint::new(0);
+        // Build returned objects
+        let mut ret = BigUint {
+            val: vec![0; self.val.len()],
+        };
         let mut remainder = BigUint::new(0);
-        for idx in (0..self.val.len()).rev() {
-            remainder = &(remainder << 32) ^ &BigUint::new(self.val[idx]);
 
-            match remainder.cmp(other) {
+        // Loop on the digits of self
+        for (idx, digit) in self.val.iter().enumerate().rev() {
+            remainder.val.insert(0, *digit);
+            remainder.remove_trailing_zeros();
+
+            // Get the quotient remainder/other
+            let quotient: u32 = match remainder.cmp(other) {
+                // remainder lower than other: accumulate one more digit of self
                 Ordering::Less => continue,
+
+                // remainder = other: quotient is 1
                 Ordering::Equal => {
-                    remainder -= other;
-                    ret += BigUint::new(1) << 32 * idx;
+                    remainder.val.resize(1, 0u32);
+                    remainder.val[0] = 0;
+                    1
                 }
+
+                // remainder greater than other: quotient is a positive u32
                 Ordering::Greater => {
                     let mut quotient = 0u32;
                     let mut product = BigUint::new(0);
 
                     // We add to the current product power of 2 by power of 2
                     for bit in (0..32).rev() {
-                        let temp = (1u32 << bit) * other;
+                        let temp = other << bit;
                         if &product + &temp <= remainder {
-                            quotient += 1 << bit;
+                            quotient |= 1 << bit;
                             product += temp;
                         }
                     }
 
                     remainder -= &product;
-                    ret += BigUint::new(quotient) << 32 * idx;
+                    quotient
                 }
             };
+
+            // ret.val[idx..] is guaranteed to be big enough to ignore carry
+            let _ = add_assign(&mut ret.val[idx..], &[quotient]);
         }
 
+        ret.remove_trailing_zeros();
         Ok((ret, remainder))
     }
 }
