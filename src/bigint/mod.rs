@@ -22,7 +22,7 @@ mod test;
 #[derive(Clone, Debug, Eq)]
 #[cfg_attr(feature = "pyo3", pyclass)]
 pub struct BigInt {
-    pub uint: BigUint,
+    pub uint: BigUint<u32>,
     pub sign: bool,
 }
 
@@ -32,7 +32,7 @@ impl BigInt {
     /// to be constructed using the various `From<T>` implementations.
     pub fn new(val: i32) -> BigInt {
         BigInt {
-            uint: BigUint::new(val.abs().try_into().unwrap()),
+            uint: BigUint::<u32>::new(val.abs().try_into().unwrap()),
             sign: val.is_positive(),
         }
     }

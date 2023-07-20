@@ -1,15 +1,18 @@
 //! biguint: declares the BigUint type and implements all its operations.
 
+use crate::traits::Digit;
+
 use core::cmp::Ordering;
-use digits_vec::Digits;
 
 #[cfg(feature = "pyo3")]
 use pyo3::prelude::*;
 
-mod digits_vec;
 pub(crate) mod fmt;
 pub(crate) mod froms;
 pub(crate) mod ops;
+
+mod digits_vec;
+use digits_vec::Digits;
 
 #[cfg(test)]
 mod test;
@@ -19,26 +22,26 @@ mod test;
 /// Representation of an unsigned integer with an infinite number of bits (above
 /// a certain position, they are all 0).
 ///
-/// The internal representation is a Vec of u32 as a radix representation. For zero,
-/// we cheat a little and use a vector with a single element: 0.
+/// The internal representation is a Vec of a type that implements Digit as a radix representation.
+/// For zero, we cheat a little and use a vector with a single element: 0.
 #[derive(Clone, Debug, PartialEq, Eq)]
-#[cfg_attr(feature = "pyo3", pyclass)]
-pub struct BigUint {
-    pub val: Vec<u32>,
+pub struct BigUint<T: Digit> {
+    pub(crate) val: Vec<T>,
 }
 
-impl BigUint {
-    /// Trivial constructor: from a single `u32` \
-    /// Integers higher than `u32::MAX` are supposed to be constructed using the
-    /// various `From<T>` implementations.
-    pub fn new(val: u32) -> BigUint {
+impl<T: Digit> BigUint<T> {
+    /// Trivial constructor: from a single digit \
+    /// Integers higher than `T::MAX` are supposed to be constructed using the
+    /// various `From<_>` implementations.
+    pub fn new(val: T) -> BigUint<T> {
         BigUint { val: vec![val] }
     }
 
     /// Returns the minimal number of bits necessary for a binary representation.
     #[inline]
     pub fn nb_bits(&self) -> usize {
-        32 * (self.val.len() - 1) + (32 - self.val.iter().last().unwrap().leading_zeros() as usize)
+        T::NB_BITS * (self.val.len() - 1)
+            + (T::NB_BITS - self.val.iter().last().unwrap().leading_zeros() as usize)
     }
 
     /// Returns the bth bit as a bool. Since we represent an infinite number of bits,
@@ -46,10 +49,10 @@ impl BigUint {
     /// (but realistically to be other than 0 it will fit in a usize)
     #[inline]
     pub fn bit(&self, b: usize) -> bool {
-        if b >= self.val.len() * 32 {
+        if b >= self.val.len() * T::NB_BITS {
             false
         } else {
-            (self.val[b / 32] >> b % 32) & 1 != 0
+            (self.val[b / T::NB_BITS] >> b % T::NB_BITS) & T::ONE != T::ZERO
         }
     }
 
@@ -64,19 +67,19 @@ impl BigUint {
     /// operation has been performed.
     #[inline]
     pub(crate) fn remove_trailing_zeros(&mut self) {
-        let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == 0).count();
-        self.val.resize(std::cmp::max(count, 1), 0u32);
+        let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == T::ZERO).count();
+        self.val.resize(std::cmp::max(count, 1), T::ZERO);
     }
 }
 
 /// Default implementation for BigUint: returns 0.
-impl Default for BigUint {
-    fn default() -> BigUint {
-        BigUint::new(0)
+impl<T: Digit> Default for BigUint<T> {
+    fn default() -> BigUint<T> {
+        BigUint::new(T::ZERO)
     }
 }
 
-impl std::hash::Hash for BigUint {
+impl<T: Digit> std::hash::Hash for BigUint<T> {
     fn hash<H>(&self, state: &mut H)
     where
         H: std::hash::Hasher,
@@ -85,14 +88,14 @@ impl std::hash::Hash for BigUint {
     }
 }
 
-impl PartialOrd<BigUint> for BigUint {
-    fn partial_cmp(&self, other: &BigUint) -> Option<Ordering> {
+impl<T: Digit> PartialOrd<BigUint<T>> for BigUint<T> {
+    fn partial_cmp(&self, other: &BigUint<T>) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for BigUint {
-    fn cmp(&self, other: &BigUint) -> Ordering {
+impl<T: Digit> Ord for BigUint<T> {
+    fn cmp(&self, other: &BigUint<T>) -> Ordering {
         match self.val.len().cmp(&other.val.len()) {
             Ordering::Equal => (),
             o => return o,

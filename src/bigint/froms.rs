@@ -14,13 +14,13 @@ impl From<i32> for BigInt {
 }
 impl From<u32> for BigInt {
     fn from(val: u32) -> BigInt {
-        BigInt::from(BigUint::from(val))
+        BigInt::from(BigUint::<u32>::from(val))
     }
 }
 impl From<u64> for BigInt {
     fn from(val: u64) -> BigInt {
         BigInt {
-            uint: BigUint::from(val),
+            uint: BigUint::<u32>::from(val),
             sign: true,
         }
     }
@@ -28,14 +28,14 @@ impl From<u64> for BigInt {
 impl From<i64> for BigInt {
     fn from(val: i64) -> BigInt {
         BigInt {
-            uint: BigUint::from(TryInto::<u64>::try_into(val.abs()).unwrap()),
+            uint: BigUint::<u32>::from(TryInto::<u64>::try_into(val.abs()).unwrap()),
             sign: val.is_positive(),
         }
     }
 }
 
-impl From<BigUint> for BigInt {
-    fn from(val: BigUint) -> BigInt {
+impl From<BigUint<u32>> for BigInt {
+    fn from(val: BigUint<u32>) -> BigInt {
         BigInt {
             uint: val,
             sign: true,
@@ -45,7 +45,7 @@ impl From<BigUint> for BigInt {
 
 impl From<Vec<u32>> for BigInt {
     fn from(val: Vec<u32>) -> BigInt {
-        BigInt::from(BigUint::from(val))
+        BigInt::from(BigUint::<u32>::from(val))
     }
 }
 
@@ -91,11 +91,11 @@ impl std::str::FromStr for BigInt {
         let (r, s2) = car_cdr(s);
         match r {
             '-' => {
-                let mut ret = BigInt::from(s2.parse::<BigUint>()?);
+                let mut ret = BigInt::from(s2.parse::<BigUint<u32>>()?);
                 ret.sign = false;
                 Ok(ret)
             }
-            _ => Ok(BigInt::from(s.parse::<BigUint>()?)),
+            _ => Ok(BigInt::from(s.parse::<BigUint<u32>>()?)),
         }
     }
 }
@@ -133,11 +133,11 @@ impl TryFrom<f64> for BigInt {
         }
 
         if f < 0.0 {
-            let mut ret = BigInt::from(BigUint::try_from(-f)?);
+            let mut ret = BigInt::from(BigUint::<u32>::try_from(-f)?);
             ret.sign = false;
             Ok(ret)
         } else {
-            Ok(BigInt::from(BigUint::try_from(f)?))
+            Ok(BigInt::from(BigUint::<u32>::try_from(f)?))
         }
     }
 }
@@ -152,11 +152,11 @@ impl TryFrom<f32> for BigInt {
         }
 
         if f < 0.0 {
-            let mut ret = BigInt::from(BigUint::try_from(-f)?);
+            let mut ret = BigInt::from(BigUint::<u32>::try_from(-f)?);
             ret.sign = false;
             Ok(ret)
         } else {
-            Ok(BigInt::from(BigUint::try_from(f)?))
+            Ok(BigInt::from(BigUint::<u32>::try_from(f)?))
         }
     }
 }

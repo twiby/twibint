@@ -1,3 +1,4 @@
+use crate::traits::Digit;
 use crate::BigUint;
 
 use rand::distributions::Standard;
@@ -20,6 +21,9 @@ where
 
 /// Generates a random BigUint with n bits
 #[cfg_attr(feature = "pyo3", pyfunction)]
-pub fn gen_random_biguint(n: usize) -> BigUint {
-    biguint!(gen_n_random_values::<u32>(n / 32))
+pub fn gen_random_biguint<T: Digit>(n: usize) -> BigUint<T>
+where
+    Standard: Distribution<T>,
+{
+    BigUint::<T>::from(gen_n_random_values::<T>(n/T::NB_BITS))
 }

@@ -1,5 +1,9 @@
 //! traits: declares traits for operations not already in `std::ops`.
 
+/// Defines the Digit trait: which defines types that can be used as a digit
+mod digit;
+pub(crate) use digit::{Digit, DoubleDigit};
+
 /// Shorthand for the result of a division or modulo operation.
 /// Is an error in case of a division by zero.
 pub type DivisionResult<T> = Result<T, crate::errors::DivisionByZero>;

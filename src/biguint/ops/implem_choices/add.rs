@@ -1,16 +1,18 @@
-pub(super) fn schoolbook_add_assign(rhs: &mut [u32], lhs: &[u32]) -> bool {
-    let mut carry = 0u64;
+use crate::traits::{Digit, DoubleDigit};
+
+pub(super) fn schoolbook_add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
+    let mut carry = T::ZERO;
 
     for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
-        let full = (*a as u64) + (*b as u64) + carry;
-        (*a, carry) = (full as u32, full >> 32);
+        let full = a.to_double() + b.to_double() + carry.to_double();
+        (*a, carry) = full.split();
     }
 
     // Potential carry propagation
     for val in rhs.iter_mut().skip(lhs.len()) {
-        let full = (*val as u64) + carry;
-        (*val, carry) = (full as u32, full >> 32);
+        let full = val.to_double() + carry.to_double();
+        (*val, carry) = full.split();
     }
 
-    carry != 0
+    carry != T::ZERO
 }

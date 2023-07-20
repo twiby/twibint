@@ -118,7 +118,7 @@ impl RemDiv<BigInt> for BigInt {
         ))
     }
     fn div(&self, other: &BigInt) -> DivisionResult<BigInt> {
-        let mut q = RemDiv::<BigUint>::div(&self.uint, &other.uint)?;
+        let mut q = RemDiv::<BigUint<u32>>::div(&self.uint, &other.uint)?;
 
         if self.sign ^ other.sign {
             q += 1;
@@ -130,7 +130,7 @@ impl RemDiv<BigInt> for BigInt {
         })
     }
     fn rem(&self, other: &BigInt) -> DivisionResult<BigInt> {
-        let mut r = RemDiv::<BigUint>::rem(&self.uint, &other.uint)?;
+        let mut r = RemDiv::<BigUint<u32>>::rem(&self.uint, &other.uint)?;
 
         if self.sign ^ other.sign {
             r = &other.uint - &r;

@@ -1,110 +1,66 @@
 use core::iter::Product;
 use core::ops::{Mul, MulAssign};
 
+use crate::traits::Digit;
 use crate::BigUint;
 
-impl MulAssign<u32> for BigUint {
-    fn mul_assign(&mut self, other: u32) {
-        *self *= other as u64;
+impl<T: Digit> MulAssign<T> for BigUint<T> {
+    fn mul_assign(&mut self, other: T) {
+        *self *= BigUint::<T>::new(other);
     }
 }
-impl MulAssign<&u32> for BigUint {
-    fn mul_assign(&mut self, other: &u32) {
+impl<T: Digit> MulAssign<&T> for BigUint<T> {
+    fn mul_assign(&mut self, other: &T) {
         *self *= *other;
     }
 }
-impl Mul<u32> for &BigUint {
-    type Output = BigUint;
-    fn mul(self, other: u32) -> BigUint {
+impl<T: Digit> Mul<T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn mul(self, other: T) -> BigUint<T> {
         let mut ret = self.clone();
         ret *= other;
         ret
     }
 }
-impl Mul<u32> for BigUint {
-    type Output = BigUint;
-    fn mul(self, other: u32) -> BigUint {
+impl<T: Digit> Mul<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn mul(self, other: T) -> BigUint<T> {
         &self * other
     }
 }
-impl Mul<&BigUint> for u32 {
-    type Output = BigUint;
-    fn mul(self, other: &BigUint) -> BigUint {
-        other * self
-    }
-}
 
-impl MulAssign<u64> for BigUint {
-    fn mul_assign(&mut self, other: u64) {
-        let mut carry = 0u64;
-
-        for val in self.val.iter_mut() {
-            let full = other * (*val as u64) + carry;
-            (*val, carry) = (full as u32, full >> 32);
-        }
-
-        self.val.push(carry as u32);
-        self.remove_trailing_zeros();
+impl<T: Digit> Mul<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn mul(self, other: &BigUint<T>) -> BigUint<T> {
+        super::implem_choices::mul(&self.val, &other.val).into()
     }
 }
-impl MulAssign<&u64> for BigUint {
-    fn mul_assign(&mut self, other: &u64) {
-        *self *= *other;
-    }
-}
-impl Mul<u64> for &BigUint {
-    type Output = BigUint;
-    fn mul(self, other: u64) -> BigUint {
-        let mut ret = self.clone();
-        ret *= other;
-        ret
-    }
-}
-impl Mul<u64> for BigUint {
-    type Output = BigUint;
-    fn mul(self, other: u64) -> BigUint {
-        &self * other
-    }
-}
-impl Mul<&BigUint> for u64 {
-    type Output = BigUint;
-    fn mul(self, other: &BigUint) -> BigUint {
-        other * self
-    }
-}
-
-impl Mul<&BigUint> for &BigUint {
-    type Output = BigUint;
-    fn mul(self, other: &BigUint) -> BigUint {
-        biguint!(super::implem_choices::mul(&self.val, &other.val))
-    }
-}
-impl MulAssign<&BigUint> for BigUint {
-    fn mul_assign(&mut self, other: &BigUint) {
+impl<T: Digit> MulAssign<&BigUint<T>> for BigUint<T> {
+    fn mul_assign(&mut self, other: &BigUint<T>) {
         *self = &*self * other;
     }
 }
-impl MulAssign<BigUint> for BigUint {
-    fn mul_assign(&mut self, other: BigUint) {
+impl<T: Digit> MulAssign<BigUint<T>> for BigUint<T> {
+    fn mul_assign(&mut self, other: BigUint<T>) {
         *self = &*self * &other;
     }
 }
-impl Mul<BigUint> for BigUint {
-    type Output = BigUint;
-    fn mul(self, other: BigUint) -> BigUint {
+impl<T: Digit> Mul<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn mul(self, other: BigUint<T>) -> BigUint<T> {
         &self * &other
     }
 }
 
-impl<T> Product<T> for BigUint
+impl<T, D: Digit> Product<T> for BigUint<D>
 where
-    BigUint: MulAssign<T>,
+    BigUint<D>: MulAssign<T>,
 {
-    fn product<I>(iter: I) -> BigUint
+    fn product<I>(iter: I) -> BigUint<D>
     where
         I: Iterator<Item = T>,
     {
-        let mut ret = BigUint::new(1);
+        let mut ret = BigUint::<D>::new(D::ONE);
         for el in iter {
             ret *= el;
         }

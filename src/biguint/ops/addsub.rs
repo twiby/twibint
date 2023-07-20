@@ -1,91 +1,86 @@
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
+use crate::traits::Digit;
 use crate::BigUint;
 
-impl Add<u32> for &BigUint {
-    type Output = BigUint;
+impl<T: Digit> Add<T> for &BigUint<T> {
+    type Output = BigUint<T>;
 
-    fn add(self, other: u32) -> Self::Output {
-        let mut ret: BigUint = self.clone();
+    fn add(self, other: T) -> Self::Output {
+        let mut ret: BigUint<T> = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<&BigUint> for u32 {
-    type Output = BigUint;
-    fn add(self, other: &BigUint) -> Self::Output {
-        other + self
-    }
-}
-impl Add<&BigUint> for &BigUint {
-    type Output = BigUint;
+impl<T: Digit> Add<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
 
-    fn add(self, other: &BigUint) -> Self::Output {
+    fn add(self, other: &BigUint<T>) -> Self::Output {
         let mut ret = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<BigUint> for BigUint {
-    type Output = BigUint;
+impl<T: Digit> Add<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
 
-    fn add(mut self, other: BigUint) -> Self::Output {
+    fn add(mut self, other: BigUint<T>) -> Self::Output {
         self += &other;
         self
     }
 }
-impl Add<u32> for BigUint {
-    type Output = BigUint;
+impl<T: Digit> Add<T> for BigUint<T> {
+    type Output = BigUint<T>;
 
-    fn add(mut self, other: u32) -> Self::Output {
+    fn add(mut self, other: T) -> Self::Output {
         self += &other;
         self
     }
 }
 
-impl AddAssign<u32> for BigUint {
-    fn add_assign(&mut self, other: u32) {
-        let other = BigUint::new(other);
+impl<T: Digit> AddAssign<T> for BigUint<T> {
+    fn add_assign(&mut self, other: T) {
+        let other = BigUint::<T>::new(other);
         *self += other;
     }
 }
-impl AddAssign<&u32> for BigUint {
-    fn add_assign(&mut self, other: &u32) {
+impl<T: Digit> AddAssign<&T> for BigUint<T> {
+    fn add_assign(&mut self, other: &T) {
         *self += *other;
     }
 }
 
-impl AddAssign<BigUint> for BigUint {
-    fn add_assign(&mut self, other: BigUint) {
+impl<T: Digit> AddAssign<BigUint<T>> for BigUint<T> {
+    fn add_assign(&mut self, other: BigUint<T>) {
         *self += &other;
     }
 }
-impl AddAssign<&BigUint> for BigUint {
-    fn add_assign(&mut self, other: &BigUint) {
+impl<T: Digit> AddAssign<&BigUint<T>> for BigUint<T> {
+    fn add_assign(&mut self, other: &BigUint<T>) {
         if self.val.len() < other.val.len() {
-            self.val.resize(other.val.len(), 0u32)
+            self.val.resize(other.val.len(), T::ZERO)
         }
 
         let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
 
-        self.val.push(carry as u32);
+        self.val.push(T::from(carry));
         self.remove_trailing_zeros();
     }
 }
 
-impl SubAssign<u32> for BigUint {
-    fn sub_assign(&mut self, other: u32) {
-        *self -= &BigUint::new(other);
+impl<T: Digit> SubAssign<T> for BigUint<T> {
+    fn sub_assign(&mut self, other: T) {
+        *self -= &BigUint::<T>::new(other);
     }
 }
-impl SubAssign<BigUint> for BigUint {
-    fn sub_assign(&mut self, other: BigUint) {
+impl<T: Digit> SubAssign<BigUint<T>> for BigUint<T> {
+    fn sub_assign(&mut self, other: BigUint<T>) {
         *self -= &other;
     }
 }
-impl SubAssign<&BigUint> for BigUint {
-    fn sub_assign(&mut self, other: &BigUint) {
+impl<T: Digit> SubAssign<&BigUint<T>> for BigUint<T> {
+    fn sub_assign(&mut self, other: &BigUint<T>) {
         if &*self < other {
             panic!("Attempt at subtraction with underflow");
         }
@@ -95,32 +90,33 @@ impl SubAssign<&BigUint> for BigUint {
         self.remove_trailing_zeros();
     }
 }
-impl Sub<u32> for &BigUint {
-    type Output = BigUint;
-    fn sub(self, other: u32) -> BigUint {
+impl<T: Digit> Sub<T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(self, other: T) -> BigUint<T> {
         let mut ret = self.clone();
         ret -= other;
         return ret;
     }
 }
-impl Sub<&BigUint> for &BigUint {
-    type Output = BigUint;
-    fn sub(self, other: &BigUint) -> BigUint {
+impl<T: Digit> Sub<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(self, other: &BigUint<T>) -> BigUint<T> {
         let mut ret = self.clone();
         ret -= other;
         ret
     }
 }
 
-impl<T> Sum<T> for BigUint
+impl<T, T2> Sum<T> for BigUint<T2>
 where
-    BigUint: AddAssign<T>,
+    T2: Digit,
+    BigUint<T2>: AddAssign<T>,
 {
-    fn sum<I>(iter: I) -> BigUint
+    fn sum<I>(iter: I) -> BigUint<T2>
     where
         I: Iterator<Item = T>,
     {
-        let mut ret = BigUint::new(0);
+        let mut ret = BigUint::<T2>::new(T2::ZERO);
         for el in iter {
             ret += el;
         }

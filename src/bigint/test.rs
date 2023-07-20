@@ -10,28 +10,28 @@ fn creation() {
     assert_eq!(
         n1,
         BigInt {
-            uint: biguint![vec![128]],
+            uint: BigUint::<u32>::from(vec![128]),
             sign: true
         }
     );
     assert_eq!(
         n2,
         BigInt {
-            uint: biguint![vec![129]],
+            uint: BigUint::<u32>::from(vec![129]),
             sign: false
         }
     );
     assert_eq!(
         n3,
         BigInt {
-            uint: biguint![vec![129]],
+            uint: BigUint::<u32>::from(vec![129]),
             sign: true
         }
     );
     assert_eq!(
         n4,
         BigInt {
-            uint: biguint![vec![128]],
+            uint: BigUint::<u32>::from(vec![128]),
             sign: false
         }
     );
@@ -50,7 +50,7 @@ fn sign() {
     let n2 = bigint!(0i32);
     let n3 = bigint!(-1i32);
     let n4 = BigInt {
-        uint: BigUint::default(),
+        uint: BigUint::<u32>::default(),
         sign: false,
     };
 
