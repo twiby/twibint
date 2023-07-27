@@ -18,8 +18,8 @@ where
     ret
 }
 
-/// Generates a random BigUint with n "digits"
+/// Generates a random BigUint with n bits
 #[cfg_attr(feature = "pyo3", pyfunction)]
 pub fn gen_random_biguint(n: usize) -> BigUint {
-    biguint!(gen_n_random_values::<u32>(n))
+    biguint!(gen_n_random_values::<u32>(n / 32))
 }
