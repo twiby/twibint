@@ -5,52 +5,53 @@
 
 use crate::errors::FromFloatError;
 use crate::errors::UnexpectedCharacterError;
+use crate::traits::Digit;
 use crate::{BigInt, BigUint};
 
-impl From<i32> for BigInt {
-    fn from(val: i32) -> BigInt {
-        BigInt::new(val)
-    }
-}
-impl From<u32> for BigInt {
-    fn from(val: u32) -> BigInt {
-        BigInt::from(BigUint::<u32>::from(val))
-    }
-}
-impl From<u64> for BigInt {
-    fn from(val: u64) -> BigInt {
-        BigInt {
-            uint: BigUint::<u32>::from(val),
-            sign: true,
+impl<T: Digit> From<i32> for BigInt<T> {
+    fn from(val: i32) -> BigInt<T> {
+        BigInt::<T> {
+            uint: BigUint::<T>::from(TryInto::<u32>::try_into(val.abs()).unwrap()),
+            sign: val.is_positive(),
         }
     }
 }
-impl From<i64> for BigInt {
-    fn from(val: i64) -> BigInt {
-        BigInt {
-            uint: BigUint::<u32>::from(TryInto::<u64>::try_into(val.abs()).unwrap()),
+impl<T: Digit> From<u32> for BigInt<T> {
+    fn from(val: u32) -> BigInt<T> {
+        BigInt::<T>::from(BigUint::<T>::from(val))
+    }
+}
+impl<T: Digit> From<u64> for BigInt<T> {
+    fn from(val: u64) -> BigInt<T> {
+        BigInt::<T>::from(BigUint::<T>::from(val))
+    }
+}
+impl<T: Digit> From<i64> for BigInt<T> {
+    fn from(val: i64) -> BigInt<T> {
+        BigInt::<T> {
+            uint: BigUint::<T>::from(TryInto::<u64>::try_into(val.abs()).unwrap()),
             sign: val.is_positive(),
         }
     }
 }
 
-impl From<BigUint<u32>> for BigInt {
-    fn from(val: BigUint<u32>) -> BigInt {
-        BigInt {
+impl<T: Digit> From<BigUint<T>> for BigInt<T> {
+    fn from(val: BigUint<T>) -> BigInt<T> {
+        BigInt::<T> {
             uint: val,
             sign: true,
         }
     }
 }
 
-impl From<Vec<u32>> for BigInt {
-    fn from(val: Vec<u32>) -> BigInt {
-        BigInt::from(BigUint::<u32>::from(val))
+impl<T: Digit> From<Vec<T>> for BigInt<T> {
+    fn from(val: Vec<T>) -> BigInt<T> {
+        BigInt::<T>::from(BigUint::<T>::from(val))
     }
 }
 
-impl From<&BigInt> for f64 {
-    fn from(int: &BigInt) -> f64 {
+impl<T: Digit> From<&BigInt<T>> for f64 {
+    fn from(int: &BigInt<T>) -> f64 {
         match int.sign {
             true => f64::from(&int.uint),
             false => -f64::from(&int.uint),
@@ -58,8 +59,8 @@ impl From<&BigInt> for f64 {
     }
 }
 
-impl From<&BigInt> for f32 {
-    fn from(int: &BigInt) -> f32 {
+impl<T: Digit> From<&BigInt<T>> for f32 {
+    fn from(int: &BigInt<T>) -> f32 {
         match int.sign {
             true => f32::from(&int.uint),
             false => -f32::from(&int.uint),
@@ -81,27 +82,26 @@ fn car_cdr(s: &str) -> (char, &str) {
     (s[0..0].chars().next().unwrap(), s)
 }
 
-impl std::str::FromStr for BigInt {
+impl<T: Digit> std::str::FromStr for BigInt<T> {
     type Err = UnexpectedCharacterError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() == 0 {
-            return Ok(BigInt::default());
+            return Ok(BigInt::<T>::default());
         }
 
         let (r, s2) = car_cdr(s);
         match r {
-            '-' => {
-                let mut ret = BigInt::from(s2.parse::<BigUint<u32>>()?);
-                ret.sign = false;
-                Ok(ret)
-            }
-            _ => Ok(BigInt::from(s.parse::<BigUint<u32>>()?)),
+            '-' => Ok(BigInt::<T> {
+                uint: s2.parse::<BigUint<T>>()?,
+                sign: false,
+            }),
+            _ => Ok(BigInt::<T>::from(s.parse::<BigUint<T>>()?)),
         }
     }
 }
 
-impl From<&BigInt> for String {
-    fn from(b: &BigInt) -> String {
+impl<T: Digit> From<&BigInt<T>> for String {
+    fn from(b: &BigInt<T>) -> String {
         let mut ret = match b.sign {
             true => "".to_string(),
             false => "-".to_string(),
@@ -111,52 +111,54 @@ impl From<&BigInt> for String {
     }
 }
 
-impl From<BigInt> for String {
-    fn from(b: BigInt) -> String {
+impl<T: Digit> From<BigInt<T>> for String {
+    fn from(b: BigInt<T>) -> String {
         String::from(&b)
     }
 }
 
-impl From<&str> for BigInt {
-    fn from(s: &str) -> BigInt {
-        <BigInt as std::str::FromStr>::from_str(s).unwrap()
+impl<T: Digit> From<&str> for BigInt<T> {
+    fn from(s: &str) -> BigInt<T> {
+        <BigInt<T> as std::str::FromStr>::from_str(s).unwrap()
     }
 }
 
 #[cfg(target_endian = "little")]
-impl TryFrom<f64> for BigInt {
+impl<T: Digit> TryFrom<f64> for BigInt<T> {
     type Error = FromFloatError<f64>;
 
-    fn try_from(f: f64) -> Result<BigInt, FromFloatError<f64>> {
+    fn try_from(f: f64) -> Result<BigInt<T>, FromFloatError<f64>> {
         if f != 0f64 && !f.is_normal() {
             return Err(FromFloatError::NotNormal(f));
         }
 
         if f < 0.0 {
-            let mut ret = BigInt::from(BigUint::<u32>::try_from(-f)?);
-            ret.sign = false;
-            Ok(ret)
+            Ok(BigInt::<T> {
+                uint: BigUint::<T>::try_from(-f)?,
+                sign: false,
+            })
         } else {
-            Ok(BigInt::from(BigUint::<u32>::try_from(f)?))
+            Ok(BigInt::<T>::from(BigUint::<T>::try_from(f)?))
         }
     }
 }
 
 #[cfg(target_endian = "little")]
-impl TryFrom<f32> for BigInt {
+impl<T: Digit> TryFrom<f32> for BigInt<T> {
     type Error = FromFloatError<f32>;
 
-    fn try_from(f: f32) -> Result<BigInt, FromFloatError<f32>> {
+    fn try_from(f: f32) -> Result<BigInt<T>, FromFloatError<f32>> {
         if f != 0f32 && !f.is_normal() {
             return Err(FromFloatError::NotNormal(f));
         }
 
         if f < 0.0 {
-            let mut ret = BigInt::from(BigUint::<u32>::try_from(-f)?);
-            ret.sign = false;
-            Ok(ret)
+            Ok(BigInt::<T> {
+                uint: BigUint::<T>::try_from(-f)?,
+                sign: false,
+            })
         } else {
-            Ok(BigInt::from(BigUint::<u32>::try_from(f)?))
+            Ok(BigInt::<T>::from(BigUint::<T>::try_from(f)?))
         }
     }
 }

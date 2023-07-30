@@ -1,18 +1,19 @@
-use std::ops::Neg;
-
+use crate::traits::Digit;
 use crate::BigInt;
 
-impl Neg for &BigInt {
-    type Output = BigInt;
-    fn neg(self) -> BigInt {
+use std::ops::Neg;
+
+impl<T: Digit> Neg for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn neg(self) -> BigInt<T> {
         let mut ret = self.clone();
         ret.sign = !self.sign;
         ret
     }
 }
-impl Neg for BigInt {
-    type Output = BigInt;
-    fn neg(mut self) -> BigInt {
+impl<T: Digit> Neg for BigInt<T> {
+    type Output = BigInt<T>;
+    fn neg(mut self) -> BigInt<T> {
         self.sign = !self.sign;
         self
     }

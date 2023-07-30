@@ -6,6 +6,7 @@ use std::ops::{
 pub trait Digit:
     Copy
     + std::fmt::Debug
+    + std::fmt::Display
     + std::fmt::Binary
     + std::fmt::LowerHex
     + std::fmt::UpperHex
@@ -34,6 +35,7 @@ pub trait Digit:
     const MAX: Self;
     const NB_BITS: usize;
     type Double: DoubleDigit<Single = Self>;
+    type Signed: SignedDigit<Unsigned = Self>;
     fn to_double(self) -> Self::Double;
     fn overflowing_sub(self, other: Self) -> (Self, bool);
     fn leading_zeros(self) -> u32;
@@ -58,6 +60,11 @@ pub trait DoubleDigit:
         (self.truncate_upper(), self.truncate_lower())
     }
 }
+pub trait SignedDigit: Copy {
+    type Unsigned: Digit<Signed = Self>;
+    fn abs(self) -> Self::Unsigned;
+    fn is_positive(self) -> bool;
+}
 
 impl Digit for u32 {
     const ZERO: u32 = 0u32;
@@ -65,6 +72,7 @@ impl Digit for u32 {
     const MAX: u32 = u32::MAX;
     const NB_BITS: usize = 32;
     type Double = u64;
+    type Signed = i32;
     fn to_double(self) -> u64 {
         self as u64
     }
@@ -91,6 +99,15 @@ impl DoubleDigit for u64 {
         (self >> 32) as u32
     }
 }
+impl SignedDigit for i32 {
+    type Unsigned = u32;
+    fn abs(self) -> u32 {
+        self.abs().try_into().unwrap()
+    }
+    fn is_positive(self) -> bool {
+        i32::is_positive(self)
+    }
+}
 
 impl Digit for u64 {
     const ZERO: u64 = 0u64;
@@ -98,6 +115,7 @@ impl Digit for u64 {
     const MAX: u64 = u64::MAX;
     const NB_BITS: usize = 64;
     type Double = u128;
+    type Signed = i64;
     fn to_double(self) -> u128 {
         self as u128
     }
@@ -122,5 +140,14 @@ impl DoubleDigit for u128 {
     }
     fn truncate_lower(self) -> u64 {
         (self >> 64) as u64
+    }
+}
+impl SignedDigit for i64 {
+    type Unsigned = u64;
+    fn abs(self) -> u64 {
+        self.abs().try_into().unwrap()
+    }
+    fn is_positive(self) -> bool {
+        i64::is_positive(self)
     }
 }

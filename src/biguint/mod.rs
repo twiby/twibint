@@ -4,9 +4,6 @@ use crate::traits::Digit;
 
 use core::cmp::Ordering;
 
-#[cfg(feature = "pyo3")]
-use pyo3::prelude::*;
-
 pub(crate) mod fmt;
 pub(crate) mod froms;
 pub(crate) mod ops;

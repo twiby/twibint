@@ -2,85 +2,55 @@ use core::cmp::Ordering;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::BigInt;
+use crate::traits::Digit;
+use crate::{BigInt, BigUint};
 
-impl Add<u32> for &BigInt {
-    type Output = BigInt;
+impl<T: Digit> Add<T> for &BigInt<T> {
+    type Output = BigInt<T>;
 
-    fn add(self, other: u32) -> Self::Output {
-        let mut ret: BigInt = self.clone();
+    fn add(self, other: T) -> Self::Output {
+        let mut ret: BigInt<T> = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<i32> for &BigInt {
-    type Output = BigInt;
+impl<T: Digit> Add<&BigInt<T>> for &BigInt<T> {
+    type Output = BigInt<T>;
 
-    fn add(self, other: i32) -> Self::Output {
-        let mut ret: BigInt = self.clone();
-        ret += other;
-        return ret;
-    }
-}
-impl Add<&BigInt> for u32 {
-    type Output = BigInt;
-    fn add(self, other: &BigInt) -> Self::Output {
-        other + self
-    }
-}
-impl Add<&BigInt> for i32 {
-    type Output = BigInt;
-    fn add(self, other: &BigInt) -> Self::Output {
-        other + self
-    }
-}
-impl Add<&BigInt> for &BigInt {
-    type Output = BigInt;
-
-    fn add(self, other: &BigInt) -> Self::Output {
+    fn add(self, other: &BigInt<T>) -> Self::Output {
         let mut ret = self.clone();
         ret += other;
         return ret;
     }
 }
-impl Add<BigInt> for BigInt {
-    type Output = BigInt;
+impl<T: Digit> Add<BigInt<T>> for BigInt<T> {
+    type Output = BigInt<T>;
 
-    fn add(self, other: BigInt) -> Self::Output {
-        &self + &other
+    fn add(mut self, other: BigInt<T>) -> Self::Output {
+        self += other;
+        self
     }
 }
 
-impl AddAssign<u32> for BigInt {
-    fn add_assign(&mut self, other: u32) {
-        let other = BigInt::from(other);
+impl<T: Digit> AddAssign<T> for BigInt<T> {
+    fn add_assign(&mut self, other: T) {
+        let other = BigInt::<T>::from(BigUint::<T>::new(other));
         *self += other;
     }
 }
-impl AddAssign<&u32> for BigInt {
-    fn add_assign(&mut self, other: &u32) {
-        *self += *other;
-    }
-}
-impl AddAssign<i32> for BigInt {
-    fn add_assign(&mut self, other: i32) {
-        let other = BigInt::from(other);
-        *self += other;
-    }
-}
-impl AddAssign<&i32> for BigInt {
-    fn add_assign(&mut self, other: &i32) {
+impl<T: Digit> AddAssign<&T> for BigInt<T> {
+    fn add_assign(&mut self, other: &T) {
         *self += *other;
     }
 }
 
-impl AddAssign<BigInt> for BigInt {
-    fn add_assign(&mut self, other: BigInt) {
+impl<T: Digit> AddAssign<BigInt<T>> for BigInt<T> {
+    fn add_assign(&mut self, other: BigInt<T>) {
         *self += &other;
     }
 }
-impl AddAssign<&BigInt> for BigInt {
-    fn add_assign(&mut self, other: &BigInt) {
+impl<T: Digit> AddAssign<&BigInt<T>> for BigInt<T> {
+    fn add_assign(&mut self, other: &BigInt<T>) {
         // Case same sign: pure addition of components
         match (self.sign, other.sign) {
             (some_bool, other_bool) if some_bool == other_bool => {
@@ -91,7 +61,7 @@ impl AddAssign<&BigInt> for BigInt {
         };
 
         match self.uint.cmp(&other.uint) {
-            Ordering::Equal => *self = BigInt::default(),
+            Ordering::Equal => *self = BigInt::<T>::default(),
             Ordering::Greater => self.uint -= &other.uint,
             Ordering::Less => {
                 self.uint = &other.uint - &self.uint;
@@ -101,48 +71,48 @@ impl AddAssign<&BigInt> for BigInt {
     }
 }
 
-impl SubAssign<u32> for BigInt {
-    fn sub_assign(&mut self, other: u32) {
-        *self -= &BigInt::from(other);
+impl<T: Digit> SubAssign<T> for BigInt<T> {
+    fn sub_assign(&mut self, other: T) {
+        *self -= &BigInt::<T>::from(BigUint::<T>::new(other));
     }
 }
-impl SubAssign<&BigInt> for BigInt {
-    fn sub_assign(&mut self, other: &BigInt) {
+impl<T: Digit> SubAssign<&BigInt<T>> for BigInt<T> {
+    fn sub_assign(&mut self, other: &BigInt<T>) {
         *self += -other;
     }
 }
-impl Sub<u32> for &BigInt {
-    type Output = BigInt;
-    fn sub(self, other: u32) -> BigInt {
+impl<T: Digit> Sub<T> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn sub(self, other: T) -> BigInt<T> {
         let mut ret = self.clone();
         ret -= other;
         return ret;
     }
 }
-impl Sub<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn sub(self, other: &BigInt) -> BigInt {
+impl<T: Digit> Sub<&BigInt<T>> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn sub(self, other: &BigInt<T>) -> BigInt<T> {
         let mut ret = self.clone();
         ret -= other;
         ret
     }
 }
-impl Sub<BigInt> for BigInt {
-    type Output = BigInt;
-    fn sub(self, other: BigInt) -> BigInt {
+impl<T: Digit> Sub<BigInt<T>> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn sub(self, other: BigInt<T>) -> BigInt<T> {
         &self - &other
     }
 }
 
-impl<T> Sum<T> for BigInt
+impl<T, D: Digit> Sum<T> for BigInt<D>
 where
-    BigInt: AddAssign<T>,
+    BigInt<D>: AddAssign<T>,
 {
-    fn sum<I>(iter: I) -> BigInt
+    fn sum<I>(iter: I) -> BigInt<D>
     where
         I: Iterator<Item = T>,
     {
-        let mut ret = BigInt::new(0);
+        let mut ret = BigInt::<D>::default();
         for el in iter {
             ret += el;
         }

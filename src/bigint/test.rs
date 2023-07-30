@@ -1,37 +1,37 @@
+use crate::traits::Digit;
 use crate::{BigInt, BigUint};
 
-#[test]
-fn creation() {
-    let n1 = bigint!(128u32);
-    let n2 = bigint!(-129i32);
-    let n3 = bigint!(129u64);
-    let n4 = bigint!(-128i64);
+fn creation<T: Digit>() {
+    let n1 = BigInt::<T>::from(128u32);
+    let n2 = BigInt::<T>::from(-129i32);
+    let n3 = BigInt::<T>::from(129u64);
+    let n4 = BigInt::<T>::from(-128i64);
 
     assert_eq!(
         n1,
-        BigInt {
-            uint: BigUint::<u32>::from(vec![128]),
+        BigInt::<T> {
+            uint: BigUint::<T>::from(128u32),
             sign: true
         }
     );
     assert_eq!(
         n2,
-        BigInt {
-            uint: BigUint::<u32>::from(vec![129]),
+        BigInt::<T> {
+            uint: BigUint::<T>::from(129u32),
             sign: false
         }
     );
     assert_eq!(
         n3,
-        BigInt {
-            uint: BigUint::<u32>::from(vec![129]),
+        BigInt::<T> {
+            uint: BigUint::<T>::from(129u32),
             sign: true
         }
     );
     assert_eq!(
         n4,
-        BigInt {
-            uint: BigUint::<u32>::from(vec![128]),
+        BigInt::<T> {
+            uint: BigUint::<T>::from(128u32),
             sign: false
         }
     );
@@ -44,13 +44,12 @@ fn creation() {
     assert!(n3 > n4);
 }
 
-#[test]
-fn sign() {
-    let n1 = bigint!(1i32);
-    let n2 = bigint!(0i32);
-    let n3 = bigint!(-1i32);
-    let n4 = BigInt {
-        uint: BigUint::<u32>::default(),
+fn sign<T: Digit>() {
+    let n1 = BigInt::<T>::from(1i32);
+    let n2 = BigInt::<T>::from(0i32);
+    let n3 = BigInt::<T>::from(-1i32);
+    let n4 = BigInt::<T> {
+        uint: BigUint::<T>::default(),
         sign: false,
     };
 
@@ -66,12 +65,11 @@ fn sign() {
     assert_eq!(n2, n4);
 }
 
-#[test]
-fn hash() {
+fn hash<T: Digit>() {
     use std::collections::HashMap;
-    let mut map = HashMap::<BigInt, String>::new();
+    let mut map = HashMap::<BigInt<T>, String>::new();
 
-    let n1 = bigint![vec![1, 2, 3]];
+    let n1 = BigInt::<T>::from(u64::MAX);
     let mut n2 = n1.clone();
     n2.sign = false;
 
@@ -84,9 +82,8 @@ fn hash() {
     assert_eq!(map[&n2], "second");
 }
 
-#[test]
-fn f64() {
-    let mut a = bigint![vec![u32::MAX, u32::MAX]];
+fn f64<T: Digit>() {
+    let mut a = BigInt::<T>::from(u64::MAX);
     a.sign = false;
     let f: f64 = From::from(&a);
     assert_eq!(f, -1.8446744073709552e+19);
@@ -94,107 +91,130 @@ fn f64() {
     assert_eq!(format!("{:e}", a), format!("{:e}", f));
 }
 
-#[test]
-fn f32() {
-    let mut a = bigint![vec![u32::MAX, u32::MAX]];
+fn f32<T: Digit>() {
+    let mut a = BigInt::<T>::from(u64::MAX);
     a.sign = false;
     let f: f32 = From::from(&a);
     assert_eq!(f, -1.8446744e+19);
 }
 
-#[test]
-fn binary() {
-    let mut a = bigint![vec![256, 1024]];
-    assert_eq!(
-        format!("{:b}", a),
-        "0000000000000000000001000000000000000000000000000000000100000000"
-    );
+fn binary<T: Digit>() {
+    let mut a = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX >> 1, T::MAX >> 1]));
+    let mut s = "0".to_string();
+    for _ in 0..T::NB_BITS - 1 {
+        s.push('1');
+    }
+    s.push('0');
+    for _ in 0..T::NB_BITS - 1 {
+        s.push('1');
+    }
+    assert_eq!(format!("{:b}", a), s);
     a.sign = false;
-    assert_eq!(
-        format!("{:b}", a),
-        "-0000000000000000000001000000000000000000000000000000000100000000"
-    );
+    let mut s2 = "-".to_string();
+    s2.push_str(&s);
+    assert_eq!(format!("{:b}", a), s2);
 }
 
-#[test]
-fn hex() {
-    let mut a = bigint![vec![256, 1024]];
-    assert_eq!(format!("{:x}", a), "0000040000000100");
+fn hex<T: Digit>() {
+    let mut a = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX >> 4, T::MAX >> 4]));
+    let mut s = "0".to_string();
+    for _ in 0..(T::NB_BITS >> 2) - 1 {
+        s.push('f');
+    }
+    s.push('0');
+    for _ in 0..(T::NB_BITS >> 2) - 1 {
+        s.push('f');
+    }
+    assert_eq!(format!("{:x}", a), s);
     a.sign = false;
-    assert_eq!(format!("{:x}", a), "-0000040000000100");
+    let mut s2 = "-".to_string();
+    s2.push_str(&s);
+    assert_eq!(format!("{:x}", a), s2);
 }
 
-#[test]
-fn parse() {
-    let n1: BigInt = "-12345678901234567".parse().unwrap();
-    let n2: BigInt = "12345678901234567".parse().unwrap();
+fn parse<T: Digit>() {
+    let n1: BigInt<T> = "-12345678901234567".parse().unwrap();
+    let n2: BigInt<T> = "12345678901234567".parse().unwrap();
     assert_eq!(n1.uint, n2.uint);
     assert_ne!(n1.sign, n2.sign);
 
     assert_eq!(String::from(&n1), "-12345678901234567");
     assert_eq!(String::from(&n2), "12345678901234567");
 }
-#[test]
-#[should_panic]
-fn parse_fail() {
-    let _: BigInt = "-123456789012-34567".parse().unwrap();
+fn parse_fail<T: Digit>() {
+    let _: BigInt<T> = "-123456789012-34567".parse().unwrap();
 }
 
-#[test]
-fn from_f64() {
+fn from_f64<T: Digit>() {
     // Test zero
     let f = 0f64;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, BigInt::default());
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n, BigInt::<T>::default());
 
     // Test positive exponent
     let f: f64 = 1.8446744073709552e+19;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, bigint!("18446744073709551616"));
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "18446744073709551616");
 
     // Test negative exponent
     let f: f64 = -1.8446744073709552e+3;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, bigint!("-1844"));
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "-1844");
 }
-#[test]
-#[should_panic]
-fn from_f64_fail2() {
+
+fn from_f64_fail2<T: Digit>() {
     let f: f64 = f64::INFINITY;
-    let _ = BigInt::try_from(f).unwrap();
+    let _ = BigInt::<T>::try_from(f).unwrap();
 }
-#[test]
-#[should_panic]
-fn from_f64_fail3() {
+
+fn from_f64_fail3<T: Digit>() {
     let f: f64 = f64::NAN;
-    let _ = BigInt::try_from(f).unwrap();
+    let _ = BigInt::<T>::try_from(f).unwrap();
 }
-#[test]
-fn from_f32() {
+fn from_f32<T: Digit>() {
     // Test zero
     let f = 0f32;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, BigInt::default());
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n, BigInt::<T>::default());
 
     // Test positive exponent
     let f: f32 = -1.8446744e+19;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, bigint!("-18446744073709551616"));
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "-18446744073709551616");
 
     // Test negative exponent
     let f: f32 = 1.8446744e+3;
-    let n = BigInt::try_from(f).unwrap();
-    assert_eq!(n, bigint!("1844"));
+    let n = BigInt::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "1844");
 }
-#[test]
-#[should_panic]
-fn from_f32_fail2() {
+
+fn from_f32_fail2<T: Digit>() {
     let f: f32 = f32::INFINITY;
-    let _ = BigInt::try_from(f).unwrap();
+    let _ = BigInt::<T>::try_from(f).unwrap();
 }
-#[test]
-#[should_panic]
-fn from_f32_fail3() {
+
+fn from_f32_fail3<T: Digit>() {
     let f: f32 = f32::NAN;
-    let _ = BigInt::try_from(f).unwrap();
+    let _ = BigInt::<T>::try_from(f).unwrap();
 }
+
+test_panic_functions!(
+    parse_fail, parse_fail_u32, parse_fail_u64;
+    from_f64_fail2, from_f64_fail2_u32, from_f64_fail2_u64;
+    from_f64_fail3, from_f64_fail3_u32, from_f64_fail3_u64;
+    from_f32_fail2, from_f32_fail2_u32, from_f32_fail2_u64;
+    from_f32_fail3, from_f32_fail3_u32, from_f32_fail3_u64;
+);
+
+test_functions!(
+    creation, creation_u32, creation_u64;
+    sign, sign_u32, sign_u64;
+    hash, hash_u32, hash_u64;
+    f32, f32_u32, f32_u64;
+    f64, f64_u32, f64_u64;
+    binary, binary_u32, binary_u64;
+    parse, parse_u32, parse_u64;
+    hex, hex_u32, hex_u64;
+    from_f32, from_f32_u32, from_f32_u64;
+    from_f64, from_f64_u32, from_f64_u64;
+);

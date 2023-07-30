@@ -1,54 +1,55 @@
+use crate::traits::Digit;
 use crate::BigInt;
 
 use core::ops::{Shl, ShlAssign, Shr, ShrAssign};
 
-impl Shr<usize> for &BigInt {
-    type Output = BigInt;
-    fn shr(self, other: usize) -> BigInt {
+impl<T: Digit> Shr<usize> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn shr(self, other: usize) -> BigInt<T> {
         let mut ret = self.clone();
         ret >>= other;
         ret
     }
 }
-impl Shr<usize> for BigInt {
-    type Output = BigInt;
-    fn shr(mut self, other: usize) -> BigInt {
+impl<T: Digit> Shr<usize> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn shr(mut self, other: usize) -> BigInt<T> {
         self >>= other;
         self
     }
 }
-impl ShrAssign<usize> for BigInt {
+impl<T: Digit> ShrAssign<usize> for BigInt<T> {
     fn shr_assign(&mut self, other: usize) {
-        if *self == BigInt::default() {
+        if *self == BigInt::<T>::default() {
             return;
         } else if self.sign {
             self.uint >>= other;
         } else {
             self.sign = !self.sign;
-            *self -= 1;
+            *self -= T::ONE;
             self.uint >>= other;
             self.sign = !self.sign;
-            *self -= 1;
+            *self -= T::ONE;
         }
     }
 }
 
-impl Shl<usize> for &BigInt {
-    type Output = BigInt;
-    fn shl(self, other: usize) -> BigInt {
+impl<T: Digit> Shl<usize> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn shl(self, other: usize) -> BigInt<T> {
         let mut ret = self.clone();
         ret <<= other;
         ret
     }
 }
-impl Shl<usize> for BigInt {
-    type Output = BigInt;
-    fn shl(mut self, other: usize) -> BigInt {
+impl<T: Digit> Shl<usize> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn shl(mut self, other: usize) -> BigInt<T> {
         self <<= other;
         self
     }
 }
-impl ShlAssign<usize> for BigInt {
+impl<T: Digit> ShlAssign<usize> for BigInt<T> {
     fn shl_assign(&mut self, other: usize) {
         self.uint <<= other;
     }
