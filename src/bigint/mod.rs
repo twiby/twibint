@@ -1,10 +1,8 @@
 //! bigint: declares the BigInt type and implements all its operations.
 
+use crate::traits::{Digit, SignedDigit};
 use crate::BigUint;
 use core::cmp::Ordering;
-
-#[cfg(feature = "pyo3")]
-use pyo3::prelude::*;
 
 mod fmt;
 mod froms;
@@ -20,19 +18,18 @@ mod test;
 /// The internal representation has 2 members: a BigUint for the absolute value, and
 /// a boolean for the sign.
 #[derive(Clone, Debug, Eq)]
-#[cfg_attr(feature = "pyo3", pyclass)]
-pub struct BigInt {
-    pub uint: BigUint,
+pub struct BigInt<T: Digit> {
+    pub uint: BigUint<T>,
     pub sign: bool,
 }
 
-impl BigInt {
+impl<T: Digit> BigInt<T> {
     /// Trivial constructor: from a single `i32` \
     /// Integers higher than `i32::MAX` or lowar than `i32::MIN` are supposed
     /// to be constructed using the various `From<T>` implementations.
-    pub fn new(val: i32) -> BigInt {
-        BigInt {
-            uint: BigUint::new(val.abs().try_into().unwrap()),
+    pub fn new(val: T::Signed) -> BigInt<T> {
+        BigInt::<T> {
+            uint: BigUint::<T>::new(val.abs()),
             sign: val.is_positive(),
         }
     }
@@ -48,16 +45,16 @@ impl BigInt {
 }
 
 /// Default implementation for BigUint: returns 0 with positive sign.
-impl Default for BigInt {
-    fn default() -> BigInt {
-        BigInt {
+impl<T: Digit> Default for BigInt<T> {
+    fn default() -> BigInt<T> {
+        BigInt::<T> {
             uint: Default::default(),
             sign: true,
         }
     }
 }
 
-impl std::hash::Hash for BigInt {
+impl<T: Digit> std::hash::Hash for BigInt<T> {
     fn hash<H>(&self, state: &mut H)
     where
         H: std::hash::Hasher,
@@ -67,14 +64,14 @@ impl std::hash::Hash for BigInt {
     }
 }
 
-impl PartialOrd<BigInt> for BigInt {
-    fn partial_cmp(&self, other: &BigInt) -> Option<Ordering> {
+impl<T: Digit> PartialOrd<BigInt<T>> for BigInt<T> {
+    fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for BigInt {
-    fn cmp(&self, other: &BigInt) -> Ordering {
+impl<T: Digit> Ord for BigInt<T> {
+    fn cmp(&self, other: &BigInt<T>) -> Ordering {
         match (self.sign, other.sign) {
             (true, true) => self.uint.cmp(&other.uint),
             (true, false) => Ordering::Greater,
@@ -88,8 +85,8 @@ impl Ord for BigInt {
 ///
 /// In particular, handles the case where the 2 operands are 0, but with opposite
 /// sign. In that case the test still returns true.
-impl PartialEq for BigInt {
+impl<T: Digit> PartialEq for BigInt<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![0]))
+        self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![T::ZERO]))
     }
 }

@@ -1,82 +1,75 @@
-use crate::traits::{Pow, TrueDiv};
+use crate::traits::{Digit, Pow, TrueDiv};
 use crate::BigUint;
 
-#[test]
-fn add_assign() {
-    let mut bg = BigUint::new(0);
-    bg += 100u32;
+fn add_assign<T: Digit>() {
+    let mut bg = BigUint::<T>::from(0u32);
+    bg += T::ONE;
 
-    assert_eq!(bg.val, vec![100]);
+    assert_eq!(bg.to_string(), "1");
 
-    bg += &BigUint::new(100);
+    bg += &BigUint::<T>::from(100u32);
 
-    assert_eq!(bg.val, vec![200]);
+    assert_eq!(bg.to_string(), "101");
 }
 
-#[test]
-fn add_assign_overflow() {
-    let mut bg = BigUint::new(u32::MAX);
-    bg += 1u32;
+fn add_assign_overflow<T: Digit>() {
+    let mut bg = BigUint::<T>::new(T::MAX);
+    bg += T::ONE;
 
-    assert_eq!(bg.val, vec![0, 1]);
+    assert_eq!(bg.val, vec![T::ZERO, T::ONE]);
 
-    bg += &BigUint::new(100);
+    bg += T::ONE;
 
-    assert_eq!(bg.val, vec![100, 1]);
+    assert_eq!(bg.val, vec![T::ONE, T::ONE]);
 }
 
-#[test]
-fn add() {
-    let b1 = BigUint::new(100);
-    let b2 = BigUint::new(50);
+fn add<T: Digit>() {
+    let b1 = BigUint::<T>::from(100u32);
+    let b2 = BigUint::<T>::from(50u32);
 
-    assert_eq!(&b1 + &b2, BigUint::new(150));
-    assert_eq!(&b1 + 50, BigUint::new(150));
+    assert_eq!(&b1 + &b2, BigUint::<T>::from(150u32));
+    assert_eq!(&b1 + T::ONE, BigUint::<T>::from(101u32));
 }
 
-#[test]
-fn add_assign_full_test() {
-    let mut b1 = biguint![vec![u32::MAX, u32::MAX, u32::MAX]];
-    b1 += 1;
+fn add_assign_full_test<T: Digit>() {
+    let mut b1 = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
+    b1 += T::ONE;
 
-    assert_eq!(b1.val, vec![0, 0, 0, 1]);
+    assert_eq!(b1.val, vec![T::ZERO, T::ZERO, T::ZERO, T::ONE]);
 
-    let b = &BigUint::new(u32::MAX) + &BigUint::new(u32::MAX);
-    assert_eq!(b.val, vec![4294967294, 1]);
+    let b = &BigUint::<T>::new(T::MAX) + &BigUint::<T>::new(T::MAX);
+    assert_eq!(b.val, vec![T::MAX - T::ONE, T::ONE]);
 }
 
-#[test]
-fn sub() {
-    let mut b1 = biguint![vec![u32::MAX, u32::MAX]];
-    b1 -= u32::MAX;
+fn sub<T: Digit>() {
+    let mut b1 = BigUint::<T>::from(vec![T::MAX, T::MAX]);
+    b1 -= T::MAX;
 
-    assert_eq!(b1, biguint![vec![0, u32::MAX]]);
-    b1 -= 1;
-    assert_eq!(b1, biguint![vec![u32::MAX, u32::MAX - 1]]);
-    b1 -= &biguint![vec![u32::MAX, u32::MAX - 1]];
-    assert_eq!(b1, BigUint::new(0));
+    assert_eq!(b1.val, vec![T::ZERO, T::MAX]);
+    b1 -= T::ONE;
+    assert_eq!(b1.val, vec![T::MAX, T::MAX - T::ONE]);
+    b1 -= &BigUint::<T>::from(vec![T::MAX, T::MAX - T::ONE]);
+    assert_eq!(b1, BigUint::<T>::default());
 }
 
-#[test]
-fn sub_full() {
-    let n1 = biguint!("12345678910111213");
-    let n2 = biguint!("987654321");
+fn sub_full<T: Digit>() {
+    let n1 = BigUint::<T>::from("12345678910111213");
+    let n2 = BigUint::<T>::from("987654321");
 
     let n3 = &n1 - &n2;
     assert_eq!(String::from(&n3), "12345677922456892");
 }
 
-#[test]
-fn fibonacci() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fibonacci<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
         let temp = n2.clone();
         n2 += &n1;
         assert_eq!(&n2 - &n1, temp);
-        assert_eq!(&n2 - &(&n1 + &temp), BigUint::new(0));
+        assert_eq!(&n2 - &(&n1 + &temp), BigUint::<T>::new(T::ZERO));
         n1 = temp;
         n -= 1;
     }
@@ -89,10 +82,9 @@ fn fibonacci() {
     );
 }
 
-#[test]
-fn fibonacci_5() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fibonacci_5<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -102,7 +94,7 @@ fn fibonacci_5() {
         n -= 1;
     }
 
-    n2 *= 5u32;
+    n2 *= BigUint::<T>::from(5u32);
 
     assert_eq!(
         String::from(&n2),
@@ -112,10 +104,9 @@ fn fibonacci_5() {
     );
 }
 
-#[test]
-fn fibonacci_5_bis() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fibonacci_5_bis<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -125,14 +116,14 @@ fn fibonacci_5_bis() {
         n -= 1;
     }
 
-    let n3 = &n2 * &BigUint::new(5);
+    let n3 = &n2 * &BigUint::<T>::from(5u32);
     assert_eq!(
         String::from(&n3),
         "6971161228084894006986219143520\
 		364197503512829384865363205448147416278581143164534577\
 		88294381112606470625"
     );
-    let n3 = &BigUint::new(5) * &n2;
+    let n3 = &BigUint::<T>::from(5u32) * &n2;
     assert_eq!(
         String::from(&n3),
         "6971161228084894006986219143520\
@@ -141,10 +132,9 @@ fn fibonacci_5_bis() {
     );
 }
 
-#[test]
-fn fibonacci_square() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fibonacci_square<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -167,16 +157,8 @@ fn fibonacci_square() {
 		57658876222521294125"
     );
 
-    let n3 = &n1 * &biguint![vec![1, 2]];
     assert_eq!(
-        String::from(&n3),
-        "1197636379730135883426986149904\
-		088164401882181843047237880919768151177099109732530421\
-		226027034957340830083465166125"
-    );
-
-    assert_eq!(
-        String::from(&n1 * 505575602u32),
+        String::from(&n1 * &BigUint::<T>::from(505575602u32)),
         "704889806905615918937\
 		649989837846505682417079166195319138308619361953957652\
 		23225155085259704056844689235065938250"
@@ -202,12 +184,11 @@ fn fibonacci_square() {
     );
 }
 
-#[test]
-fn factorial_100() {
-    let mut n = BigUint::new(1);
+fn factorial_100<T: Digit>() {
+    let mut n = BigUint::<T>::new(T::ONE);
 
     for i in 1..=100u32 {
-        n *= i;
+        n *= BigUint::<T>::from(i);
     }
 
     assert_eq!(
@@ -219,10 +200,9 @@ fn factorial_100() {
     );
 }
 
-#[test]
-fn fact_mod() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fact_mod<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -233,14 +213,16 @@ fn fact_mod() {
     }
     let n3 = &n2 * &n2;
 
-    assert_eq!(&n3 % 13, 9);
-    assert_eq!(&n3 % 4294967295, 637285095);
+    assert_eq!(&n3 % &BigUint::<T>::from(13u32), BigUint::<T>::from(9u32));
+    assert_eq!(
+        &n3 % &BigUint::<T>::from(4294967295u32),
+        BigUint::<T>::from(637285095u32)
+    );
 }
 
-#[test]
-fn fact_div() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn fact_div<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -252,8 +234,8 @@ fn fact_div() {
     let mut n3 = &n2 * &n2;
 
     assert_eq!(
-        &n3 / 13,
-        biguint!(
+        &n3 / &BigUint::<T>::from(13u32),
+        BigUint::<T>::from(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -261,8 +243,8 @@ fn fact_div() {
         )
     );
     assert_eq!(
-        &n3 / 4294967295,
-        biguint!(
+        &n3 / &BigUint::<T>::from(4294967295u32),
+        BigUint::<T>::from(
             "45259565933858024969189\
     	89092294192835654543867968879846044465914135558921337249217357\
     	80617389059621687664461274568142421215633665995869120916045822\
@@ -270,10 +252,10 @@ fn fact_div() {
         )
     );
 
-    n3 /= 13;
+    n3 /= &BigUint::<T>::from(13u32);
     assert_eq!(
         n3,
-        biguint!(
+        BigUint::<T>::from(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -282,116 +264,100 @@ fn fact_div() {
     );
 }
 
-#[test]
-fn mul_test() {
-    let n1 = BigUint::new(4294967295);
-    let n2 = BigUint::new(4294967295);
+fn mul_test<T: Digit>() {
+    let n1 = BigUint::<T>::from("4294967295");
+    let n2 = BigUint::<T>::from("4294967295");
     let n3 = &n1 * &n2;
 
     assert_eq!(String::from(&n3), "18446744065119617025");
 }
 
-#[test]
-fn pure_mul_test() {
-    let n1 = biguint![vec![4294967295, 4294967295, 4294967295]];
-    let n2 = &n1 * 4294967295u32;
-    assert_eq!(String::from(&n2), "340282366841710300949110269833929293825");
+fn shl_assign_test<T: Digit>() {
+    let mut b = BigUint::<T>::new(T::ONE << (T::NB_BITS - 1));
+    let b2 = &b << (T::NB_BITS + 1);
+    assert_eq!(b2.val, vec![T::ZERO, T::ZERO, T::ONE]);
+    b <<= T::NB_BITS + 1;
+    assert_eq!(b.val, vec![T::ZERO, T::ZERO, T::ONE]);
 }
 
-#[test]
-fn shl_assign_test() {
-    let mut b = BigUint::new(2147483648);
-    let b2 = &b << 33;
-    assert_eq!(b2.val, vec![0, 0, 1]);
-    b <<= 33;
-    assert_eq!(b.val, vec![0, 0, 1]);
+fn shr_assign_test<T: Digit>() {
+    let mut b = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
+    let b2 = &b >> (T::NB_BITS + 1);
+    assert_eq!(b2.val, vec![T::MAX, T::MAX >> 1]);
+    b >>= T::NB_BITS + 1;
+    assert_eq!(b.val, vec![T::MAX, T::MAX >> 1]);
 }
 
-#[test]
-fn shr_assign_test() {
-    let mut b = biguint![vec![u32::MAX, u32::MAX, u32::MAX]];
-    let b2 = &b >> 33;
-    assert_eq!(b2.val, vec![u32::MAX, u32::MAX >> 1]);
-    b >>= 33;
-    assert_eq!(b.val, vec![u32::MAX, u32::MAX >> 1]);
-}
+fn bit_and<T: Digit>() {
+    let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
+    let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
 
-#[test]
-fn bit_and() {
-    let mut n1 = biguint![vec![u32::MAX, 15]];
-    let n2 = biguint![vec![15, u32::MAX, u32::MAX]];
-
-    assert_eq!(&n1 & &n2, biguint![vec![15, 15]]);
-    assert_eq!(&n2 & &n1, biguint![vec![15, 15]]);
+    assert_eq!(&n1 & &n2, BigUint::<T>::from(vec![T::ONE, T::ONE]));
+    assert_eq!(&n2 & &n1, BigUint::<T>::from(vec![T::ONE, T::ONE]));
 
     n1 &= &n2;
-    assert_eq!(n1, biguint![vec![15, 15]]);
+    assert_eq!(n1, BigUint::<T>::from(vec![T::ONE, T::ONE]));
 }
 
-#[test]
-fn bit_or() {
-    let mut n1 = biguint![vec![u32::MAX, 15]];
-    let n2 = biguint![vec![15, u32::MAX, u32::MAX]];
+fn bit_or<T: Digit>() {
+    let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
+    let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
 
-    assert_eq!(&n1 | &n2, biguint![vec![u32::MAX, u32::MAX, u32::MAX]]);
-    assert_eq!(&n2 | &n1, biguint![vec![u32::MAX, u32::MAX, u32::MAX]]);
+    assert_eq!(&n1 | &n2, BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]));
+    assert_eq!(&n2 | &n1, BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]));
 
     n1 |= &n2;
-    assert_eq!(n1, biguint![vec![u32::MAX, u32::MAX, u32::MAX]]);
+    assert_eq!(n1, BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]));
 }
 
-#[test]
-fn bit_xor() {
-    let mut n1 = biguint![vec![u32::MAX, 15]];
-    let n2 = biguint![vec![15, u32::MAX, u32::MAX]];
+fn bit_xor<T: Digit>() {
+    let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
+    let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
 
-    assert_eq!(&n1 ^ &n2, biguint![vec![4294967280, 4294967280, u32::MAX]]);
-    assert_eq!(&n2 ^ &n1, biguint![vec![4294967280, 4294967280, u32::MAX]]);
+    assert_eq!(
+        &n1 ^ &n2,
+        BigUint::<T>::from(vec![T::MAX - T::ONE, T::MAX - T::ONE, T::MAX])
+    );
+    assert_eq!(
+        &n2 ^ &n1,
+        BigUint::<T>::from(vec![T::MAX - T::ONE, T::MAX - T::ONE, T::MAX])
+    );
 
     n1 ^= &n2;
-    assert_eq!(n1, biguint![vec![4294967280, 4294967280, u32::MAX]]);
+    assert_eq!(
+        n1,
+        BigUint::<T>::from(vec![T::MAX - T::ONE, T::MAX - T::ONE, T::MAX])
+    );
 }
 
-#[test]
-fn mul_assign_u32() {
-    let mut b = BigUint::new(2147483648);
-    b *= 5u32;
+fn mul_assign_u32<T: Digit>() {
+    let mut b = BigUint::<T>::from("2147483648");
+    b *= T::ONE << 3;
 
-    assert_eq!(b.to_string(), "10737418240");
-}
-#[test]
-fn mul_assign_u64() {
-    let mut b = BigUint::new(2147483648);
-    b *= 1u64 << 32;
-
-    assert_eq!(b.to_string(), "9223372036854775808");
+    assert_eq!(b.to_string(), "17179869184");
 }
 
-#[test]
-#[should_panic]
-fn div_by_zero() {
-    let n = BigUint::new(12345);
-    let _ = &n / 0u32;
+fn div_by_zero<T: Digit>() {
+    let n = BigUint::<T>::from("12345");
+    let _ = &n / T::ZERO;
 }
 
-#[test]
-fn div_1() {
-    let mut a = 16u32;
+fn div_1<T: Digit>() {
+    let mut a = BigUint::<T>::from(16u32);
 
-    a /= &BigUint::new(3);
-    assert_eq!(a, 5u32);
+    a /= &BigUint::<T>::from(3u32);
+    assert_eq!(a, BigUint::<T>::from(5u32));
 
-    a /= &BigUint::new(5);
-    assert_eq!(a, 1u32);
+    a /= &BigUint::<T>::from(5u32);
+    assert_eq!(a, BigUint::<T>::from(1u32));
 
-    a /= &BigUint::new(10);
-    assert_eq!(a, 0u32);
+    a /= &BigUint::<T>::from(10u32);
+    assert_eq!(a, BigUint::<T>::from(0u32));
 }
 
-#[test]
-fn div_2() {
-    let mut n1 = BigUint::new(0);
-    let mut n2 = BigUint::new(1);
+fn div_2<T: Digit>() {
+    let mut n1 = BigUint::<T>::new(T::ZERO);
+    let mut n2 = BigUint::<T>::new(T::ONE);
     let mut n = 500;
 
     while n > 1 {
@@ -403,17 +369,17 @@ fn div_2() {
     let mut n3 = &n2 * &n2;
 
     assert_eq!(
-        &n3 / &biguint!(
+        &n3 / &BigUint::<T>::from(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
     	48326176773601497063020348946641164733333774212270432"
         ),
-        biguint!(13u32)
+        BigUint::<T>::from(13u32)
     );
     assert_eq!(
-        &n3 / &biguint!(13u32),
-        biguint!(
+        &n3 / &BigUint::<T>::from(13u32),
+        BigUint::<T>::from(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -421,8 +387,8 @@ fn div_2() {
         )
     );
     assert_eq!(
-        &n3 / 4294967295,
-        biguint!(
+        &n3 / &BigUint::<T>::from("4294967295"),
+        BigUint::<T>::from(
             "45259565933858024969189\
     	89092294192835654543867968879846044465914135558921337249217357\
     	80617389059621687664461274568142421215633665995869120916045822\
@@ -430,10 +396,10 @@ fn div_2() {
         )
     );
 
-    n3 /= 13;
+    n3 /= &BigUint::<T>::from(13u32);
     assert_eq!(
         n3,
-        biguint!(
+        BigUint::<T>::from(
             "1495295042090895003199722801220\
     	40728827381352546685669358043201668880798182222792721662490998\
     	53225891950704354677416822677102005678101626764883209609807969\
@@ -441,105 +407,93 @@ fn div_2() {
         )
     );
 
-    n3 /= &biguint![vec![256, 256, 1024]];
-    assert_eq!(
-        n3,
-        biguint!(
-            "79160260402704383443505518173623327171271715\
-		894251231563668951724860277618637301958917651208758398\
-		250711971981987758781540730998305599662194105412632969\
-		281358142708870468507852092297047"
-        )
-    );
+    let mut n4 = &n3 * &BigUint::<T>::from(vec![T::ONE, T::ONE, T::ONE]);
+    assert_eq!(&n4 % &n3, BigUint::<T>::default());
 
-    let mut n4 = &n3 * &biguint![vec![256, 256, 1024]];
-    assert_eq!(&n4 % &n3, BigUint::new(0));
-
-    n4 /= &biguint![vec![256, 256, 1024]];
+    n4 /= &BigUint::<T>::from(vec![T::ONE, T::ONE, T::ONE]);
     assert_eq!(n3, n4);
 }
 
-#[test]
-fn rem() {
-    let a = biguint![vec![256, 256, 256, 1024]];
-    let b = biguint![vec![109, 75, 31]];
-    println!("{:?}", a.to_string());
-    println!("{:?}", b.to_string());
+fn rem<T: Digit>() {
+    let a = BigUint::<T>::from("81129638419329048179758161985792");
+    let b = BigUint::<T>::from("571849066607118647405");
     assert_eq!((&a % &b).to_string(), "268965438589694318452");
 }
 
-#[test]
-fn product() {
-    let mut values = Vec::<u32>::with_capacity(20);
-    for i in 0..20 {
-        values.push(i + 1);
-    }
+fn product<T: Digit>() {
+    let values = vec![T::ONE; 20];
 
-    let n1: BigUint = values.iter().product();
-    assert_eq!(n1, biguint!("2432902008176640000"));
+    let n1: BigUint<T> = values.iter().product();
+    assert_eq!(n1, BigUint::<T>::from("1"));
 
-    let big_values = values.iter().map(|n| BigUint::new(*n)).collect::<Vec<_>>();
-    let n2: BigUint = big_values.iter().product();
-    assert_eq!(n2, biguint!("2432902008176640000"));
+    let big_values = values
+        .iter()
+        .map(|n| BigUint::<T>::new(*n))
+        .collect::<Vec<_>>();
+    let n2: BigUint<T> = big_values.iter().product();
+    assert_eq!(n2, BigUint::<T>::from("1"));
 }
 
-#[test]
-fn sum() {
-    let values = vec![u32::MAX; 10];
+fn sum<T: Digit>() {
+    let values = vec![T::MAX; 10];
+    let mut s = format!("{:?}", T::MAX);
+    s.push('0');
 
-    let n1: BigUint = values.iter().sum();
+    let n1: BigUint<T> = values.iter().sum();
     println!("{:?}", n1.to_string());
-    assert_eq!(n1, biguint!("42949672950"));
+    assert_eq!(n1.to_string(), s);
 
-    let big_values = values.iter().map(|n| BigUint::new(*n)).collect::<Vec<_>>();
-    let n2: BigUint = big_values.iter().sum();
-    assert_eq!(n2, biguint!("42949672950"));
+    let big_values = values
+        .iter()
+        .map(|n| BigUint::<T>::new(*n))
+        .collect::<Vec<_>>();
+    let n2: BigUint<T> = big_values.iter().sum();
+    assert_eq!(n2.to_string(), s);
 }
 
-#[test]
-fn truediv() {
-    let n1 = biguint!("123456678890123345567789");
-    let n2 = biguint!("12345667555");
+fn truediv<T: Digit>() {
+    let n1 = BigUint::<T>::from("123456678890123345567789");
+    let n2 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = 10000000270550.242f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 
-    let n1 = biguint!("123456678890123345567789") << 15;
-    let n2 = biguint!("12345667555");
+    let n1 = BigUint::<T>::from("123456678890123345567789") << 15;
+    let n2 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = 3.2768000886539034e+17f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 
-    let n1 = biguint!("123456678890123345567789") << 3030;
-    let n2 = biguint!("12345667555");
+    let n1 = BigUint::<T>::from("123456678890123345567789") << 3030;
+    let n2 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = f64::INFINITY;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 
-    let n2 = biguint!("123456678890123345567789");
-    let n1 = biguint!("12345667555");
+    let n2 = BigUint::<T>::from("123456678890123345567789");
+    let n1 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = 9.999999729449765e-14f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 
-    let n2 = biguint!("12345667889012334556778900000000");
-    let n1 = biguint!("12345667555");
+    let n2 = BigUint::<T>::from("12345667889012334556778900000000");
+    let n1 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = 9.999999729449765e-22f64;
     println!("{:b}", f.to_bits());
     println!("{:b}", true_div.to_bits());
     assert_eq!(f, true_div);
 
-    let n1 = biguint!("12345667889012334556778900000000");
-    let n2 = biguint!("12345667555");
+    let n1 = BigUint::<T>::from("12345667889012334556778900000000");
+    let n2 = BigUint::<T>::from("12345667555");
     let f = n1.truediv(&n2).unwrap();
     let true_div = 1.0000000270550242e+21f64;
     println!("{:b}", f.to_bits());
@@ -547,44 +501,42 @@ fn truediv() {
     assert_eq!(f, true_div);
 }
 
-#[test]
-fn pow() {
-    let n = biguint!(5u32);
-    assert_eq!(n.pow(0), biguint!(1u32));
-    assert_eq!(n.pow(1), biguint!(5u32));
-    assert_eq!(n.pow(2), biguint!(25u32));
-    assert_eq!(n.pow(3), biguint!(125u32));
+fn pow<T: Digit>() {
+    let n = BigUint::<T>::from(5u32);
+    assert_eq!(n.pow(0), BigUint::<T>::from(1u32));
+    assert_eq!(n.pow(1), BigUint::<T>::from(5u32));
+    assert_eq!(n.pow(2), BigUint::<T>::from(25u32));
+    assert_eq!(n.pow(3), BigUint::<T>::from(125u32));
 
-    let n = biguint!(128u32);
+    let n = BigUint::<T>::from(128u32);
     let n2 = n.pow(50);
     assert_eq!(
         n2,
-        biguint!(
+        BigUint::<T>::from(
             "2293498615990071511610820895302086940796564989168281\
             123737588839386922876088484808070018553110125686554624"
         )
     );
 
-    let n = biguint!(128u32);
+    let n = BigUint::<T>::from(128u32);
     let n2 = n.pow(16);
-    assert_eq!(n2, biguint!("5192296858534827628530496329220096"));
+    assert_eq!(n2, BigUint::<T>::from("5192296858534827628530496329220096"));
 
-    let n = biguint!(128u32);
+    let n = BigUint::<T>::from(128u32);
     let n2 = n.pow(15);
-    assert_eq!(n2, biguint!("40564819207303340847894502572032"));
+    assert_eq!(n2, BigUint::<T>::from("40564819207303340847894502572032"));
 }
 
-#[test]
-fn long_mul() {
-    let n1 = biguint!(vec![1u32; 100]);
-    let n2 = biguint!(vec![1u32; 100]);
+fn long_mul<T: Digit>() {
+    let n1 = BigUint::<T>::from(vec![T::ONE; 100]);
+    let n2 = BigUint::<T>::from(vec![T::ONE; 100]);
 
-    let mut ret = Vec::<u32>::with_capacity(2 * 100 - 1);
+    let mut ret = Vec::<T>::with_capacity(2 * 100 - 1);
     for i in 0..100 {
-        ret.push(i + 1);
+        ret.push(T::decomposition_from_u32(i + 1)[0]);
     }
     for i in (0..99).rev() {
-        ret.push(i + 1);
+        ret.push(T::decomposition_from_u32(i + 1)[0]);
     }
 
     let n3 = n1 * n2;
@@ -593,13 +545,49 @@ fn long_mul() {
 
 #[test]
 fn maxed_out_mul() {
-    let n1 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
-    let n2 = biguint![vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]];
+    let n1 = BigUint::<u32>::from(vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]);
+    let n2 = BigUint::<u32>::from(vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]);
 
     let n3 = &n1 * &n2;
 
     assert_eq!(
         n3,
-        biguint!("115792089237316195423570985008687907852589419931798687112530834793049593217025")
+        BigUint::<u32>::from(
+            "115792089237316195423570985008687907852589419931798687112530834793049593217025"
+        )
     );
 }
+
+test_panic_functions!(
+    div_by_zero, div_by_zero_u32, div_by_zero_u64;
+);
+test_functions!(
+    add, add_u32, add_u64;
+    add_assign, add_assign_u32, add_assign_u64;
+    add_assign_overflow, add_assign_overflow_u32, add_assign_overflow_u64;
+    add_assign_full_test, add_assign_full_test_u32, add_assign_full_test_u64;
+    sub, sub_u32, sub_u64;
+    sub_full, sub_full_u32, sub_full_u64;
+    fibonacci, fibonacci_u32, fibonacci_u64;
+    fibonacci_5, fibonacci_5_u32, fibonacci_5_u64;
+    fibonacci_5_bis, fibonacci_5_bis_u32, fibonacci_5_bis_u64;
+    fibonacci_square, fibonacci_square_u32, fibonacci_square_u64;
+    factorial_100, factorial_100_u32, factorial_100_u64;
+    fact_mod, fact_mod_u32, fact_mod_u64;
+    fact_div, fact_div_u32, fact_div_u64;
+    mul_test, mul_test_u32, mul_test_u64;
+    shl_assign_test, shl_assign_test_u32, shl_assign_test_u64;
+    shr_assign_test, shr_assign_test_u32, shr_assign_test_u64;
+    bit_and, bit_and_u32, bit_and_u64;
+    bit_or, bit_or_u32, bit_or_u64;
+    bit_xor, bit_xor_u32, bit_xor_u64;
+    mul_assign_u32, mul_assign_u32_u32, mul_assign_u32_u64;
+    div_1, div_1_u32, div_1_u64;
+    div_2, div_2_u32, div_2_u64;
+    rem, rem_u332, rem_64;
+    product, product_u32, product_u64;
+    sum, sum_u32, sum_u64;
+    truediv, truediv_u32, truediv_u64;
+    pow, pow_u32, pow_u64;
+    long_mul, long_mul_u32, long_mul_u64;
+);

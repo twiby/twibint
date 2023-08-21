@@ -1,14 +1,14 @@
-use crate::traits::Pow;
+use crate::traits::{Digit, Pow};
 use crate::BigUint;
 
-impl Pow for BigUint {
-    fn pow(&self, mut exp: usize) -> BigUint {
+impl<T: Digit> Pow for BigUint<T> {
+    fn pow(&self, mut exp: usize) -> BigUint<T> {
         if exp == 0 {
-            return biguint!(1u32);
+            return BigUint::<T>::new(T::ONE);
         }
 
         let mut base = self.clone();
-        let mut ret = biguint!(1u32);
+        let mut ret = BigUint::<T>::new(T::ONE);
 
         while exp > 1 {
             if exp & 1 != 0 {

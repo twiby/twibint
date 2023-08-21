@@ -1,22 +1,23 @@
 //! (private) fmt: private module containing implementation of traits
 //! pertaining to I/O formatting.
 
+use crate::traits::Digit;
 use crate::BigInt;
 
-impl std::fmt::LowerExp for BigInt {
+impl<T: Digit> std::fmt::LowerExp for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);
         std::fmt::LowerExp::fmt(&val, f)
     }
 }
-impl std::fmt::UpperExp for BigInt {
+impl<T: Digit> std::fmt::UpperExp for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let val = f64::from(self);
         std::fmt::UpperExp::fmt(&val, f)
     }
 }
 
-impl std::fmt::LowerHex for BigInt {
+impl<T: Digit> std::fmt::LowerHex for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = match self.sign {
             true => "".to_string(),
@@ -26,7 +27,7 @@ impl std::fmt::LowerHex for BigInt {
         write!(f, "{}", ret)
     }
 }
-impl std::fmt::UpperHex for BigInt {
+impl<T: Digit> std::fmt::UpperHex for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = match self.sign {
             true => "".to_string(),
@@ -37,13 +38,13 @@ impl std::fmt::UpperHex for BigInt {
     }
 }
 
-impl std::fmt::Display for BigInt {
+impl<T: Digit> std::fmt::Display for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", String::from(self))
     }
 }
 
-impl std::fmt::Binary for BigInt {
+impl<T: Digit> std::fmt::Binary for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = match self.sign {
             true => "".to_string(),

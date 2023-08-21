@@ -1,83 +1,76 @@
-use crate::traits::TrueDiv;
+use crate::traits::Digit;
 use crate::BigUint;
 
-#[test]
-fn new() {
-    let val: u32 = 100;
+fn new<T: Digit>() {
+    let val = T::ONE;
 
-    let bg = BigUint::new(val);
+    let bg = BigUint::<T>::new(val);
 
     assert_eq!(bg.val, vec![val]);
 }
 
-#[test]
-fn zero() {
-    let val = BigUint::default();
+fn zero<T: Digit>() {
+    let val = BigUint::<T>::default();
     assert_eq!(val.to_string(), "0");
 }
 
-#[test]
-fn from_str() {
+fn from_str<T: Digit>() {
     let s = "1234567891011121314151617181920";
 
-    let bg = biguint!(s);
+    let bg = BigUint::<T>::from(s);
 
     assert_eq!(String::from(bg), "1234567891011121314151617181920");
 }
 
-#[test]
-fn from_u64() {
-    let n = BigUint::from(18446744073709551614u64);
-    assert_eq!(n.val, vec![4294967294, 4294967295]);
+fn from_u64<T: Digit>() {
+    let n = BigUint::from(T::decomposition_from_u64(18446744073709551614u64));
+    assert_eq!(n.to_string(), "18446744073709551614");
 }
 
-#[test]
-fn to_str() {
-    let bg = BigUint::new(123);
+fn to_str<T: Digit>() {
+    let bg = BigUint::<T>::from("123");
 
     assert_eq!(String::from(&bg), "123");
 }
 
-#[test]
-fn to_str_overflow() {
-    let mut bg = BigUint::new(u32::MAX);
-    bg += 1;
+fn to_str_overflow<T: Digit>() {
+    let mut bg = BigUint::<T>::from(T::decomposition_from_u32(u32::MAX));
+    bg += T::ONE;
 
     assert_eq!(String::from(&bg), "4294967296");
 }
 
-#[test]
-fn cmp() {
-    let n1 = biguint![vec![u32::MAX, u32::MAX, u32::MAX]];
+fn cmp<T: Digit>() {
+    let n1 = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
     assert!(n1 == n1);
     assert!(n1 <= n1);
     assert!(n1 >= n1);
 
-    let n2 = biguint![vec![u32::MAX - 1, u32::MAX, u32::MAX]];
+    let n2 = BigUint::<T>::from(vec![T::MAX - T::ONE, T::MAX, T::MAX]);
     assert!(n2 < n1);
     assert!(n1 > n2);
 
-    let n3 = biguint![vec![u32::MAX, u32::MAX, u32::MAX - 1]];
+    let n3 = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX - T::ONE]);
     assert!(n3 < n2);
     assert!(n3 < n1);
 
-    let n4 = biguint![vec![u32::MAX, u32::MAX]];
+    let n4 = BigUint::<T>::from(vec![T::MAX, T::MAX]);
     assert!(n4 <= n1);
     assert!(n4 <= n2);
     assert!(n4 <= n3);
 }
 
-#[test]
-fn bits() {
-    let b1 = BigUint::new(0);
-    let b2 = BigUint::new(4294967295);
-    let b3 = BigUint::new(2147483648);
+fn bits<T: Digit>() {
+    let b1 = BigUint::<T>::new(T::ZERO);
+    let b2 = BigUint::<T>::new(T::MAX);
+    let mut b3 = BigUint::<T>::new(T::ONE);
+    b3 <<= T::NB_BITS - 1;
     let b4 = &b3 >> 1;
 
     assert_eq!(b1.nb_bits(), 0);
-    assert_eq!(b2.nb_bits(), 32);
-    assert_eq!(b3.nb_bits(), 32);
-    assert_eq!(b4.nb_bits(), 31);
+    assert_eq!(b2.nb_bits(), T::NB_BITS);
+    assert_eq!(b3.nb_bits(), T::NB_BITS);
+    assert_eq!(b4.nb_bits(), T::NB_BITS - 1);
 
     assert!(!b1.bit(100));
     assert!(!b2.bit(100));
@@ -95,7 +88,7 @@ fn bits() {
     for b in 0..b3.nb_bits() - 1 {
         assert!(!b3.bit(b));
     }
-    assert!(b3.bit(31));
+    assert!(b3.bit(T::NB_BITS - 1));
 
     let mut count = 0;
     for bit in b1.bits() {
@@ -106,191 +99,184 @@ fn bits() {
         assert!(bit);
         count += 1;
     }
-    assert_eq!(count, 32);
+    assert_eq!(count, T::NB_BITS);
 }
 
-#[test]
-fn binary() {
-    let a = biguint![vec![256, 1024]];
-    assert_eq!(
-        format!("{:b}", a),
-        "0000000000000000000001000000000000000000000000000000000100000000"
-    );
+fn binary<T: Digit>() {
+    let a = BigUint::<T>::from(vec![T::MAX >> 1, T::MAX >> 1]);
+    let mut s = "0".to_string();
+    for _ in 0..T::NB_BITS - 1 {
+        s.push('1');
+    }
+    s.push('0');
+    for _ in 0..T::NB_BITS - 1 {
+        s.push('1');
+    }
+    assert_eq!(format!("{:b}", a), s);
 }
 
-#[test]
-fn hex() {
-    let a = biguint![vec![256, 1024]];
-    assert_eq!(format!("{:x}", a), "0000040000000100");
+fn hex<T: Digit>() {
+    let a = BigUint::<T>::from(vec![T::MAX >> 4, T::MAX >> 4]);
+    let mut s = "0".to_string();
+    for _ in 0..(T::NB_BITS >> 2) - 1 {
+        s.push('f');
+    }
+    s.push('0');
+    for _ in 0..(T::NB_BITS >> 2) - 1 {
+        s.push('f');
+    }
+    assert_eq!(format!("{:x}", a), s);
 }
 
-#[test]
-fn default() {
-    assert_eq!(BigUint::default(), BigUint::new(0));
+fn default<T: Digit>() {
+    assert_eq!(BigUint::<T>::default(), BigUint::<T>::new(T::ZERO));
 }
 
-#[test]
-fn fromstr() {
-    let a: BigUint = "124".parse().unwrap();
-    assert_eq!(a, BigUint::new(124));
+fn fromstr<T: Digit>() {
+    let a: BigUint<T> = "124".parse().unwrap();
+    assert_eq!(a, BigUint::<T>::from(124u32));
 }
 
-#[test]
-#[should_panic]
-fn fromstr_fail() {
-    let _: BigUint = "124test".parse().unwrap();
+fn fromstr_fail<T: Digit>() {
+    assert!("124test".parse::<BigUint<T>>().is_err());
 }
 
-#[test]
-fn f64() {
-    let a = biguint![vec![u32::MAX, u32::MAX]];
+fn f64<T: Digit>() {
+    let a = BigUint::<T>::from(u64::MAX);
     let f: f64 = From::from(&a);
     assert_eq!(f, 1.8446744073709552e+19);
 
     assert_eq!(format!("{:e}", a), format!("{:e}", f));
 }
 
-#[test]
-fn f32() {
-    let a = biguint![vec![u32::MAX, u32::MAX]];
+fn f32<T: Digit>() {
+    let a = BigUint::<T>::from(u64::MAX);
     let f: f32 = From::from(&a);
     assert_eq!(f, 1.8446744e+19);
 }
 
-#[test]
-fn hash() {
+fn hash<T: Digit>() {
     use std::collections::HashMap;
-    let mut map = HashMap::<BigUint, String>::new();
+    let mut map = HashMap::<BigUint<T>, String>::new();
 
-    map.insert(biguint![vec![1, 2, 3]], "first".to_string());
-    map.insert(biguint![vec![3, 2, 1]], "second".to_string());
+    map.insert(BigUint::<T>::from(u32::MAX), "first".to_string());
+    map.insert(BigUint::<T>::from(u64::MAX), "second".to_string());
 
-    assert!(map.contains_key(&biguint![vec![1, 2, 3]]));
-    assert!(map.contains_key(&biguint![vec![3, 2, 1]]));
-    assert_eq!(map[&biguint![vec![1, 2, 3]]], "first");
-    assert_eq!(map[&biguint![vec![3, 2, 1]]], "second");
+    assert!(map.contains_key(&BigUint::<T>::from(u32::MAX)));
+    assert!(map.contains_key(&BigUint::<T>::from(u64::MAX)));
+    assert_eq!(map[&BigUint::<T>::from(u32::MAX)], "first");
+    assert_eq!(map[&BigUint::<T>::from(u64::MAX)], "second");
 }
 
-#[test]
-fn from_f64() {
+fn from_f64<T: Digit>() {
     // Test zero
     let f = 0f64;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, BigUint::default());
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n, BigUint::<T>::default());
 
     // Test positive exponent
     let f: f64 = 1.8446744073709552e+19;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, biguint!("18446744073709551616"));
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "18446744073709551616");
 
     // Test negative exponent
     let f: f64 = 1.8446744073709552e+3;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, biguint!("1844"));
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "1844");
 }
 
-#[test]
-#[should_panic]
-fn from_f64_fail() {
+fn from_f64_fail<T: Digit>() {
     let f: f64 = -1.8446744073709552e+19;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
-#[test]
-#[should_panic]
-fn from_f64_fail2() {
+fn from_f64_fail2<T: Digit>() {
     let f: f64 = f64::INFINITY;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
-#[test]
-#[should_panic]
-fn from_f64_fail3() {
+fn from_f64_fail3<T: Digit>() {
     let f: f64 = f64::NAN;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
-#[test]
-fn from_f32() {
+fn from_f32<T: Digit>() {
     // Test zero
     let f = 0f32;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, BigUint::default());
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n, BigUint::<T>::default());
 
     // Test positive exponent
     let f: f32 = 1.8446744e+19;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, biguint!("18446744073709551616"));
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "18446744073709551616");
 
     // Test negative exponent
     let f: f32 = 1.8446744e+3;
-    let n = BigUint::try_from(f).unwrap();
-    assert_eq!(n, biguint!("1844"));
+    let n = BigUint::<T>::try_from(f).unwrap();
+    assert_eq!(n.to_string(), "1844");
 }
 
-#[test]
-#[should_panic]
-fn from_f32_fail() {
+fn from_f32_fail<T: Digit>() {
     let f: f32 = -1.8446744e+19;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
-#[test]
-#[should_panic]
-fn from_f32_fail2() {
+fn from_f32_fail2<T: Digit>() {
     let f: f32 = f32::INFINITY;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
-#[test]
-#[should_panic]
-fn from_f32_fail3() {
+fn from_f32_fail3<T: Digit>() {
     let f: f32 = f32::NAN;
-    let _ = BigUint::try_from(f).unwrap();
+    assert!(BigUint::<T>::try_from(f).is_err());
 }
 
-#[test]
-fn truediv() {
-    let n1 = biguint!("123456678890123345567789");
-    let n2 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = 10000000270550.242f64;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
+fn to_primitive<T: Digit>() {
+    let n1 = BigUint::<T>::from(T::decomposition_from_u64(u64::MAX));
+    assert_eq!(TryInto::<u64>::try_into(&n1).unwrap(), u64::MAX);
 
-    let n1 = biguint!("123456678890123345567789") << 15;
-    let n2 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = 3.2768000886539034e+17f64;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
-
-    let n1 = biguint!("123456678890123345567789") << 3030;
-    let n2 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = f64::INFINITY;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
-
-    let n2 = biguint!("123456678890123345567789");
-    let n1 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = 9.999999729449765e-14f64;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
-
-    let n2 = biguint!("12345667889012334556778900000000");
-    let n1 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = 9.999999729449765e-22f64;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
-
-    let n1 = biguint!("12345667889012334556778900000000");
-    let n2 = biguint!("12345667555");
-    let f = n1.truediv(&n2).unwrap();
-    let true_div = 1.0000000270550242e+21f64;
-    println!("{:b}", f.to_bits());
-    println!("{:b}", true_div.to_bits());
-    assert_eq!(f, true_div);
+    let n2 = BigUint::<T>::from(T::decomposition_from_u32(u32::MAX >> 16));
+    assert_eq!(TryInto::<u16>::try_into(&n2).unwrap(), u16::MAX);
+    assert_eq!(TryInto::<u32>::try_into(&n2).unwrap(), u16::MAX as u32);
+    assert_eq!(TryInto::<u64>::try_into(&n2).unwrap(), u16::MAX as u64);
 }
+fn to_primitive_fail<T: Digit>() {
+    assert!(
+        TryInto::<u16>::try_into(&BigUint::<T>::from(T::decomposition_from_u32(u32::MAX))).is_err()
+    );
+}
+fn to_primitive_fail2<T: Digit>() {
+    let n1 = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
+    assert!(TryInto::<u64>::try_into(&n1).is_err());
+}
+fn to_primitive_fail3<T: Digit>() {
+    let n1 = BigUint::<T>::from(vec![T::MAX >> 16; 3]);
+    assert!(TryInto::<u32>::try_into(&n1).is_err());
+}
+
+test_functions!(
+    new, new_u32, new_u64;
+    zero, zero_u32, zero_u64;
+    from_str, from_str_u32, from_str_u64;
+    from_u64, from_u64_u32, from_u64_u64;
+    to_str, to_str_u32, to_str_u64;
+    to_str_overflow, to_str_overflow_u32, to_str_overflow_u64;
+    to_primitive, to_primitive_u32, to_primitive_u64;
+    to_primitive_fail, to_primitive_fail_u32, to_primitive_fail_u64;
+    to_primitive_fail2, to_primitive_fail2_u32, to_primitive_fail2_u64;
+    to_primitive_fail3, to_primitive_fail3_u32, to_primitive_fail3_u64;
+    cmp, cmp_u32, cmp_u64;
+    bits, bits_u32, bits_u64;
+    default, default_u32, default_u64;
+    fromstr, fromstr_u32, fromstr_u64;
+    fromstr_fail, fromstr_fail_u32, fromstr_fail_u64;
+    binary, binary_u32, binary_u64;
+    hex, hex_u32, hex_u64;
+    f64, f64_u32, f64_u64;
+    f32, f32_u32, f32_u64;
+    hash, hash_u32, hash_u64;
+    from_f64_fail, from_f64_fail_u32, from_f64_fail_u64;
+    from_f64_fail2, from_f64_fail2_u32, from_f64_fail2_u64;
+    from_f64_fail3, from_f64_fail3_u32, from_f64_fail3_u64;
+    from_f32_fail, from_f32_fail_u32, from_f32_fail_u64;
+    from_f32_fail2, from_f32_fail2_u32, from_f32_fail2_u64;
+    from_f32_fail3, from_f32_fail3_u32, from_f32_fail3_u64;
+    from_f32, from_f32_u32, from_f32_u64;
+    from_f64, from_f64_u32, from_f64_u64;
+);

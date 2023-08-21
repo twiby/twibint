@@ -1,11 +1,12 @@
 use core::cmp::Ordering;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign};
 
+use crate::traits::Digit;
 use crate::BigUint;
 
-impl BitAnd<&BigUint> for &BigUint {
-    type Output = BigUint;
-    fn bitand(self, other: &BigUint) -> BigUint {
+impl<T: Digit> BitAnd<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(self, other: &BigUint<T>) -> BigUint<T> {
         let (big, small) = match self.cmp(other) {
             Ordering::Equal => return self.clone(),
             Ordering::Less => (other, self),
@@ -16,25 +17,25 @@ impl BitAnd<&BigUint> for &BigUint {
         ret
     }
 }
-impl BitAndAssign<&BigUint> for BigUint {
-    fn bitand_assign(&mut self, other: &BigUint) {
+impl<T: Digit> BitAndAssign<&BigUint<T>> for BigUint<T> {
+    fn bitand_assign(&mut self, other: &BigUint<T>) {
         self.val
-            .resize(std::cmp::min(self.val.len(), other.val.len()), 0u32);
+            .resize(std::cmp::min(self.val.len(), other.val.len()), T::ZERO);
         self.val
             .iter_mut()
             .zip(other.val.iter())
             .for_each(|(a, b)| *a &= *b);
     }
 }
-impl BitAndAssign<BigUint> for BigUint {
-    fn bitand_assign(&mut self, other: BigUint) {
+impl<T: Digit> BitAndAssign<BigUint<T>> for BigUint<T> {
+    fn bitand_assign(&mut self, other: BigUint<T>) {
         *self &= &other;
     }
 }
 
-impl BitOr<&BigUint> for &BigUint {
-    type Output = BigUint;
-    fn bitor(self, other: &BigUint) -> BigUint {
+impl<T: Digit> BitOr<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: &BigUint<T>) -> BigUint<T> {
         let (big, small) = match self.cmp(other) {
             Ordering::Equal => return self.clone(),
             Ordering::Less => (other, self),
@@ -46,25 +47,25 @@ impl BitOr<&BigUint> for &BigUint {
         ret
     }
 }
-impl BitOrAssign<&BigUint> for BigUint {
-    fn bitor_assign(&mut self, other: &BigUint) {
+impl<T: Digit> BitOrAssign<&BigUint<T>> for BigUint<T> {
+    fn bitor_assign(&mut self, other: &BigUint<T>) {
         self.val
-            .resize(std::cmp::max(self.val.len(), other.val.len()), 0u32);
+            .resize(std::cmp::max(self.val.len(), other.val.len()), T::ZERO);
         self.val
             .iter_mut()
             .zip(other.val.iter())
             .for_each(|(a, b)| *a |= *b);
     }
 }
-impl BitOrAssign<BigUint> for BigUint {
-    fn bitor_assign(&mut self, other: BigUint) {
+impl<T: Digit> BitOrAssign<BigUint<T>> for BigUint<T> {
+    fn bitor_assign(&mut self, other: BigUint<T>) {
         *self |= &other;
     }
 }
 
-impl BitXor<&BigUint> for &BigUint {
-    type Output = BigUint;
-    fn bitxor(self, other: &BigUint) -> BigUint {
+impl<T: Digit> BitXor<&BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: &BigUint<T>) -> BigUint<T> {
         let (big, small) = match self.cmp(other) {
             Ordering::Equal => return self.clone(),
             Ordering::Less => (other, self),
@@ -76,10 +77,10 @@ impl BitXor<&BigUint> for &BigUint {
         ret
     }
 }
-impl BitXorAssign<&BigUint> for BigUint {
-    fn bitxor_assign(&mut self, other: &BigUint) {
+impl<T: Digit> BitXorAssign<&BigUint<T>> for BigUint<T> {
+    fn bitxor_assign(&mut self, other: &BigUint<T>) {
         self.val
-            .resize(std::cmp::max(self.val.len(), other.val.len()), 0u32);
+            .resize(std::cmp::max(self.val.len(), other.val.len()), T::ZERO);
         self.val
             .iter_mut()
             .zip(other.val.iter())
@@ -87,8 +88,8 @@ impl BitXorAssign<&BigUint> for BigUint {
         self.remove_trailing_zeros();
     }
 }
-impl BitXorAssign<BigUint> for BigUint {
-    fn bitxor_assign(&mut self, other: BigUint) {
+impl<T: Digit> BitXorAssign<BigUint<T>> for BigUint<T> {
+    fn bitxor_assign(&mut self, other: BigUint<T>) {
         *self ^= &other;
     }
 }

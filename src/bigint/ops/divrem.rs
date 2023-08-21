@@ -1,252 +1,166 @@
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
-use crate::traits::{DivisionResult, RemDiv};
+use crate::traits::{Digit, DivisionResult, RemDiv};
 use crate::{BigInt, BigUint};
 
-impl RemDiv<u32> for BigInt {
-    type DivOutput = BigInt;
-    type RemOutput = u32;
-    fn rem_div(&self, other: &u32) -> DivisionResult<(BigInt, u32)> {
+impl<T: Digit> RemDiv<T> for BigInt<T> {
+    type DivOutput = BigInt<T>;
+    type RemOutput = T;
+    fn rem_div(&self, other: &T) -> DivisionResult<(BigInt<T>, T)> {
         let (mut q, mut r) = self.uint.rem_div(other)?;
 
         if !self.sign {
-            q += 1;
-            r = other - r;
+            q += T::ONE;
+            r = *other - r;
         }
 
         Ok((
-            BigInt {
+            BigInt::<T> {
                 uint: q,
                 sign: self.sign,
             },
             r,
         ))
     }
-    fn div(&self, other: &u32) -> DivisionResult<BigInt> {
+    fn div(&self, other: &T) -> DivisionResult<BigInt<T>> {
         let mut q = RemDiv::div(&self.uint, other)?;
 
         if !self.sign {
-            q += 1;
+            q += T::ONE;
         }
 
-        Ok(BigInt {
+        Ok(BigInt::<T> {
             uint: q,
             sign: self.sign,
         })
     }
-    fn rem(&self, other: &u32) -> DivisionResult<u32> {
+    fn rem(&self, other: &T) -> DivisionResult<T> {
         let mut r = RemDiv::rem(&self.uint, other)?;
 
         if !self.sign {
-            r = other - r;
+            r = *other - r;
         }
 
         Ok(r)
     }
 }
 
-impl RemDiv<i32> for BigInt {
-    type DivOutput = BigInt;
-    type RemOutput = i32;
-    fn rem_div(&self, other: &i32) -> DivisionResult<(BigInt, i32)> {
-        let (mut q, mut r) = self.uint.rem_div(&(other.abs() as u32))?;
-
-        if self.sign ^ other.is_positive() {
-            q += 1;
-            r = other.abs() as u32 - r;
-        }
-
-        Ok((
-            BigInt {
-                uint: q,
-                sign: !(self.sign ^ other.is_positive()),
-            },
-            if other.is_positive() {
-                r as i32
-            } else {
-                -(r as i32)
-            },
-        ))
-    }
-    fn div(&self, other: &i32) -> DivisionResult<BigInt> {
-        let mut q = RemDiv::<u32>::div(&self.uint, &other.abs().try_into().unwrap())?;
-
-        if self.sign ^ other.is_positive() {
-            q += 1;
-        }
-
-        Ok(BigInt {
-            uint: q,
-            sign: !(self.sign ^ other.is_positive()),
-        })
-    }
-    fn rem(&self, other: &i32) -> DivisionResult<i32> {
-        let mut r = RemDiv::<u32>::rem(&self.uint, &other.abs().try_into().unwrap())?;
-
-        if self.sign ^ other.is_positive() {
-            r = other.abs() as u32 - r;
-        }
-
-        Ok(if other.is_positive() {
-            r as i32
-        } else {
-            -(r as i32)
-        })
-    }
-}
-
-impl RemDiv<BigInt> for BigInt {
-    type DivOutput = BigInt;
-    type RemOutput = BigInt;
-    fn rem_div(&self, other: &BigInt) -> DivisionResult<(BigInt, BigInt)> {
+impl<T: Digit> RemDiv<BigInt<T>> for BigInt<T> {
+    type DivOutput = BigInt<T>;
+    type RemOutput = BigInt<T>;
+    fn rem_div(&self, other: &BigInt<T>) -> DivisionResult<(BigInt<T>, BigInt<T>)> {
         let (mut q, mut r) = self.uint.rem_div(&other.uint)?;
 
         if self.sign ^ other.sign {
-            q += 1;
+            q += T::ONE;
             r = &other.uint - &r;
         }
 
         Ok((
-            BigInt {
+            BigInt::<T> {
                 uint: q,
                 sign: !(self.sign ^ other.sign),
             },
-            BigInt {
+            BigInt::<T> {
                 uint: r,
                 sign: other.sign,
             },
         ))
     }
-    fn div(&self, other: &BigInt) -> DivisionResult<BigInt> {
-        let mut q = RemDiv::<BigUint>::div(&self.uint, &other.uint)?;
+    fn div(&self, other: &BigInt<T>) -> DivisionResult<BigInt<T>> {
+        let mut q = RemDiv::<BigUint<T>>::div(&self.uint, &other.uint)?;
 
         if self.sign ^ other.sign {
-            q += 1;
+            q += T::ONE;
         }
 
-        Ok(BigInt {
+        Ok(BigInt::<T> {
             uint: q,
             sign: !(self.sign ^ other.sign),
         })
     }
-    fn rem(&self, other: &BigInt) -> DivisionResult<BigInt> {
-        let mut r = RemDiv::<BigUint>::rem(&self.uint, &other.uint)?;
+    fn rem(&self, other: &BigInt<T>) -> DivisionResult<BigInt<T>> {
+        let mut r = RemDiv::<BigUint<T>>::rem(&self.uint, &other.uint)?;
 
         if self.sign ^ other.sign {
             r = &other.uint - &r;
         }
 
-        Ok(BigInt {
+        Ok(BigInt::<T> {
             uint: r,
             sign: other.sign,
         })
     }
 }
 
-impl RemAssign<u32> for BigInt {
-    fn rem_assign(&mut self, other: u32) {
+impl<T: Digit> RemAssign<T> for BigInt<T> {
+    fn rem_assign(&mut self, other: T) {
         let value = &*self % other;
-        *self = BigInt::from(value);
+        *self = BigInt::<T>::from(BigUint::<T>::new(value));
     }
 }
-impl Rem<u32> for &BigInt {
-    type Output = u32;
-    fn rem(self, other: u32) -> u32 {
+impl<T: Digit> Rem<T> for &BigInt<T> {
+    type Output = T;
+    fn rem(self, other: T) -> T {
         RemDiv::rem(self, &other).unwrap()
     }
 }
-impl Rem<u32> for BigInt {
-    type Output = u32;
-    fn rem(self, other: u32) -> u32 {
+impl<T: Digit> Rem<T> for BigInt<T> {
+    type Output = T;
+    fn rem(self, other: T) -> T {
         RemDiv::rem(&self, &other).unwrap()
     }
 }
 
-impl DivAssign<u32> for BigInt {
-    fn div_assign(&mut self, other: u32) {
+impl<T: Digit> DivAssign<T> for BigInt<T> {
+    fn div_assign(&mut self, other: T) {
         *self = &*self / other;
     }
 }
-impl Div<u32> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: u32) -> BigInt {
+impl<T: Digit> Div<T> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn div(self, other: T) -> BigInt<T> {
         RemDiv::div(self, &other).unwrap()
     }
 }
-impl Div<u32> for BigInt {
-    type Output = BigInt;
-    fn div(self, other: u32) -> BigInt {
+impl<T: Digit> Div<T> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn div(self, other: T) -> BigInt<T> {
         RemDiv::div(&self, &other).unwrap()
     }
 }
 
-impl RemAssign<i32> for BigInt {
-    fn rem_assign(&mut self, other: i32) {
-        let value = &*self % other;
-        *self = BigInt::from(value);
-    }
-}
-impl Rem<i32> for &BigInt {
-    type Output = i32;
-    fn rem(self, other: i32) -> i32 {
-        RemDiv::rem(self, &other).unwrap()
-    }
-}
-impl Rem<i32> for BigInt {
-    type Output = i32;
-    fn rem(self, other: i32) -> i32 {
-        RemDiv::rem(&self, &other).unwrap()
-    }
-}
-
-impl DivAssign<i32> for BigInt {
-    fn div_assign(&mut self, other: i32) {
-        *self = &*self / other;
-    }
-}
-impl Div<i32> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: i32) -> BigInt {
-        RemDiv::div(self, &other).unwrap()
-    }
-}
-impl Div<i32> for BigInt {
-    type Output = BigInt;
-    fn div(self, other: i32) -> BigInt {
-        RemDiv::div(&self, &other).unwrap()
-    }
-}
-impl RemAssign<&BigInt> for BigInt {
-    fn rem_assign(&mut self, other: &BigInt) {
+impl<T: Digit> RemAssign<&BigInt<T>> for BigInt<T> {
+    fn rem_assign(&mut self, other: &BigInt<T>) {
         *self = &*self % other;
     }
 }
-impl Rem<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn rem(self, other: &BigInt) -> BigInt {
+impl<T: Digit> Rem<&BigInt<T>> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn rem(self, other: &BigInt<T>) -> BigInt<T> {
         RemDiv::rem(self, other).unwrap()
     }
 }
-impl Rem<BigInt> for BigInt {
-    type Output = BigInt;
-    fn rem(self, other: BigInt) -> BigInt {
+impl<T: Digit> Rem<BigInt<T>> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn rem(self, other: BigInt<T>) -> BigInt<T> {
         RemDiv::rem(&self, &other).unwrap()
     }
 }
-impl DivAssign<&BigInt> for BigInt {
-    fn div_assign(&mut self, other: &BigInt) {
+impl<T: Digit> DivAssign<&BigInt<T>> for BigInt<T> {
+    fn div_assign(&mut self, other: &BigInt<T>) {
         *self = &*self / other;
     }
 }
-impl Div<&BigInt> for &BigInt {
-    type Output = BigInt;
-    fn div(self, other: &BigInt) -> BigInt {
+impl<T: Digit> Div<&BigInt<T>> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn div(self, other: &BigInt<T>) -> BigInt<T> {
         RemDiv::div(self, other).unwrap()
     }
 }
-impl Div<BigInt> for BigInt {
-    type Output = BigInt;
-    fn div(self, other: BigInt) -> BigInt {
+impl<T: Digit> Div<BigInt<T>> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn div(self, other: BigInt<T>) -> BigInt<T> {
         RemDiv::div(&self, &other).unwrap()
     }
 }

@@ -3,21 +3,23 @@
 //! These implementations are meant to be the main to construct a BigUint,
 //! or export its value into another type.
 
+use core::cmp::Ordering;
+
 use crate::biguint::Digits;
 use crate::errors::FromFloatError;
 use crate::errors::UnexpectedCharacterError;
+use crate::traits::Digit;
 use crate::BigUint;
 
-impl From<&BigUint> for f64 {
-    fn from(int: &BigUint) -> f64 {
+impl<T: Digit> From<&BigUint<T>> for f64 {
+    fn from(int: &BigUint<T>) -> f64 {
         let mut exponent = 0i64;
 
         // Get the correct 52 bits of mantissa
         let extra_bits = int.nb_bits() - 53;
-        let mut cleaned = (int >> extra_bits) + (int.bit(extra_bits - 1) as u32);
+        let cleaned = (int >> extra_bits) + T::from(int.bit(extra_bits - 1));
 
         exponent -= extra_bits as i64;
-        cleaned.val[1] ^= 1u32 << 20;
 
         // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
         if exponent > 52 + 1023 {
@@ -27,22 +29,22 @@ impl From<&BigUint> for f64 {
         }
 
         // Get actual mantissa and exponent biased 1023
-        let mantissa: u64 = cleaned.try_into().unwrap();
+        let mut mantissa: u64 = cleaned.into();
+        mantissa ^= 1u64 << 52;
         let exponent_u64: u64 = (52 + 1023 - exponent).try_into().unwrap();
         f64::from_bits((exponent_u64 << 52) | mantissa)
     }
 }
 
-impl From<&BigUint> for f32 {
-    fn from(int: &BigUint) -> f32 {
+impl<T: Digit> From<&BigUint<T>> for f32 {
+    fn from(int: &BigUint<T>) -> f32 {
         let mut exponent = 0i32;
 
         // Get the correct 23 bits of mantissa
         let extra_bits = int.nb_bits() - 24;
-        let mut cleaned = (int >> extra_bits) + (int.bit(extra_bits - 1) as u32);
+        let cleaned = (int >> extra_bits) + T::from(int.bit(extra_bits - 1));
 
         exponent -= extra_bits as i32;
-        cleaned.val[0] ^= 1u32 << 23;
 
         // Handle overflow or underflow (probably not correct, some answers get mapped to NaNs)
         if exponent > 23 + 127 {
@@ -52,26 +54,28 @@ impl From<&BigUint> for f32 {
         }
 
         // Get actual mantissa and exponent biased 127
-        let mantissa: u32 = cleaned.try_into().unwrap();
+        let mut mantissa: u32 = cleaned.into();
+        mantissa ^= 1u32 << 23;
         let exponent_u32: u32 = (23 + 127 - exponent).try_into().unwrap();
         f32::from_bits((exponent_u32 << 23) | mantissa)
     }
 }
 
-impl std::str::FromStr for BigUint {
+impl<T: Digit> std::str::FromStr for BigUint<T> {
     type Err = UnexpectedCharacterError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut ret = BigUint::new(0);
+        let mut ret = BigUint::<T>::new(T::ZERO);
 
-        let mut base = BigUint::new(1);
+        let mut base = BigUint::<T>::new(T::ONE);
         for c in s.chars().rev() {
-            let v: u32 = match c.to_digit(10) {
+            let v: BigUint<T> = match c.to_digit(10) {
                 Some(val) => val,
                 None => return Err(UnexpectedCharacterError(c)),
-            };
+            }
+            .into();
 
-            ret += v * &base;
-            base *= 10u32;
+            ret += &base * &v;
+            base *= BigUint::<T>::from(10u32);
         }
 
         ret.remove_trailing_zeros();
@@ -79,108 +83,166 @@ impl std::str::FromStr for BigUint {
     }
 }
 
-impl From<&BigUint> for Digits {
-    fn from(b: &BigUint) -> Digits {
+impl<T: Digit> From<&BigUint<T>> for Digits {
+    fn from(b: &BigUint<T>) -> Digits {
         let mut digits = Digits::new(0);
 
         for bit in b.bits().rev() {
             digits.times_2();
-            if bit {
-                digits.add_n_at_k(1, 0);
-            }
+            digits.add_n_at_k(bit as u8, 0);
         }
 
         digits
     }
 }
 
-impl From<&BigUint> for String {
-    fn from(b: &BigUint) -> String {
+impl<T: Digit> From<&BigUint<T>> for String {
+    fn from(b: &BigUint<T>) -> String {
         String::from(&Digits::from(b))
     }
 }
 
-impl From<BigUint> for String {
-    fn from(b: BigUint) -> String {
+impl<T: Digit> From<BigUint<T>> for String {
+    fn from(b: BigUint<T>) -> String {
         String::from(&Digits::from(&b))
     }
 }
 
-impl From<Vec<u32>> for BigUint {
-    fn from(v: Vec<u32>) -> BigUint {
-        let mut ret = BigUint { val: v };
+impl<T: Digit> From<Vec<T>> for BigUint<T> {
+    fn from(v: Vec<T>) -> BigUint<T> {
+        let mut ret = BigUint::<T> { val: v };
         ret.remove_trailing_zeros();
         ret
     }
 }
 
-impl From<&str> for BigUint {
-    fn from(s: &str) -> BigUint {
+impl<T: Digit> From<&str> for BigUint<T> {
+    fn from(s: &str) -> BigUint<T> {
         s.parse().unwrap()
     }
 }
-impl From<String> for BigUint {
-    fn from(s: String) -> BigUint {
-        BigUint::from(s.as_str())
+impl<T: Digit> From<String> for BigUint<T> {
+    fn from(s: String) -> BigUint<T> {
+        BigUint::<T>::from(s.as_str())
     }
 }
 
-impl From<u64> for BigUint {
-    fn from(n: u64) -> BigUint {
-        let mut ret = BigUint {
-            val: vec![n as u32, (n >> 32) as u32],
-        };
-        ret.remove_trailing_zeros();
-        ret
-    }
-}
-impl From<u32> for BigUint {
-    fn from(n: u32) -> BigUint {
-        BigUint::new(n)
+impl<T: Digit> From<(T, T)> for BigUint<T> {
+    fn from((a, b): (T, T)) -> BigUint<T> {
+        BigUint::<T>::from(vec![a, b])
     }
 }
 
 #[derive(Debug)]
-pub struct IntoUintError {}
-impl TryFrom<&BigUint> for u64 {
-    type Error = IntoUintError;
-    fn try_from(uint: &BigUint) -> Result<u64, IntoUintError> {
-        match uint.val.len() {
+pub enum IntoUintError {
+    ToUint16Overflow,
+    ToUint32Overflow,
+    ToUint64Overflow,
+    ToDigitOverflow,
+    ToDoubleDigitOverflow,
+}
+
+impl<T: Digit> BigUint<T> {
+    pub fn try_into_double_digit(&self) -> Result<T::Double, IntoUintError> {
+        match self.val.len() {
             0 => unreachable!(),
-            1 => Ok(uint.val[0].into()),
-            2 => Ok(uint.val[0] as u64 + ((uint.val[1] as u64) << 32)),
-            _ => Err(IntoUintError {}),
+            1 => Ok(self.val[0].to_double()),
+            2 => Ok(self.val[0].to_double() + (self.val[1].to_double() << T::NB_BITS)),
+            _ => Err(IntoUintError::ToDoubleDigitOverflow),
+        }
+    }
+
+    pub fn try_into_digit(&self) -> Result<T, IntoUintError> {
+        match self.val.len() {
+            0 => unreachable!(),
+            1 => Ok(self.val[0]),
+            _ => Err(IntoUintError::ToDigitOverflow),
         }
     }
 }
-impl TryFrom<BigUint> for u64 {
+
+impl<T: Digit> TryFrom<&BigUint<T>> for u16 {
     type Error = IntoUintError;
-    fn try_from(uint: BigUint) -> Result<u64, IntoUintError> {
-        u64::try_from(&uint)
-    }
-}
-impl TryFrom<&BigUint> for u32 {
-    type Error = IntoUintError;
-    fn try_from(uint: &BigUint) -> Result<u32, IntoUintError> {
-        match uint.val.len() {
-            0 => unreachable!(),
-            1 => Ok(uint.val[0]),
-            _ => Err(IntoUintError {}),
+    fn try_from(uint: &BigUint<T>) -> Result<u16, Self::Error> {
+        let val_64: u64 = uint.try_into()?;
+        match val_64.try_into() {
+            Err(_) => Err(IntoUintError::ToUint16Overflow),
+            Ok(val) => Ok(val),
         }
     }
 }
-impl TryFrom<BigUint> for u32 {
+impl<T: Digit> TryFrom<&BigUint<T>> for u32 {
     type Error = IntoUintError;
-    fn try_from(uint: BigUint) -> Result<u32, IntoUintError> {
-        u32::try_from(&uint)
+    fn try_from(uint: &BigUint<T>) -> Result<u32, Self::Error> {
+        let val_64: u64 = uint.try_into()?;
+        match val_64.try_into() {
+            Err(_) => Err(IntoUintError::ToUint32Overflow),
+            Ok(val) => Ok(val),
+        }
+    }
+}
+impl<T: Digit> TryFrom<&BigUint<T>> for u64 {
+    type Error = IntoUintError;
+    fn try_from(uint: &BigUint<T>) -> Result<u64, Self::Error> {
+        match T::NB_BITS.cmp(&64) {
+            Ordering::Greater => unreachable!(),
+            Ordering::Equal | Ordering::Less => {
+                assert_eq!(64 % T::NB_BITS, 0);
+
+                let mut idx = 0;
+                let mut ret = 0u64;
+                let mut remaining = 64;
+                while remaining >= T::NB_BITS && idx < uint.val.len() {
+                    let val: u64 = match uint.val[idx].try_into() {
+                        Err(_) => return Err(IntoUintError::ToUint64Overflow),
+                        Ok(val) => val,
+                    };
+                    ret |= val << (idx * T::NB_BITS);
+                    idx += 1;
+                    remaining -= T::NB_BITS;
+                }
+                if idx < uint.val.len() {
+                    return Err(IntoUintError::ToUint64Overflow);
+                }
+                Ok(ret)
+            }
+        }
+    }
+}
+
+impl<T: Digit> From<u32> for BigUint<T> {
+    fn from(n: u32) -> BigUint<T> {
+        BigUint::<T>::from(T::decomposition_from_u32(n))
+    }
+}
+
+impl<T: Digit> From<u64> for BigUint<T> {
+    fn from(n: u64) -> BigUint<T> {
+        BigUint::<T>::from(T::decomposition_from_u64(n))
+    }
+}
+
+impl<T: Digit> From<BigUint<T>> for u16 {
+    fn from(uint: BigUint<T>) -> u16 {
+        <u16 as TryFrom<&BigUint<T>>>::try_from(&uint).unwrap()
+    }
+}
+impl<T: Digit> From<BigUint<T>> for u32 {
+    fn from(uint: BigUint<T>) -> u32 {
+        <u32 as TryFrom<&BigUint<T>>>::try_from(&uint).unwrap()
+    }
+}
+impl<T: Digit> From<BigUint<T>> for u64 {
+    fn from(uint: BigUint<T>) -> u64 {
+        <u64 as TryFrom<&BigUint<T>>>::try_from(&uint).unwrap()
     }
 }
 
 #[cfg(target_endian = "little")]
-impl TryFrom<f64> for BigUint {
+impl<T: Digit> TryFrom<f64> for BigUint<T> {
     type Error = FromFloatError<f64>;
 
-    fn try_from(f: f64) -> Result<BigUint, FromFloatError<f64>> {
+    fn try_from(f: f64) -> Result<BigUint<T>, FromFloatError<f64>> {
         if f != 0f64 && !f.is_normal() {
             return Err(FromFloatError::NotNormal(f));
         } else if f.is_sign_negative() {
@@ -194,20 +256,21 @@ impl TryFrom<f64> for BigUint {
 
         let exponent = ((f_u64 >> 52) as i64) - 1023 - 52;
         let mantissa = two_to_the_52 | (f_u64 & mantissa_mask);
+        let ret = BigUint::<T>::from(T::decomposition_from_u64(mantissa));
 
         Ok(match exponent {
-            i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
-            i if i > 0 => BigUint::from(mantissa) << exponent.try_into().unwrap(),
-            _ => BigUint::from(mantissa),
+            i if i < 0 => ret >> exponent.abs().try_into().unwrap(),
+            i if i > 0 => ret << exponent.try_into().unwrap(),
+            _ => ret,
         })
     }
 }
 
 #[cfg(target_endian = "little")]
-impl TryFrom<f32> for BigUint {
+impl<T: Digit> TryFrom<f32> for BigUint<T> {
     type Error = FromFloatError<f32>;
 
-    fn try_from(f: f32) -> Result<BigUint, FromFloatError<f32>> {
+    fn try_from(f: f32) -> Result<BigUint<T>, FromFloatError<f32>> {
         if f != 0f32 && !f.is_normal() {
             return Err(FromFloatError::NotNormal(f));
         } else if f.is_sign_negative() {
@@ -221,11 +284,12 @@ impl TryFrom<f32> for BigUint {
 
         let exponent = ((f_u32 >> 23) as i64) - 127 - 23;
         let mantissa = two_to_the_23 | (f_u32 & mantissa_mask);
+        let ret = BigUint::<T>::from(T::decomposition_from_u32(mantissa));
 
         Ok(match exponent {
-            i if i < 0 => BigUint::from(mantissa) >> exponent.abs().try_into().unwrap(),
-            i if i > 0 => BigUint::from(mantissa) << exponent.try_into().unwrap(),
-            _ => BigUint::from(mantissa),
+            i if i < 0 => ret >> exponent.abs().try_into().unwrap(),
+            i if i > 0 => ret << exponent.try_into().unwrap(),
+            _ => ret,
         })
     }
 }
