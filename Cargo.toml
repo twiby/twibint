@@ -16,7 +16,8 @@ version = "0.8"
 
 [dev-dependencies]
 criterion = "0.5"
-num-bigint = "0.4.3"
+num-bigint = "0.4"
+typed_test_gen = "0.1"
 
 [[bench]]
 name = "biguint"

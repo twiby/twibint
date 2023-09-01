@@ -1,6 +1,9 @@
 use crate::traits::{Digit, Pow, TrueDiv};
 use crate::{BigInt, BigUint};
 
+use typed_test_gen::test_with;
+
+#[test_with(u32, u64)]
 fn neg<T: Digit>() {
     let n1: BigInt<T> = "-12345678901234567".parse().unwrap();
     let n2: BigInt<T> = "12345678901234567".parse().unwrap();
@@ -8,6 +11,7 @@ fn neg<T: Digit>() {
     assert_eq!(-n1, n2);
 }
 
+#[test_with(u32, u64)]
 fn add_full_test<T: Digit>() {
     assert_eq!(
         BigInt::<T>::from("4294967295") + BigInt::<T>::from("4294967295"),
@@ -43,6 +47,7 @@ fn add_full_test<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn sub_full_test<T: Digit>() {
     assert_eq!(
         BigInt::<T>::from("4294967295") - BigInt::<T>::from("4294967295"),
@@ -75,6 +80,7 @@ fn sub_full_test<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn sum<T: Digit>() {
     let values = vec![T::MAX; 10];
     let mut ret = T::MAX.to_string();
@@ -93,6 +99,7 @@ fn sum<T: Digit>() {
     assert_eq!(n2.to_string(), ret2);
 }
 
+#[test_with(u32, u64)]
 fn mul_full_test<T: Digit>() {
     assert_eq!(
         BigInt::<T>::from("4294967295") * BigInt::<T>::from("4294967295"),
@@ -112,6 +119,7 @@ fn mul_full_test<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn div_rem_1<T: Digit>() {
     let two = T::ONE + T::ONE;
     let three = two + T::ONE;
@@ -131,6 +139,7 @@ fn div_rem_1<T: Digit>() {
     assert_eq!(r, two);
 }
 
+#[test_with(u32, u64)]
 fn div_rem_2<T: Digit>() {
     let (q, r) = (
         BigInt::<T>::from("10") / BigInt::<T>::from(3),
@@ -161,6 +170,7 @@ fn div_rem_2<T: Digit>() {
     assert_eq!(r, BigInt::<T>::from(-2));
 }
 
+#[test_with(u32, u64)]
 fn pow<T: Digit>() {
     let n = BigInt::<T>::from(-5i32);
     assert_eq!(n.pow(0), BigInt::<T>::from(1i32));
@@ -187,6 +197,7 @@ fn pow<T: Digit>() {
     assert_eq!(n2, BigInt::<T>::from("-40564819207303340847894502572032"));
 }
 
+#[test_with(u32, u64)]
 fn truediv<T: Digit>() {
     let n1 = BigInt::<T>::from("123456678890123345567789");
     let n2 = BigInt::<T>::from("-12345667555");
@@ -205,6 +216,7 @@ fn truediv<T: Digit>() {
     assert_eq!(f, true_div);
 }
 
+#[test_with(u32, u64)]
 fn not<T: Digit>() {
     let n1 = BigInt::<T>::from(-10);
     let n2 = BigInt::<T>::from(9);
@@ -212,6 +224,7 @@ fn not<T: Digit>() {
     assert_eq!(!n2, n1);
 }
 
+#[test_with(u32, u64)]
 fn xor<T: Digit>() {
     let n1 = BigInt::<T>::from(10);
     let n2 = BigInt::<T>::from(8);
@@ -222,6 +235,7 @@ fn xor<T: Digit>() {
     assert_eq!(&-&n1 ^ &n2, BigInt::<T>::from(-2));
 }
 
+#[test_with(u32, u64)]
 fn and<T: Digit>() {
     let n1 = BigInt::<T>::from(10);
     let n2 = BigInt::<T>::from(3);
@@ -232,6 +246,7 @@ fn and<T: Digit>() {
     assert_eq!(&-&n1 & &n2, BigInt::<T>::from(2));
 }
 
+#[test_with(u32, u64)]
 fn or<T: Digit>() {
     let n1 = BigInt::<T>::from(10);
     let n2 = BigInt::<T>::from(3);
@@ -242,6 +257,7 @@ fn or<T: Digit>() {
     assert_eq!(&-&n1 | &n2, BigInt::<T>::from(-9));
 }
 
+#[test_with(u32, u64)]
 fn shifts<T: Digit>() {
     assert_eq!(BigInt::<T>::from(10) >> 2, BigInt::<T>::from(2));
     assert_eq!(BigInt::<T>::from(-10) >> 2, BigInt::<T>::from(-3));
@@ -265,20 +281,3 @@ fn shifts<T: Digit>() {
     n <<= 2;
     assert_eq!(n, BigInt::<T>::from(-40));
 }
-
-test_functions!(
-    neg, neg_u32, neg_u64;
-    add_full_test, add_full_test_u32, add_full_test_u64;
-    sub_full_test, sub_full_test_u32, sub_full_test_u64;
-    sum, sum_u32, sum_u64;
-    mul_full_test, mul_full_test_u32, mul_full_test_u64;
-    div_rem_1, div_rem_1_u32, div_rem_1_u64;
-    div_rem_2, div_rem_2_u32, div_rem_2_u64;
-    pow, pow_u32, pow_u64;
-    truediv, truediv_u32, truediv_u64;
-    not, not_u32, not_u64;
-    xor, xor_u32, xor_u64;
-    and, and_u32, and_u64;
-    or, or_u32, or_u64;
-    shifts, shifts_u32, shifts_u64;
-);

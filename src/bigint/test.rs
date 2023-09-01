@@ -1,6 +1,9 @@
 use crate::traits::Digit;
 use crate::{BigInt, BigUint};
 
+use typed_test_gen::test_with;
+
+#[test_with(u32, u64)]
 fn creation<T: Digit>() {
     let n1 = BigInt::<T>::from(128u32);
     let n2 = BigInt::<T>::from(-129i32);
@@ -44,6 +47,7 @@ fn creation<T: Digit>() {
     assert!(n3 > n4);
 }
 
+#[test_with(u32, u64)]
 fn sign<T: Digit>() {
     let n1 = BigInt::<T>::from(1i32);
     let n2 = BigInt::<T>::from(0i32);
@@ -65,6 +69,7 @@ fn sign<T: Digit>() {
     assert_eq!(n2, n4);
 }
 
+#[test_with(u32, u64)]
 fn hash<T: Digit>() {
     use std::collections::HashMap;
     let mut map = HashMap::<BigInt<T>, String>::new();
@@ -82,6 +87,7 @@ fn hash<T: Digit>() {
     assert_eq!(map[&n2], "second");
 }
 
+#[test_with(u32, u64)]
 fn f64<T: Digit>() {
     let mut a = BigInt::<T>::from(u64::MAX);
     a.sign = false;
@@ -91,6 +97,7 @@ fn f64<T: Digit>() {
     assert_eq!(format!("{:e}", a), format!("{:e}", f));
 }
 
+#[test_with(u32, u64)]
 fn f32<T: Digit>() {
     let mut a = BigInt::<T>::from(u64::MAX);
     a.sign = false;
@@ -98,6 +105,7 @@ fn f32<T: Digit>() {
     assert_eq!(f, -1.8446744e+19);
 }
 
+#[test_with(u32, u64)]
 fn binary<T: Digit>() {
     let mut a = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX >> 1, T::MAX >> 1]));
     let mut s = "0".to_string();
@@ -115,6 +123,7 @@ fn binary<T: Digit>() {
     assert_eq!(format!("{:b}", a), s2);
 }
 
+#[test_with(u32, u64)]
 fn hex<T: Digit>() {
     let mut a = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX >> 4, T::MAX >> 4]));
     let mut s = "0".to_string();
@@ -132,6 +141,7 @@ fn hex<T: Digit>() {
     assert_eq!(format!("{:x}", a), s2);
 }
 
+#[test_with(u32, u64)]
 fn parse<T: Digit>() {
     let n1: BigInt<T> = "-12345678901234567".parse().unwrap();
     let n2: BigInt<T> = "12345678901234567".parse().unwrap();
@@ -141,10 +151,13 @@ fn parse<T: Digit>() {
     assert_eq!(String::from(&n1), "-12345678901234567");
     assert_eq!(String::from(&n2), "12345678901234567");
 }
+#[test_with(u32, u64)]
+#[should_panic]
 fn parse_fail<T: Digit>() {
     let _: BigInt<T> = "-123456789012-34567".parse().unwrap();
 }
 
+#[test_with(u32, u64)]
 fn from_f64<T: Digit>() {
     // Test zero
     let f = 0f64;
@@ -162,15 +175,20 @@ fn from_f64<T: Digit>() {
     assert_eq!(n.to_string(), "-1844");
 }
 
+#[test_with(u32, u64)]
+#[should_panic]
 fn from_f64_fail2<T: Digit>() {
     let f: f64 = f64::INFINITY;
     let _ = BigInt::<T>::try_from(f).unwrap();
 }
 
+#[test_with(u32, u64)]
+#[should_panic]
 fn from_f64_fail3<T: Digit>() {
     let f: f64 = f64::NAN;
     let _ = BigInt::<T>::try_from(f).unwrap();
 }
+#[test_with(u32, u64)]
 fn from_f32<T: Digit>() {
     // Test zero
     let f = 0f32;
@@ -188,33 +206,37 @@ fn from_f32<T: Digit>() {
     assert_eq!(n.to_string(), "1844");
 }
 
+#[test_with(u32, u64)]
+#[should_panic]
 fn from_f32_fail2<T: Digit>() {
     let f: f32 = f32::INFINITY;
     let _ = BigInt::<T>::try_from(f).unwrap();
 }
 
+#[test_with(u32, u64)]
+#[should_panic]
 fn from_f32_fail3<T: Digit>() {
     let f: f32 = f32::NAN;
     let _ = BigInt::<T>::try_from(f).unwrap();
 }
 
-test_panic_functions!(
-    parse_fail, parse_fail_u32, parse_fail_u64;
-    from_f64_fail2, from_f64_fail2_u32, from_f64_fail2_u64;
-    from_f64_fail3, from_f64_fail3_u32, from_f64_fail3_u64;
-    from_f32_fail2, from_f32_fail2_u32, from_f32_fail2_u64;
-    from_f32_fail3, from_f32_fail3_u32, from_f32_fail3_u64;
-);
+// test_panic_functions!(
+//     parse_fail, parse_fail_u32, parse_fail_u64;
+//     from_f64_fail2, from_f64_fail2_u32, from_f64_fail2_u64;
+//     from_f64_fail3, from_f64_fail3_u32, from_f64_fail3_u64;
+//     from_f32_fail2, from_f32_fail2_u32, from_f32_fail2_u64;
+//     from_f32_fail3, from_f32_fail3_u32, from_f32_fail3_u64;
+// );
 
-test_functions!(
-    creation, creation_u32, creation_u64;
-    sign, sign_u32, sign_u64;
-    hash, hash_u32, hash_u64;
-    f32, f32_u32, f32_u64;
-    f64, f64_u32, f64_u64;
-    binary, binary_u32, binary_u64;
-    parse, parse_u32, parse_u64;
-    hex, hex_u32, hex_u64;
-    from_f32, from_f32_u32, from_f32_u64;
-    from_f64, from_f64_u32, from_f64_u64;
-);
+// test_functions!(
+//     creation, creation_u32, creation_u64;
+//     sign, sign_u32, sign_u64;
+//     hash, hash_u32, hash_u64;
+//     f32, f32_u32, f32_u64;
+//     f64, f64_u32, f64_u64;
+//     binary, binary_u32, binary_u64;
+//     parse, parse_u32, parse_u64;
+//     hex, hex_u32, hex_u64;
+//     from_f32, from_f32_u32, from_f32_u64;
+//     from_f64, from_f64_u32, from_f64_u64;
+// );

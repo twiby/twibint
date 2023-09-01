@@ -1,6 +1,9 @@
 use crate::traits::{Digit, Pow, TrueDiv};
 use crate::BigUint;
 
+use typed_test_gen::test_with;
+
+#[test_with(u32, u64)]
 fn add_assign<T: Digit>() {
     let mut bg = BigUint::<T>::from(0u32);
     bg += T::ONE;
@@ -12,6 +15,7 @@ fn add_assign<T: Digit>() {
     assert_eq!(bg.to_string(), "101");
 }
 
+#[test_with(u32, u64)]
 fn add_assign_overflow<T: Digit>() {
     let mut bg = BigUint::<T>::new(T::MAX);
     bg += T::ONE;
@@ -23,6 +27,7 @@ fn add_assign_overflow<T: Digit>() {
     assert_eq!(bg.val, vec![T::ONE, T::ONE]);
 }
 
+#[test_with(u32, u64)]
 fn add<T: Digit>() {
     let b1 = BigUint::<T>::from(100u32);
     let b2 = BigUint::<T>::from(50u32);
@@ -31,6 +36,7 @@ fn add<T: Digit>() {
     assert_eq!(&b1 + T::ONE, BigUint::<T>::from(101u32));
 }
 
+#[test_with(u32, u64)]
 fn add_assign_full_test<T: Digit>() {
     let mut b1 = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
     b1 += T::ONE;
@@ -41,6 +47,7 @@ fn add_assign_full_test<T: Digit>() {
     assert_eq!(b.val, vec![T::MAX - T::ONE, T::ONE]);
 }
 
+#[test_with(u32, u64)]
 fn sub<T: Digit>() {
     let mut b1 = BigUint::<T>::from(vec![T::MAX, T::MAX]);
     b1 -= T::MAX;
@@ -52,6 +59,7 @@ fn sub<T: Digit>() {
     assert_eq!(b1, BigUint::<T>::default());
 }
 
+#[test_with(u32, u64)]
 fn sub_full<T: Digit>() {
     let n1 = BigUint::<T>::from("12345678910111213");
     let n2 = BigUint::<T>::from("987654321");
@@ -60,6 +68,7 @@ fn sub_full<T: Digit>() {
     assert_eq!(String::from(&n3), "12345677922456892");
 }
 
+#[test_with(u32, u64)]
 fn fibonacci<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -82,6 +91,7 @@ fn fibonacci<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn fibonacci_5<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -104,6 +114,7 @@ fn fibonacci_5<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn fibonacci_5_bis<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -132,6 +143,7 @@ fn fibonacci_5_bis<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn fibonacci_square<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -184,6 +196,7 @@ fn fibonacci_square<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn factorial_100<T: Digit>() {
     let mut n = BigUint::<T>::new(T::ONE);
 
@@ -200,6 +213,7 @@ fn factorial_100<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn fact_mod<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -220,6 +234,7 @@ fn fact_mod<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn fact_div<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -264,6 +279,7 @@ fn fact_div<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn mul_test<T: Digit>() {
     let n1 = BigUint::<T>::from("4294967295");
     let n2 = BigUint::<T>::from("4294967295");
@@ -272,6 +288,7 @@ fn mul_test<T: Digit>() {
     assert_eq!(String::from(&n3), "18446744065119617025");
 }
 
+#[test_with(u32, u64)]
 fn shl_assign_test<T: Digit>() {
     let mut b = BigUint::<T>::new(T::ONE << (T::NB_BITS - 1));
     let b2 = &b << (T::NB_BITS + 1);
@@ -280,6 +297,7 @@ fn shl_assign_test<T: Digit>() {
     assert_eq!(b.val, vec![T::ZERO, T::ZERO, T::ONE]);
 }
 
+#[test_with(u32, u64)]
 fn shr_assign_test<T: Digit>() {
     let mut b = BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]);
     let b2 = &b >> (T::NB_BITS + 1);
@@ -288,6 +306,7 @@ fn shr_assign_test<T: Digit>() {
     assert_eq!(b.val, vec![T::MAX, T::MAX >> 1]);
 }
 
+#[test_with(u32, u64)]
 fn bit_and<T: Digit>() {
     let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
     let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
@@ -299,6 +318,7 @@ fn bit_and<T: Digit>() {
     assert_eq!(n1, BigUint::<T>::from(vec![T::ONE, T::ONE]));
 }
 
+#[test_with(u32, u64)]
 fn bit_or<T: Digit>() {
     let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
     let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
@@ -310,6 +330,7 @@ fn bit_or<T: Digit>() {
     assert_eq!(n1, BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]));
 }
 
+#[test_with(u32, u64)]
 fn bit_xor<T: Digit>() {
     let mut n1 = BigUint::<T>::from(vec![T::MAX, T::ONE]);
     let n2 = BigUint::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
@@ -330,6 +351,7 @@ fn bit_xor<T: Digit>() {
     );
 }
 
+#[test_with(u32, u64)]
 fn mul_assign_u32<T: Digit>() {
     let mut b = BigUint::<T>::from("2147483648");
     b *= T::ONE << 3;
@@ -337,11 +359,14 @@ fn mul_assign_u32<T: Digit>() {
     assert_eq!(b.to_string(), "17179869184");
 }
 
+#[test_with(u32, u64)]
+#[should_panic]
 fn div_by_zero<T: Digit>() {
     let n = BigUint::<T>::from("12345");
     let _ = &n / T::ZERO;
 }
 
+#[test_with(u32, u64)]
 fn div_1<T: Digit>() {
     let mut a = BigUint::<T>::from(16u32);
 
@@ -355,6 +380,7 @@ fn div_1<T: Digit>() {
     assert_eq!(a, BigUint::<T>::from(0u32));
 }
 
+#[test_with(u32, u64)]
 fn div_2<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -414,12 +440,14 @@ fn div_2<T: Digit>() {
     assert_eq!(n3, n4);
 }
 
+#[test_with(u32, u64)]
 fn rem<T: Digit>() {
     let a = BigUint::<T>::from("81129638419329048179758161985792");
     let b = BigUint::<T>::from("571849066607118647405");
     assert_eq!((&a % &b).to_string(), "268965438589694318452");
 }
 
+#[test_with(u32, u64)]
 fn product<T: Digit>() {
     let values = vec![T::ONE; 20];
 
@@ -434,6 +462,7 @@ fn product<T: Digit>() {
     assert_eq!(n2, BigUint::<T>::from("1"));
 }
 
+#[test_with(u32, u64)]
 fn sum<T: Digit>() {
     let values = vec![T::MAX; 10];
     let mut s = format!("{:?}", T::MAX);
@@ -451,6 +480,7 @@ fn sum<T: Digit>() {
     assert_eq!(n2.to_string(), s);
 }
 
+#[test_with(u32, u64)]
 fn truediv<T: Digit>() {
     let n1 = BigUint::<T>::from("123456678890123345567789");
     let n2 = BigUint::<T>::from("12345667555");
@@ -501,6 +531,7 @@ fn truediv<T: Digit>() {
     assert_eq!(f, true_div);
 }
 
+#[test_with(u32, u64)]
 fn pow<T: Digit>() {
     let n = BigUint::<T>::from(5u32);
     assert_eq!(n.pow(0), BigUint::<T>::from(1u32));
@@ -527,6 +558,7 @@ fn pow<T: Digit>() {
     assert_eq!(n2, BigUint::<T>::from("40564819207303340847894502572032"));
 }
 
+#[test_with(u32, u64)]
 fn long_mul<T: Digit>() {
     let n1 = BigUint::<T>::from(vec![T::ONE; 100]);
     let n2 = BigUint::<T>::from(vec![T::ONE; 100]);
@@ -557,37 +589,3 @@ fn maxed_out_mul() {
         )
     );
 }
-
-test_panic_functions!(
-    div_by_zero, div_by_zero_u32, div_by_zero_u64;
-);
-test_functions!(
-    add, add_u32, add_u64;
-    add_assign, add_assign_u32, add_assign_u64;
-    add_assign_overflow, add_assign_overflow_u32, add_assign_overflow_u64;
-    add_assign_full_test, add_assign_full_test_u32, add_assign_full_test_u64;
-    sub, sub_u32, sub_u64;
-    sub_full, sub_full_u32, sub_full_u64;
-    fibonacci, fibonacci_u32, fibonacci_u64;
-    fibonacci_5, fibonacci_5_u32, fibonacci_5_u64;
-    fibonacci_5_bis, fibonacci_5_bis_u32, fibonacci_5_bis_u64;
-    fibonacci_square, fibonacci_square_u32, fibonacci_square_u64;
-    factorial_100, factorial_100_u32, factorial_100_u64;
-    fact_mod, fact_mod_u32, fact_mod_u64;
-    fact_div, fact_div_u32, fact_div_u64;
-    mul_test, mul_test_u32, mul_test_u64;
-    shl_assign_test, shl_assign_test_u32, shl_assign_test_u64;
-    shr_assign_test, shr_assign_test_u32, shr_assign_test_u64;
-    bit_and, bit_and_u32, bit_and_u64;
-    bit_or, bit_or_u32, bit_or_u64;
-    bit_xor, bit_xor_u32, bit_xor_u64;
-    mul_assign_u32, mul_assign_u32_u32, mul_assign_u32_u64;
-    div_1, div_1_u32, div_1_u64;
-    div_2, div_2_u32, div_2_u64;
-    rem, rem_u332, rem_64;
-    product, product_u32, product_u64;
-    sum, sum_u32, sum_u64;
-    truediv, truediv_u32, truediv_u64;
-    pow, pow_u32, pow_u64;
-    long_mul, long_mul_u32, long_mul_u64;
-);
