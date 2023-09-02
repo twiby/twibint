@@ -1,8 +1,8 @@
 # twibint
 Rust crate for arbitrarily big integers, signed or unsigned.
 
-[![crate](https://img.shields.io/crates/v/num-bigint.svg)](https://crates.io/crates/twibint)
-[![documentation](https://docs.rs/num-bigint/badge.svg)](https://docs.rs/twibint)
+[![crate](https://img.shields.io/crates/v/twibint.svg)](https://crates.io/crates/twibint)
+[![documentation](https://docs.rs/twibint/badge.svg)](https://docs.rs/twibint)
 
 
 The main API of this crate is to export 2 types: BigUint and BigInt, 
