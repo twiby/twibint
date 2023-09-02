@@ -1,5 +1,9 @@
-# bigint
+# twibint
 Rust crate for arbitrarily big integers, signed or unsigned.
+
+[![crate](https://img.shields.io/crates/v/num-bigint.svg)](https://crates.io/crates/twibint)
+[![documentation](https://docs.rs/num-bigint/badge.svg)](https://docs.rs/twibint)
+
 
 The main API of this crate is to export 2 types: BigUint and BigInt, 
 meant to represent unsigned or signed integers of arbitrarily large
@@ -31,6 +35,11 @@ cargo bench sub
 Simply use from the base directory
 ```bash
 python3 -m pip install .
+```
+
+or from the PyPi repository
+```bash
+pip install twibint
 ```
 
 Python tests are available to be run in the `pytest` framework. They are located
