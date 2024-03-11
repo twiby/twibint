@@ -57,8 +57,8 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     let (x_temp, y_temp) = ret[..size].split_at_mut(half_size);
     x_temp.copy_from_slice(x0);
     y_temp.copy_from_slice(y0);
-    let x_carry = super::add::schoolbook_add_assign(x_temp, x1);
-    let y_carry = super::add::schoolbook_add_assign(y_temp, y1);
+    let x_carry = super::add_assign(x_temp, x1);
+    let y_carry = super::add_assign(y_temp, y1);
 
     // compute z1 in a separate buffer
     // but specifically handle its last bit
@@ -66,13 +66,13 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     let mut z1_last_bit = T::ZERO;
     _karatsuba::<THRESHOLD, _>(&mut z1[..size], x_temp, y_temp, new_buff);
     if x_carry {
-        z1_last_bit += T::from(super::add::schoolbook_add_assign(
+        z1_last_bit += T::from(super::add_assign(
             &mut z1[half_size..],
             &y_temp,
         ));
     }
     if y_carry {
-        z1_last_bit += T::from(super::add::schoolbook_add_assign(
+        z1_last_bit += T::from(super::add_assign(
             &mut z1[half_size..],
             &x_temp,
         ));
@@ -100,6 +100,6 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     (z1_last_bit, _) = z1_last_bit.overflowing_sub(carry);
 
     // add z1
-    super::add::schoolbook_add_assign(&mut ret[half_size..], z1);
-    super::add::schoolbook_add_assign(&mut ret[half_size + size..], &[z1_last_bit]);
+    super::add_assign(&mut ret[half_size..], z1);
+    super::add_assign(&mut ret[half_size + size..], &[z1_last_bit]);
 }

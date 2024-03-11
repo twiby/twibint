@@ -1,6 +1,10 @@
 use crate::traits::Digit;
 
+#[cfg(not(feature="parallel_add"))]
 mod add;
+#[cfg(feature="parallel_add")]
+mod parallel_add;
+
 mod mul;
 mod sub;
 
@@ -32,7 +36,11 @@ pub(super) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
 /// Current implementation of add_assign, returning the carry
 /// Assumes rhs has at least the size of lhs
 pub(super) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
-    add::schoolbook_add_assign(rhs, lhs)
+    #[cfg(feature =  "parallel_add")]
+    return parallel_add::parallel_add_assign(rhs, lhs);
+
+    #[cfg(not(feature =  "parallel_add"))]
+    return add::schoolbook_add_assign(rhs, lhs);
 }
 
 /// Current implementation of sub_assign
