@@ -1,16 +1,19 @@
 use crate::traits::Digit;
 
 pub(super) fn schoolbook_sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) {
-    let mut partial_carry_1: bool;
-    let mut partial_carry_2: bool;
+    let mut c1: bool;
+    let mut c2: bool;
     let mut carry = false;
     for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
-        (*a, partial_carry_1) = a.overflowing_sub(*b);
-        (*a, partial_carry_2) = a.overflowing_sub(T::from(carry));
-        carry = partial_carry_1 | partial_carry_2;
+        (*a, c1) = a.overflowing_sub(*b);
+        (*a, c2) = a.overflowing_sub(T::from(carry));
+        carry = c1 | c2;
     }
 
-    for val in rhs.iter_mut().skip(lhs.len()) {
-        (*val, carry) = val.overflowing_sub(T::from(carry));
+    // Potential carry propagation
+    let mut n = lhs.len();
+    while carry && n < rhs.len() {
+        (rhs[n], carry) = rhs[n].overflowing_sub(T::from(carry));
+        n += 1;
     }
 }

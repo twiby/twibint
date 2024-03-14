@@ -1,22 +1,21 @@
 use crate::traits::Digit;
 
-#[cfg(not(feature="parallel_add"))]
 mod add;
-#[cfg(feature="parallel_add")]
-mod parallel_add;
-
 mod mul;
 mod sub;
 
+#[cfg(feature = "parallel")]
+mod parallel_add;
+
 // Below this number of digits, multiplication is schoolbook
-#[cfg(debug_assertions)]
+#[cfg(test)]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 2;
-#[cfg(debug_assertions)]
+#[cfg(test)]
 const KARATSUBA_EXTERNAL_THRESHOLD: usize = 2;
 
-#[cfg(not(debug_assertions))]
+#[cfg(not(test))]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
-#[cfg(not(debug_assertions))]
+#[cfg(not(test))]
 const KARATSUBA_EXTERNAL_THRESHOLD: usize = 500;
 
 const KARATSUBA_EXTERNAL_THRESHOLD_SQUARED: usize =
@@ -36,11 +35,11 @@ pub(super) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
 /// Current implementation of add_assign, returning the carry
 /// Assumes rhs has at least the size of lhs
 pub(super) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
-    #[cfg(feature =  "parallel_add")]
+    #[cfg(feature = "parallel")]
     return parallel_add::parallel_add_assign(rhs, lhs);
 
-    #[cfg(not(feature =  "parallel_add"))]
-    return add::schoolbook_add_assign(rhs, lhs);
+    #[cfg(not(feature = "parallel"))]
+    return add::schoolbook_add_assign(rhs, lhs, false);
 }
 
 /// Current implementation of sub_assign

@@ -3,6 +3,14 @@ use std::ops::{
     ShlAssign, Shr, ShrAssign, Sub,
 };
 
+#[cfg(feature = "parallel")]
+pub trait ParallelDigit: Send + Sync {}
+#[cfg(not(feature = "parallel"))]
+pub trait ParallelDigit {}
+
+impl ParallelDigit for u32 {}
+impl ParallelDigit for u64 {}
+
 pub trait Digit:
     Copy
     + std::fmt::Debug
@@ -29,6 +37,7 @@ pub trait Digit:
     + BitAndAssign
     + BitOrAssign
     + BitXorAssign
+    + ParallelDigit
 {
     const ZERO: Self;
     const ONE: Self;
@@ -38,6 +47,7 @@ pub trait Digit:
     type Signed: SignedDigit<Unsigned = Self>;
     fn to_double(self) -> Self::Double;
     fn overflowing_sub(self, other: Self) -> (Self, bool);
+    fn overflowing_add(self, other: Self) -> (Self, bool);
     fn leading_zeros(self) -> u32;
     fn decomposition_from_u32(n: u32) -> Vec<Self>;
     fn decomposition_from_u64(n: u64) -> Vec<Self>;
@@ -78,6 +88,9 @@ impl Digit for u32 {
     }
     fn overflowing_sub(self, other: Self) -> (Self, bool) {
         self.overflowing_sub(other)
+    }
+    fn overflowing_add(self, other: Self) -> (Self, bool) {
+        self.overflowing_add(other)
     }
     fn leading_zeros(self) -> u32 {
         self.leading_zeros()
@@ -121,6 +134,9 @@ impl Digit for u64 {
     }
     fn overflowing_sub(self, other: Self) -> (Self, bool) {
         self.overflowing_sub(other)
+    }
+    fn overflowing_add(self, other: Self) -> (Self, bool) {
+        self.overflowing_add(other)
     }
     fn leading_zeros(self) -> u32 {
         self.leading_zeros()

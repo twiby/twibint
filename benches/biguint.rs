@@ -41,6 +41,8 @@ criterion_group!(
     add<30_000_000, u64>,
     add<100_000_000, u32>,
     add<100_000_000, u64>,
+    add<1_000_000_000, u32>,
+    add<1_000_000_000, u64>,
 );
 
 pub fn sub<const N: usize, T: Digit>(c: &mut Criterion)

@@ -66,16 +66,10 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     let mut z1_last_bit = T::ZERO;
     _karatsuba::<THRESHOLD, _>(&mut z1[..size], x_temp, y_temp, new_buff);
     if x_carry {
-        z1_last_bit += T::from(super::add_assign(
-            &mut z1[half_size..],
-            &y_temp,
-        ));
+        z1_last_bit += T::from(super::add_assign(&mut z1[half_size..], &y_temp));
     }
     if y_carry {
-        z1_last_bit += T::from(super::add_assign(
-            &mut z1[half_size..],
-            &x_temp,
-        ));
+        z1_last_bit += T::from(super::add_assign(&mut z1[half_size..], &x_temp));
     }
     z1_last_bit += T::from(x_carry && y_carry);
 

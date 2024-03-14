@@ -13,8 +13,8 @@ categories = ["mathematics"]
 name = "twibint"
 
 [features]
-default = ["parallel_add"]
-parallel_add = ["dep:rayon"]
+default = []
+parallel = ["dep:rayon"]
 
 [dependencies.rayon]
 version = "1.9.0"
