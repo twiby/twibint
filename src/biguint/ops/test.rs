@@ -28,6 +28,18 @@ fn add_assign_overflow<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn add_assign_overflow_big<T: Digit>() {
+    let mut bg = BigUint::<T>::from(vec![T::MAX - T::ONE; 100]);
+    let mut other = BigUint::<T>::from(vec![T::ONE; 100]);
+    other.val[0] += T::ONE;
+    bg += other;
+
+    let mut ret = vec![T::ZERO; 100];
+    ret.push(T::ONE);
+    assert_eq!(bg.val, ret);
+}
+
+#[test_with(u32, u64)]
 fn add<T: Digit>() {
     let b1 = BigUint::<T>::from(100u32);
     let b2 = BigUint::<T>::from(50u32);
@@ -588,4 +600,36 @@ fn maxed_out_mul() {
             "115792089237316195423570985008687907852589419931798687112530834793049593217025"
         )
     );
+}
+
+#[cfg(target_arch="x86_64")]
+#[test]
+fn test_asm_u64() {
+    use std::arch::asm;
+
+    let mut carry = 1u64;
+    let mut a = u64::MAX;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "cmp {c}, 0",
+            "jle 2f",
+            "stc",
+
+            "2:",
+            "adc {a}, {b}",
+
+            "setc dl",
+            "movzx {c:r}, dl",
+            "clc",
+            a = inout(reg) a,
+            b = in(reg) b,
+            c = inout(reg) carry,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, u64::MAX);
+    assert_eq!(carry, 1);
 }

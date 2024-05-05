@@ -1,10 +1,51 @@
+use std::any::TypeId;
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXorAssign, Div, Mul, Rem, Shl,
     ShlAssign, Shr, ShrAssign, Sub,
 };
 
+pub trait ToPtr {
+    fn to_ptr<T: 'static>(&self) -> Option<*const T>;
+    fn to_mut_ptr<T: 'static>(&mut self) -> Option<*mut T>;
+}
+
+impl <T: Digit> ToPtr for T {
+    fn to_ptr<T2: 'static>(&self) -> Option<*const T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some((self as *const T).cast())
+        } else {
+            None
+        }
+    }
+    fn to_mut_ptr<T2: 'static>(&mut self) -> Option<*mut T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some((self as *mut T).cast())
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Digit> ToPtr for [T] {
+    fn to_ptr<T2: 'static>(&self) -> Option<*const T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some(self.as_ptr().cast())
+        } else {
+            None
+        }
+    }
+    fn to_mut_ptr<T2: 'static>(&mut self) -> Option<*mut T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some(self.as_mut_ptr().cast())
+        } else {
+            None
+        }
+    }
+}
+
 pub trait Digit:
-    Copy
+    'static
+    + Copy
     + std::fmt::Debug
     + std::fmt::Display
     + std::fmt::Binary
@@ -29,6 +70,8 @@ pub trait Digit:
     + BitAndAssign
     + BitOrAssign
     + BitXorAssign
+    + ToPtr
+where [Self]: ToPtr
 {
     const ZERO: Self;
     const ONE: Self;
