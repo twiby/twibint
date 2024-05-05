@@ -29,6 +29,6 @@ typed_test_gen = "0.1"
 name = "biguint"
 harness = false
 
-[[bench]]
-name = "num-bigint"
-harness = false
+# [[bench]]
+# name = "num-bigint"
+# harness = false
