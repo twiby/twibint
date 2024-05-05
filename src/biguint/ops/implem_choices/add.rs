@@ -11,27 +11,29 @@ use crate::traits::{Digit, DoubleDigit, ToPtr};
 
 /// Performs a part of the addition. Returns a tuple containing the carry state 
 /// and the number of digits currently added
-fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> (bool, usize) {
+fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, mut size: usize) -> (bool, usize) {
+    if size <= 4 {
+        return (false, 0);
+    }
+    size -= 4;
+
     let mut c = 0u64;
-    const FACTOR: usize = 4;
 
-    let size_div = size / FACTOR;
-    for i in 0..size_div {
-        let idx = i * FACTOR;
-
+    let mut idx = 0;
+    while idx < size {
         unsafe {
             asm!(
                 // Copy a in registers
-                "mov {a_tmp1}, qword ptr [{a}]",
-                "mov {a_tmp2}, qword ptr [{a} + 8]",
-                "mov {a_tmp3}, qword ptr [{a} + 16]",
-                "mov {a_tmp4}, qword ptr [{a} + 24]",
+                "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
+                "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
+                "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
+                "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
 
                 // Copy b in registers
-                "mov {b_tmp1}, qword ptr [{b}]",
-                "mov {b_tmp2}, qword ptr [{b} + 8]",
-                "mov {b_tmp3}, qword ptr [{b} + 16]",
-                "mov {b_tmp4}, qword ptr [{b} + 24]",
+                "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
+                "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
+                "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
+                "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
 
                 // Set the carry flag if there was a previous carry
                 "cmp {c}, 0",
@@ -46,18 +48,23 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> 
                 "adc {a_tmp4}, {b_tmp4}",
 
                 // Copy the return values
-                "mov qword ptr [{a}], {a_tmp1}",
-                "mov qword ptr [{a} + 8], {a_tmp2}",
-                "mov qword ptr [{a} + 16], {a_tmp3}",
-                "mov qword ptr [{a} + 24], {a_tmp4}",
+                "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
+                "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
+                "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
+                "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
 
                 // Output the carry flag
                 "setc dl",
                 "movzx {c}, dl",
                 "clc",
-                a = in(reg) rhs.add(idx), 
-                b = in(reg) lhs.add(idx), 
+
+                // Increment loop counter
+                "add {idx}, 4",
+
+                a = in(reg) rhs, 
+                b = in(reg) lhs, 
                 c = inout(reg) c,
+                idx = inout(reg) idx,
 
                 a_tmp1 = out(reg) _,
                 a_tmp2 = out(reg) _,
@@ -74,19 +81,28 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> 
         }
     }
 
-    (c > 0, size_div * FACTOR)
+    (c > 0, idx)
 }
 
-pub(super) fn schoolbook_add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
+#[cfg(test)]
+const SPECIALIZATION_THRESHOLD: usize = 16;
+
+#[cfg(not(test))]
+const SPECIALIZATION_THRESHOLD: usize = 256;
+
+/// Current implementation of add_assign, returning the carry
+/// Assumes rhs has at least the size of lhs
+pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
     #[allow(unused_mut)]
     let mut done = 0;
-    let mut carry = T::ZERO;
+    #[allow(unused_mut)]
+    let mut carry = false;
 
     #[cfg(target_arch="x86_64")]
     'x86_spec: {
         let size = lhs.len().min(rhs.len());
-        // Avboid specialization overhead for small sizes
-        if size < 256 {
+        // Avoid specialization overhead for small sizes
+        if size < SPECIALIZATION_THRESHOLD {
             break 'x86_spec;
         }
 
@@ -101,14 +117,21 @@ pub(super) fn schoolbook_add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool 
 
             let (c, d) = schoolbook_add_assign_x64_64(rhs_cast, lhs_cast, size);
             done += d;
-            if c {
-                carry = T::ONE;
-            }
+            carry = c;
         }
-        
     }
 
-    for (a, b) in rhs[done..].iter_mut().zip(lhs[done..].iter()) {
+    schoolbook_add_assign(&mut rhs[done..], &lhs[done..], carry)
+}
+
+fn schoolbook_add_assign<T: Digit>(rhs: &mut [T], lhs: &[T], carry: bool) -> bool {
+    let mut carry = if carry {
+        T::ONE
+    } else {
+        T::ZERO
+    };
+
+    for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
         let full = a.to_double() + b.to_double() + carry.to_double();
         (*a, carry) = full.split();
     }

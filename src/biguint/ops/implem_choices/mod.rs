@@ -4,6 +4,8 @@ mod add;
 mod mul;
 mod sub;
 
+pub(super) use add::add_assign;
+
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 2;
@@ -27,12 +29,6 @@ pub(super) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
     }
 
     mul::karatsuba::<KARATSUBA_INTERNAL_THRESHOLD, _>(rhs, lhs)
-}
-
-/// Current implementation of add_assign, returning the carry
-/// Assumes rhs has at least the size of lhs
-pub(super) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
-    add::schoolbook_add_assign(rhs, lhs)
 }
 
 /// Current implementation of sub_assign
