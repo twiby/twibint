@@ -2,6 +2,13 @@ use std::arch::asm;
 
 use crate::traits::{Digit, DoubleDigit, ToPtr};
 
+// TODO: x86_64 u32
+// TODO: arm u32
+// TODO: arm u64
+// TODO: check apple m chips for arm specialization
+// TODO: generalize this for overwriting add ?
+// multiplication ?
+
 /// Performs a part of the addition. Returns a tuple containing the carry state 
 /// and the number of digits currently added
 fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> (bool, usize) {
