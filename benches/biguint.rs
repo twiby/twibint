@@ -52,8 +52,8 @@ where
     name.push(' ');
     name.push_str(&T::NB_BITS.to_string());
 
-    let n1 = gen_random_biguint::<T>(N + 1);
     let n2 = gen_random_biguint::<T>(N);
+    let n1 = &n2 + T::MAX;
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 - &n2)));
 }
 
