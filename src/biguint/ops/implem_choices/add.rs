@@ -17,7 +17,7 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, mut size: usize)
     }
     size -= 4;
 
-    let mut c = 0u64;
+    let mut c = 0u8;
 
     let mut idx = 0;
     while idx < size {
@@ -54,8 +54,7 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, mut size: usize)
                 "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
 
                 // Output the carry flag
-                "setc dl",
-                "movzx {c}, dl",
+                "setc {c}",
                 "clc",
 
                 // Increment loop counter
@@ -63,7 +62,7 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, mut size: usize)
 
                 a = in(reg) rhs, 
                 b = in(reg) lhs, 
-                c = inout(reg) c,
+                c = inout(reg_byte) c,
                 idx = inout(reg) idx,
 
                 a_tmp1 = out(reg) _,

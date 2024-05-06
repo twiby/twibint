@@ -607,7 +607,7 @@ fn maxed_out_mul() {
 fn test_asm_u64() {
     use std::arch::asm;
 
-    let mut carry = 1u64;
+    let mut carry = 1u8;
     let mut a = u64::MAX;
     let b = u64::MAX;
 
@@ -620,12 +620,11 @@ fn test_asm_u64() {
             "2:",
             "adc {a}, {b}",
 
-            "setc dl",
-            "movzx {c:r}, dl",
+            "setc {c}",
             "clc",
             a = inout(reg) a,
             b = in(reg) b,
-            c = inout(reg) carry,
+            c = inout(reg_byte) carry,
             options(nostack),
         );
     }
