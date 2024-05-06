@@ -14,6 +14,7 @@ where
 
     let n1 = gen_random_biguint::<T>(N);
     let n2 = gen_random_biguint::<T>(N);
+    println!("nb digits {:?}", N / T::NB_BITS);
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 + &n2)));
 }
 
