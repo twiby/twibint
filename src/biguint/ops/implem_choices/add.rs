@@ -16,68 +16,71 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, mut size: usize)
         return (false, 0);
     }
     size -= 4;
-
     let mut c = 0u8;
-
     let mut idx = 0;
-    while idx < size {
-        unsafe {
-            asm!(
-                // Copy a in registers
-                "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
-                "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
-                "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
-                "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
 
-                // Copy b in registers
-                "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
-                "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
-                "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
-                "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
+    unsafe {
+        asm!(
+            "3:",
 
-                // Set the carry flag if there was a previous carry
-                "cmp {c}, 0",
-                "jle 2f",
-                "stc",
+            // Copy a in registers
+            "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
+            "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
+            "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
+            "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
 
-                // Perform the addition
-                "2:",
-                "adc {a_tmp1}, {b_tmp1}",
-                "adc {a_tmp2}, {b_tmp2}",
-                "adc {a_tmp3}, {b_tmp3}",
-                "adc {a_tmp4}, {b_tmp4}",
+            // Copy b in registers
+            "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
+            "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
+            "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
+            "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
 
-                // Copy the return values
-                "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
-                "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
-                "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
-                "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
+            // Set the carry flag if there was a previous carry
+            "cmp {c}, 0",
+            "jle 2f",
+            "stc",
 
-                // Output the carry flag
-                "setc {c}",
-                "clc",
+            // Perform the addition
+            "2:",
+            "adc {a_tmp1}, {b_tmp1}",
+            "adc {a_tmp2}, {b_tmp2}",
+            "adc {a_tmp3}, {b_tmp3}",
+            "adc {a_tmp4}, {b_tmp4}",
 
-                // Increment loop counter
-                "add {idx}, 4",
+            // Copy the return values
+            "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
+            "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
+            "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
+            "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
 
-                a = in(reg) rhs, 
-                b = in(reg) lhs, 
-                c = inout(reg_byte) c,
-                idx = inout(reg) idx,
+            // Output and clear the carry flag
+            "setc {c}",
+            "clc",
 
-                a_tmp1 = out(reg) _,
-                a_tmp2 = out(reg) _,
-                a_tmp3 = out(reg) _,
-                a_tmp4 = out(reg) _,
+            // Increment loop counter
+            "add {idx}, 4",
+            "cmp {idx}, {size}",
+            "jl 3b",
+            "cld",
 
-                b_tmp1 = out(reg) _,
-                b_tmp2 = out(reg) _,
-                b_tmp3 = out(reg) _,
-                b_tmp4 = out(reg) _,
+            size = in(reg) size,
+            a = in(reg) rhs, 
+            b = in(reg) lhs, 
+            c = inout(reg_byte) c,
+            idx = inout(reg) idx,
 
-                options(nostack),
-            );
-        }
+            a_tmp1 = out(reg) _,
+            a_tmp2 = out(reg) _,
+            a_tmp3 = out(reg) _,
+            a_tmp4 = out(reg) _,
+
+            b_tmp1 = out(reg) _,
+            b_tmp2 = out(reg) _,
+            b_tmp3 = out(reg) _,
+            b_tmp4 = out(reg) _,
+
+            options(nostack),
+        );
     }
 
     (c > 0, idx)
