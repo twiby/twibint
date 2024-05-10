@@ -81,6 +81,15 @@ fn sub_full<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn sub_assign_overflow_big<T: Digit>() {
+    let mut bg = BigUint::<T>::from(vec![T::MAX; 100]);
+    let other = BigUint::<T>::from(vec![T::MAX; 100]);
+    bg += T::ONE;
+    bg -= other;
+    assert_eq!(String::from(bg), "1");
+}
+
+#[test_with(u32, u64)]
 fn fibonacci<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
@@ -602,9 +611,9 @@ fn maxed_out_mul() {
     );
 }
 
-#[cfg(target_arch="x86_64")]
+#[cfg(target_arch = "x86_64")]
 #[test]
-fn test_asm_u64() {
+fn test_asm_u64_sum() {
     use std::arch::asm;
 
     let mut carry = 1u8;
@@ -630,5 +639,36 @@ fn test_asm_u64() {
     }
 
     assert_eq!(a, u64::MAX);
+    assert_eq!(carry, 1);
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_sub() {
+    use std::arch::asm;
+
+    let mut carry = 1u8;
+    let mut a = 0u64;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "cmp {c}, 0",
+            "jle 2f",
+            "stc",
+
+            "2:",
+            "sbb {a}, {b}",
+
+            "setc {c}",
+            "clc",
+            a = inout(reg) a,
+            b = in(reg) b,
+            c = inout(reg_byte) carry,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, 0u64);
     assert_eq!(carry, 1);
 }

@@ -5,6 +5,7 @@ mod mul;
 mod sub;
 
 pub(super) use add::add_assign;
+pub(super) use sub::sub_assign;
 
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
@@ -29,10 +30,4 @@ pub(super) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
     }
 
     mul::karatsuba::<KARATSUBA_INTERNAL_THRESHOLD, _>(rhs, lhs)
-}
-
-/// Current implementation of sub_assign
-/// Assumes rhs > lhs
-pub(super) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) {
-    sub::schoolbook_sub_assign(rhs, lhs);
 }

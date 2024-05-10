@@ -8,7 +8,7 @@ use crate::traits::{Digit, DoubleDigit, ToPtr};
 // TODO: generalize this for overwriting add ?
 // multiplication ?
 
-/// Performs a part of the addition. Returns a tuple containing the carry state 
+/// Performs a part of the addition. Returns a tuple containing the carry state
 /// and the number of digits currently added
 fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> (bool, usize) {
     let mut c = 0u8;
@@ -59,11 +59,11 @@ fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> 
             // Increment loop counter
             "add {idx}, 5",
             "cmp {idx}, {size}",
-            "jl 3b",
+            "jle 3b",
 
             size = in(reg) size,
-            a = in(reg) rhs, 
-            b = in(reg) lhs, 
+            a = in(reg) rhs,
+            b = in(reg) lhs,
             c = inout(reg_byte) c,
             idx = inout(reg) idx,
 
@@ -94,30 +94,30 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
     #[allow(unused_mut)]
     let mut carry = false;
 
-    #[cfg(target_arch="x86_64")]
+    #[cfg(target_arch = "x86_64")]
     'x86_u64_spec: {
-        if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u64>(), lhs.to_ptr::<u64>()) { 
+        if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u64>(), lhs.to_ptr::<u64>()) {
             assert_eq!(T::NB_BITS, 64);
 
-            let mut size = lhs.len().min(rhs.len());
+            let size = lhs.len().min(rhs.len());
             if size <= 5 {
                 break 'x86_u64_spec;
             }
-            size -= 5;
-            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast, lhs_cast, size);
+            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast, lhs_cast, size - 5);
+            debug_assert!(size - d < 5);
             done += d;
             carry = c;
         }
 
         if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u32>(), lhs.to_ptr::<u32>()) {
             assert_eq!(T::NB_BITS, 32);
-            let mut size = lhs.len().min(rhs.len()) / 2;
+            let size = lhs.len().min(rhs.len()) / 2;
             if size <= 5 {
                 break 'x86_u64_spec;
             }
-            size -= 5;
-            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast.cast(), lhs_cast.cast(), size);
-            done += d*2;
+            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast.cast(), lhs_cast.cast(), size - 5);
+            debug_assert!(size - d < 5);
+            done += d * 2;
             carry = c;
         }
     }
@@ -126,11 +126,7 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
 }
 
 fn schoolbook_add_assign<T: Digit>(rhs: &mut [T], lhs: &[T], carry: bool) -> bool {
-    let mut carry = if carry {
-        T::ONE
-    } else {
-        T::ZERO
-    };
+    let mut carry = if carry { T::ONE } else { T::ZERO };
 
     for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
         let full = a.to_double() + b.to_double() + carry.to_double();
