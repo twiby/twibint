@@ -133,6 +133,25 @@ fn single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
             done = d;
             carry = unsafe { *T::from_ptr::<u64>(&c).unwrap() };
         }
+
+        if let (Some(ret_cast), Some(rhs_cast), Some(b)) = (
+            ret.to_mut_ptr::<u32>(),
+            rhs.to_ptr::<u32>(),
+            b.to_ptr::<u32>(),
+        ) {
+            assert_eq!(T::NB_BITS, 32);
+
+            let size = rhs.len() / 2;
+            if size <= 4 {
+                break 'x86_u64_spec;
+            }
+            let (c, d) =
+                unsafe { single_digit_add_assign_mul_x64_64(ret_cast.cast(), rhs_cast.cast(), *b as u64, size - 4) };
+            debug_assert!(size - d < 4);
+            done = d * 2;
+            let c_32 = c as u32;
+            carry =  unsafe { *T::from_ptr::<u32>(&c_32).unwrap() };
+        }
     }
 
     for (a, r) in rhs[done..].iter().zip(ret[done..].iter_mut()) {
