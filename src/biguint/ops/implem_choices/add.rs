@@ -10,78 +10,81 @@ use crate::traits::{Digit, DoubleDigit, ToPtr};
 
 /// Performs a part of the addition. Returns a tuple containing the carry state
 /// and the number of digits currently added
-fn schoolbook_add_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> (bool, usize) {
+#[cfg(target_arch = "x86_64")]
+unsafe fn schoolbook_add_assign_x64_64(
+    rhs: *mut u64,
+    lhs: *const u64,
+    size: usize,
+) -> (bool, usize) {
     let mut c = 0u8;
     let mut idx = 0;
 
-    unsafe {
-        asm!(
-            "3:",
+    asm!(
+        "3:",
 
-            // Copy a in registers
-            "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
-            "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
-            "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
-            "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
-            "mov {a_tmp5}, qword ptr [{a} + 8*{idx} + 32]",
+        // Copy a in registers
+        "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
+        "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
+        "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
+        "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
+        "mov {a_tmp5}, qword ptr [{a} + 8*{idx} + 32]",
 
-            // Copy b in registers
-            "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
-            "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
-            "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
-            "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
-            "mov {b_tmp5}, qword ptr [{b} + 8*{idx} + 32]",
+        // Copy b in registers
+        "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
+        "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
+        "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
+        "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
+        "mov {b_tmp5}, qword ptr [{b} + 8*{idx} + 32]",
 
-            // Set the carry flag if there was a previous carry
-            "cmp {c}, 0",
-            "jle 2f",
-            "stc",
+        // Set the carry flag if there was a previous carry
+        "cmp {c}, 0",
+        "jle 2f",
+        "stc",
 
-            // Perform the addition
-            "2:",
-            "adc {a_tmp1}, {b_tmp1}",
-            "adc {a_tmp2}, {b_tmp2}",
-            "adc {a_tmp3}, {b_tmp3}",
-            "adc {a_tmp4}, {b_tmp4}",
-            "adc {a_tmp5}, {b_tmp5}",
+        // Perform the addition
+        "2:",
+        "adc {a_tmp1}, {b_tmp1}",
+        "adc {a_tmp2}, {b_tmp2}",
+        "adc {a_tmp3}, {b_tmp3}",
+        "adc {a_tmp4}, {b_tmp4}",
+        "adc {a_tmp5}, {b_tmp5}",
 
-            // Copy the return values
-            "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
-            "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
-            "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
-            "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
-            "mov qword ptr [{a} + 8*{idx} + 32], {a_tmp5}",
+        // Copy the return values
+        "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
+        "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
+        "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
+        "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
+        "mov qword ptr [{a} + 8*{idx} + 32], {a_tmp5}",
 
-            // Output and clear the carry flag
-            "setc {c}",
-            "clc",
+        // Output and clear the carry flag
+        "setc {c}",
+        "clc",
 
-            // Increment loop counter
-            "add {idx}, 5",
-            "cmp {idx}, {size}",
-            "jle 3b",
+        // Increment loop counter
+        "add {idx}, 5",
+        "cmp {idx}, {size}",
+        "jle 3b",
 
-            size = in(reg) size,
-            a = in(reg) rhs,
-            b = in(reg) lhs,
-            c = inout(reg_byte) c,
-            idx = inout(reg) idx,
+        size = in(reg) size,
+        a = in(reg) rhs,
+        b = in(reg) lhs,
+        c = inout(reg_byte) c,
+        idx = inout(reg) idx,
 
-            a_tmp1 = out(reg) _,
-            a_tmp2 = out(reg) _,
-            a_tmp3 = out(reg) _,
-            a_tmp4 = out(reg) _,
-            a_tmp5 = out(reg) _,
+        a_tmp1 = out(reg) _,
+        a_tmp2 = out(reg) _,
+        a_tmp3 = out(reg) _,
+        a_tmp4 = out(reg) _,
+        a_tmp5 = out(reg) _,
 
-            b_tmp1 = out(reg) _,
-            b_tmp2 = out(reg) _,
-            b_tmp3 = out(reg) _,
-            b_tmp4 = out(reg) _,
-            b_tmp5 = out(reg) _,
+        b_tmp1 = out(reg) _,
+        b_tmp2 = out(reg) _,
+        b_tmp3 = out(reg) _,
+        b_tmp4 = out(reg) _,
+        b_tmp5 = out(reg) _,
 
-            options(nostack),
-        );
-    }
+        options(nostack),
+    );
 
     (c > 0, idx)
 }
@@ -103,7 +106,7 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
             if size <= 5 {
                 break 'x86_u64_spec;
             }
-            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast, lhs_cast, size - 5);
+            let (c, d) = unsafe { schoolbook_add_assign_x64_64(rhs_cast, lhs_cast, size - 5) };
             debug_assert!(size - d < 5);
             done += d;
             carry = c;
@@ -115,7 +118,8 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
             if size <= 5 {
                 break 'x86_u64_spec;
             }
-            let (c, d) = schoolbook_add_assign_x64_64(rhs_cast.cast(), lhs_cast.cast(), size - 5);
+            let (c, d) =
+                unsafe { schoolbook_add_assign_x64_64(rhs_cast.cast(), lhs_cast.cast(), size - 5) };
             debug_assert!(size - d < 5);
             done += d * 2;
             carry = c;

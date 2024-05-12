@@ -672,3 +672,62 @@ fn test_asm_u64_sub() {
     assert_eq!(a, 0u64);
     assert_eq!(carry, 1);
 }
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_mul() {
+    use std::arch::asm;
+
+    // let mut carry = 1u8;
+    let mut a = u64::MAX;
+    let b = u64::MAX;
+    let msb: u64;
+
+    unsafe {
+        asm!(
+            "mul {b}",
+            b = in(reg) b,
+            inout("rax") a,
+            out("rdx") msb,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, 1u64);
+    assert_eq!(msb, u64::MAX - 1);
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_big_mul() {
+    use std::arch::asm;
+
+    let mut carry = u64::MAX;
+    let mut r = u64::MAX;
+    let a = u64::MAX;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "mov rax, {a}",
+
+            "mul {b}",
+            "add rax, {c}",
+            "adc rdx, 0",
+            "add rax, {r}",
+            "adc rdx, 0",
+
+            "mov {c}, rdx",
+            "mov {r}, rax",
+            out("rax") _,
+            out("rdx") _,
+            b = in(reg) b,
+            a = in(reg) a,
+            r = inout(reg) r,
+            c = inout(reg) carry,
+        );
+    }
+
+    assert_eq!(r, u64::MAX);
+    assert_eq!(carry, u64::MAX);
+}

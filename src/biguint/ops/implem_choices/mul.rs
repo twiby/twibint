@@ -1,22 +1,150 @@
-use crate::traits::{Digit, DoubleDigit};
+use crate::traits::{Digit, DoubleDigit, ToPtr};
+use std::arch::asm;
 
-use core::cmp::max;
+// TODO: some of these may be simd-able
 
-pub(super) fn schoolbook_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
-    for (idx_1, b) in rhs.iter().enumerate() {
-        let mut carry = T::ZERO;
+#[cfg(target_arch = "x86_64")]
+unsafe fn single_digit_add_assign_mul_x64_64(
+    ret: *mut u64,
+    rhs: *const u64,
+    b: u64,
+    len: usize,
+) -> (u64, usize) {
+    let mut carry = 0;
+    let mut idx = 0;
 
-        for (a, r) in lhs.iter().zip(&mut ret[idx_1..]) {
-            let full = a.to_double() * b.to_double() + r.to_double() + carry.to_double();
-            (*r, carry) = full.split();
-        }
+    asm!(
+        "3:",
 
-        ret[idx_1 + lhs.len()] = carry;
+        // Get data
+        "mov rax, qword ptr[{a} + 8*{i}]",
+        "mov {temp_a_2}, qword ptr [{a} + 8*{i} + 8]",
+        "mov {temp_a_3}, qword ptr [{a} + 8*{i} + 16]",
+        "mov {temp_a_4}, qword ptr [{a} + 8*{i} + 24]",
+        "mov {temp_r_1}, qword ptr[{r} + 8*{i}]",
+        "mov {temp_r_2}, qword ptr[{r} + 8*{i} + 8]",
+        "mov {temp_r_3}, qword ptr[{r} + 8*{i} + 16]",
+        "mov {temp_r_4}, qword ptr[{r} + 8*{i} + 24]",
+
+        // Multiply
+        "mul {b}",
+        // Handle carry from previous
+        "add rax, {c}",
+        "adc rdx, 0",
+        // Add to the current number
+        "add rax, {temp_r_1}",
+        "adc rdx, 0",
+        // Get results
+        "mov {c}, rdx",
+        "mov qword ptr [{r} + 8*{i}], rax",
+
+        // Next mul
+        "mov rax, {temp_a_2}",
+        "mul {b}",
+        // Handle carry from previous
+        "add rax, {c}",
+        "adc rdx, 0",
+        // Add to the current number
+        "add rax, {temp_r_2}",
+        "adc rdx, 0",
+        // Get results
+        "mov {c}, rdx",
+        "mov qword ptr [{r} + 8*{i} + 8], rax",
+
+        // Next mul
+        "mov rax, {temp_a_3}",
+        "mul {b}",
+        // Handle carry from previous
+        "add rax, {c}",
+        "adc rdx, 0",
+        // Add to the current number
+        "add rax, {temp_r_3}",
+        "adc rdx, 0",
+        // Get results
+        "mov {c}, rdx",
+        "mov qword ptr [{r} + 8*{i} + 16], rax",
+
+        // Next mul
+        "mov rax, {temp_a_4}",
+        "mul {b}",
+        // Handle carry from previous
+        "add rax, {c}",
+        "adc rdx, 0",
+        // Add to the current number
+        "add rax, {temp_r_4}",
+        "adc rdx, 0",
+        // Get results
+        "mov {c}, rdx",
+        "mov qword ptr [{r} + 8*{i} + 24], rax",
+
+        // Increment loop counter
+        "add {i}, 4",
+        "cmp {i}, {len}",
+        "jle 3b",
+
+        out("rax") _,
+        out("rdx") _,
+        b = in(reg) b,
+        a = in(reg) rhs,
+        r = in(reg) ret,
+        c = inout(reg) carry,
+        i = inout(reg) idx,
+        len = in(reg) len,
+
+        temp_r_1 = out(reg) _,
+        temp_r_2 = out(reg) _,
+        temp_r_3 = out(reg) _,
+        temp_r_4 = out(reg) _,
+        temp_a_2 = out(reg) _,
+        temp_a_3 = out(reg) _,
+        temp_a_4 = out(reg) _,
+    );
+
+    (carry, idx)
+}
+
+fn schoolbook_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
+    for i in 0..lhs.len() {
+        single_digit_add_assign_mul(&mut ret[i..], rhs, lhs[i]);
     }
 }
 
-pub(super) fn karatsuba<const THRESHOLD: usize, T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
-    let target_length = max(rhs.len(), lhs.len()).next_power_of_two();
+fn single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
+    #[allow(unused_mut)]
+    let mut done = 0;
+    let mut carry = T::ZERO;
+
+    #[cfg(target_arch = "x86_64")]
+    'x86_u64_spec: {
+        if let (Some(ret_cast), Some(rhs_cast), Some(b)) = (
+            ret.to_mut_ptr::<u64>(),
+            rhs.to_ptr::<u64>(),
+            b.to_ptr::<u64>(),
+        ) {
+            assert_eq!(T::NB_BITS, 64);
+
+            let size = rhs.len();
+            if size <= 4 {
+                break 'x86_u64_spec;
+            }
+            let (c, d) =
+                unsafe { single_digit_add_assign_mul_x64_64(ret_cast, rhs_cast, *b, size - 4) };
+            debug_assert!(size - d < 4);
+            done = d;
+            carry = unsafe { *T::from_ptr::<u64>(&c).unwrap() };
+        }
+    }
+
+    for (a, r) in rhs[done..].iter().zip(ret[done..].iter_mut()) {
+        let full = a.to_double() * b.to_double() + r.to_double() + carry.to_double();
+        (*r, carry) = full.split();
+    }
+
+    ret[rhs.len()] = carry;
+}
+
+fn karatsuba<const THRESHOLD: usize, T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
+    let target_length = rhs.len().max(lhs.len()).next_power_of_two();
     assert!(target_length < usize::MAX >> 1);
 
     let mut x = rhs.to_vec();
@@ -66,16 +194,10 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     let mut z1_last_bit = T::ZERO;
     _karatsuba::<THRESHOLD, _>(&mut z1[..size], x_temp, y_temp, new_buff);
     if x_carry {
-        z1_last_bit += T::from(super::add_assign(
-            &mut z1[half_size..],
-            &y_temp,
-        ));
+        z1_last_bit += T::from(super::add_assign(&mut z1[half_size..], &y_temp));
     }
     if y_carry {
-        z1_last_bit += T::from(super::add_assign(
-            &mut z1[half_size..],
-            &x_temp,
-        ));
+        z1_last_bit += T::from(super::add_assign(&mut z1[half_size..], &x_temp));
     }
     z1_last_bit += T::from(x_carry && y_carry);
 
@@ -102,4 +224,29 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     // add z1
     super::add_assign(&mut ret[half_size..], z1);
     super::add_assign(&mut ret[half_size + size..], &[z1_last_bit]);
+}
+
+// Below this number of digits, multiplication is schoolbook
+#[cfg(debug_assertions)]
+const KARATSUBA_INTERNAL_THRESHOLD: usize = 2;
+#[cfg(debug_assertions)]
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 2;
+
+#[cfg(not(debug_assertions))]
+const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
+#[cfg(not(debug_assertions))]
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 500;
+
+const KARATSUBA_EXTERNAL_THRESHOLD_SQUARED: usize =
+    KARATSUBA_EXTERNAL_THRESHOLD * KARATSUBA_EXTERNAL_THRESHOLD;
+
+/// Current implementation of multiplication
+pub(crate) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
+    if rhs.len() * lhs.len() < KARATSUBA_EXTERNAL_THRESHOLD_SQUARED {
+        let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
+        schoolbook_add_assign_mul(&mut ret, rhs, lhs);
+        return ret;
+    }
+
+    karatsuba::<KARATSUBA_INTERNAL_THRESHOLD, _>(rhs, lhs)
 }

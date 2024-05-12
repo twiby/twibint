@@ -4,6 +4,7 @@ use std::arch::asm;
 
 /// Performs a part of the subtraction. Returns a tuple containing the carry state
 /// and the number of digits currently sbtracted
+#[cfg(target_arch = "x86_64")]
 fn schoolbook_sub_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> (bool, usize) {
     let mut c = 0u8;
     let mut idx = 0;
