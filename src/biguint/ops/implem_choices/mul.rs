@@ -2,9 +2,10 @@ use crate::traits::{Digit, DoubleDigit, ToPtr};
 use std::arch::asm;
 
 // TODO: some of these may be simd-able
+// TODO: the karatsuba multiplication could be switched u32 -> u64
 
 #[cfg(target_arch = "x86_64")]
-unsafe fn single_digit_add_assign_mul_x64_64(
+unsafe fn single_digit_add_assign_mul_x86_64(
     ret: *mut u64,
     rhs: *const u64,
     b: u64,
@@ -128,7 +129,7 @@ fn single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
                 break 'x86_u64_spec;
             }
             let (c, d) =
-                unsafe { single_digit_add_assign_mul_x64_64(ret_cast, rhs_cast, *b, size - 4) };
+                unsafe { single_digit_add_assign_mul_x86_64(ret_cast, rhs_cast, *b, size - 4) };
             debug_assert!(size - d < 4);
             done = d;
             carry = unsafe { *T::from_ptr::<u64>(&c).unwrap() };
@@ -145,12 +146,18 @@ fn single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
             if size <= 4 {
                 break 'x86_u64_spec;
             }
-            let (c, d) =
-                unsafe { single_digit_add_assign_mul_x64_64(ret_cast.cast(), rhs_cast.cast(), *b as u64, size - 4) };
+            let (c, d) = unsafe {
+                single_digit_add_assign_mul_x86_64(
+                    ret_cast.cast(),
+                    rhs_cast.cast(),
+                    *b as u64,
+                    size - 4,
+                )
+            };
             debug_assert!(size - d < 4);
             done = d * 2;
             let c_32 = c as u32;
-            carry =  unsafe { *T::from_ptr::<u32>(&c_32).unwrap() };
+            carry = unsafe { *T::from_ptr::<u32>(&c_32).unwrap() };
         }
     }
 
@@ -254,7 +261,7 @@ const KARATSUBA_EXTERNAL_THRESHOLD: usize = 2;
 #[cfg(not(debug_assertions))]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
 #[cfg(not(debug_assertions))]
-const KARATSUBA_EXTERNAL_THRESHOLD: usize = 500;
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 156;
 
 const KARATSUBA_EXTERNAL_THRESHOLD_SQUARED: usize =
     KARATSUBA_EXTERNAL_THRESHOLD * KARATSUBA_EXTERNAL_THRESHOLD;
