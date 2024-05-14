@@ -1,6 +1,6 @@
 use crate::traits::{Digit, DoubleDigit, ToPtr};
 
-#[cfg(targe_arch = "x86_64")]
+#[cfg(target_arch = "x86_64")]
 use std::arch::asm;
 
 // TODO: some of these may be simd-able
