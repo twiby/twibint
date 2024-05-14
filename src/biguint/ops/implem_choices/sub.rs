@@ -1,5 +1,9 @@
 use crate::traits::Digit;
+
+#[cfg(target_arch = "x86_64")]
 use crate::traits::ToPtr;
+
+#[cfg(target_arch = "x86_64")]
 use std::arch::asm;
 
 /// Performs a part of the subtraction. Returns a tuple containing the carry state
