@@ -2,7 +2,6 @@ use crate::traits::{Digit, DoubleDigit, ToPtr};
 use std::arch::asm;
 
 // TODO: some of these may be simd-able
-// TODO: the karatsuba multiplication could be switched u32 -> u64
 
 #[cfg(target_arch = "x86_64")]
 unsafe fn single_digit_add_assign_mul_x86_64(
@@ -104,6 +103,7 @@ unsafe fn single_digit_add_assign_mul_x86_64(
     (carry, idx)
 }
 
+/// adds the multiplicatin of rhs and lhs to ret
 fn schoolbook_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
     for i in 0..lhs.len() {
         single_digit_add_assign_mul(&mut ret[i..], rhs, lhs[i]);
@@ -181,6 +181,7 @@ fn karatsuba<const THRESHOLD: usize, T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
     let mut ret = vec![T::ZERO; target_length << 1];
     let mut buff = vec![T::ZERO; target_length << 1];
     _karatsuba::<THRESHOLD, _>(&mut ret, &x, &y, &mut buff);
+    ret.resize(rhs.len() + lhs.len(), T::ZERO);
     ret
 }
 fn _karatsuba<const THRESHOLD: usize, T: Digit>(
@@ -268,6 +269,51 @@ const KARATSUBA_EXTERNAL_THRESHOLD_SQUARED: usize =
 
 /// Current implementation of multiplication
 pub(crate) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
+    // Specifically for u32 digits, we accelerate multiplication by reinterpreting
+    // arrays as u64 (and add a correction if length is odd)
+    if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_ptr::<u32>(), lhs.to_ptr::<u32>()) {
+        // Do the multiplication on u64 arrays (with half length)
+        let mut ret: Vec<T> = unsafe {
+            let rhs_size = rhs.len() / 2;
+            let lhs_size = lhs.len() / 2;
+            let rhs_64: &[u64] = std::slice::from_raw_parts(rhs_cast.cast(), rhs_size);
+            let lhs_64: &[u64] = std::slice::from_raw_parts(lhs_cast.cast(), lhs_size);
+            let mut ret_64: Vec<u64> = mul(rhs_64, lhs_64);
+            let ret = Vec::<T>::from_raw_parts(
+                ret_64.as_mut_ptr().cast(),
+                ret_64.len() * 2,
+                ret_64.capacity() * 2,
+            );
+            std::mem::forget(ret_64);
+            ret
+        };
+
+        // if the array lengths are odd, then the multiplication is not over
+        let additional_rhs_term = (rhs.len() % 2 == 1).then_some(rhs.last().unwrap());
+        let additional_lhs_term = (lhs.len() % 2 == 1).then_some(lhs.last().unwrap());
+
+        match (additional_rhs_term, additional_lhs_term) {
+            (Some(&a), None) => {
+                ret.push(T::ZERO);
+                single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs, a);
+            }
+            (None, Some(&b)) => {
+                ret.push(T::ZERO);
+                single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
+            }
+            (Some(&a), Some(&b)) => {
+                ret.push(T::ZERO);
+                ret.push(T::ZERO);
+                single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs[..lhs.len() - 1], a);
+                single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
+            }
+            (None, None) => (),
+        }
+
+        return ret;
+    }
+
+    // Arrays are not big enough for karatsuba to be worth it
     if rhs.len() * lhs.len() < KARATSUBA_EXTERNAL_THRESHOLD_SQUARED {
         let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
         schoolbook_add_assign_mul(&mut ret, rhs, lhs);
