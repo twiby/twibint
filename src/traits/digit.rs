@@ -1,7 +1,7 @@
 use std::any::TypeId;
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXorAssign, Div, Mul, Rem, Shl,
-    ShlAssign, Shr, ShrAssign, Sub,
+    ShlAssign, Shr, ShrAssign, Sub, SubAssign,
 };
 
 pub trait ToPtr {
@@ -71,6 +71,7 @@ pub trait Digit:
     + TryFrom<Self::Double>
     + PartialEq
     + AddAssign
+    + SubAssign
     + Add<Output = Self>
     + Sub<Output = Self>
     + Shr<usize, Output = Self>

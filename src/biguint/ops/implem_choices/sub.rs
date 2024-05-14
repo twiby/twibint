@@ -86,7 +86,7 @@ fn schoolbook_sub_assign_x64_64(rhs: *mut u64, lhs: *const u64, size: usize) -> 
 }
 
 /// Assumes rhs > lhs
-pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) {
+pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
     #[allow(unused_mut)]
     let mut done = 0;
     #[allow(unused_mut)]
@@ -120,10 +120,10 @@ pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) {
         }
     }
 
-    schoolbook_sub_assign(&mut rhs[done..], &lhs[done..], carry);
+    schoolbook_sub_assign(&mut rhs[done..], &lhs[done..], carry)
 }
 
-fn schoolbook_sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], mut carry: bool) {
+fn schoolbook_sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], mut carry: bool) -> bool {
     let mut partial_carry_1: bool;
     let mut partial_carry_2: bool;
     for (a, b) in rhs.iter_mut().zip(lhs.iter()) {
@@ -135,4 +135,6 @@ fn schoolbook_sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], mut carry: bool) {
     for val in rhs.iter_mut().skip(lhs.len()) {
         (*val, carry) = val.overflowing_sub(T::from(carry));
     }
+
+    carry
 }

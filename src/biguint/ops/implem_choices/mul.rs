@@ -238,17 +238,12 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     _karatsuba::<THRESHOLD, _>(&mut ret[size..], x1, y1, new_buff);
 
     // subtract z0 and z2 from z1
-    let mut partial_carry_1: bool;
-    let mut partial_carry_2: bool;
-    let mut partial_carry_3: bool;
-    let mut carry = T::ZERO;
-    for i in 0..size {
-        (z1[i], partial_carry_1) = z1[i].overflowing_sub(ret[i + size]);
-        (z1[i], partial_carry_2) = z1[i].overflowing_sub(ret[i]);
-        (z1[i], partial_carry_3) = z1[i].overflowing_sub(carry);
-        carry = T::from(partial_carry_1) + T::from(partial_carry_2) + T::from(partial_carry_3);
+    if super::sub_assign(z1, &ret[..size]) {
+        z1_last_bit -= T::ONE;
     }
-    (z1_last_bit, _) = z1_last_bit.overflowing_sub(carry);
+    if super::sub_assign(z1, &ret[size..size * 2]) {
+        z1_last_bit -= T::ONE;
+    }
 
     // add z1
     super::add_assign(&mut ret[half_size..], z1);
