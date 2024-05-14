@@ -44,3 +44,12 @@ pip install twibint
 
 Python tests are available to be run in the `pytest` framework. They are located
 in the `tests` folder and should provide ample example usage.
+
+# Changelog for version 0.2
+This new version contains extensive accelerations for addition, subtraction, and 
+multiplication on x86_64 machines. These will probably also have performance 
+repercussions on many other features.
+
+These acceleration are mostly due to dropping inline assembly for core loops, and are 
+based on `unsafe` Rust. Other `unsafe` features used include smartly swapping between 
+`&[u32]` and `&[u64]` slices via pointers.

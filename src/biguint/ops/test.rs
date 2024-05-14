@@ -28,6 +28,18 @@ fn add_assign_overflow<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn add_assign_overflow_big<T: Digit>() {
+    let mut bg = BigUint::<T>::from(vec![T::MAX - T::ONE; 100]);
+    let mut other = BigUint::<T>::from(vec![T::ONE; 100]);
+    other.val[0] += T::ONE;
+    bg += other;
+
+    let mut ret = vec![T::ZERO; 100];
+    ret.push(T::ONE);
+    assert_eq!(bg.val, ret);
+}
+
+#[test_with(u32, u64)]
 fn add<T: Digit>() {
     let b1 = BigUint::<T>::from(100u32);
     let b2 = BigUint::<T>::from(50u32);
@@ -66,6 +78,15 @@ fn sub_full<T: Digit>() {
 
     let n3 = &n1 - &n2;
     assert_eq!(String::from(&n3), "12345677922456892");
+}
+
+#[test_with(u32, u64)]
+fn sub_assign_overflow_big<T: Digit>() {
+    let mut bg = BigUint::<T>::from(vec![T::MAX; 100]);
+    let other = BigUint::<T>::from(vec![T::MAX; 100]);
+    bg += T::ONE;
+    bg -= other;
+    assert_eq!(String::from(bg), "1");
 }
 
 #[test_with(u32, u64)]
@@ -588,4 +609,125 @@ fn maxed_out_mul() {
             "115792089237316195423570985008687907852589419931798687112530834793049593217025"
         )
     );
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_sum() {
+    use std::arch::asm;
+
+    let mut carry = 1u8;
+    let mut a = u64::MAX;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "cmp {c}, 0",
+            "jle 2f",
+            "stc",
+
+            "2:",
+            "adc {a}, {b}",
+
+            "setc {c}",
+            "clc",
+            a = inout(reg) a,
+            b = in(reg) b,
+            c = inout(reg_byte) carry,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, u64::MAX);
+    assert_eq!(carry, 1);
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_sub() {
+    use std::arch::asm;
+
+    let mut carry = 1u8;
+    let mut a = 0u64;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "cmp {c}, 0",
+            "jle 2f",
+            "stc",
+
+            "2:",
+            "sbb {a}, {b}",
+
+            "setc {c}",
+            "clc",
+            a = inout(reg) a,
+            b = in(reg) b,
+            c = inout(reg_byte) carry,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, 0u64);
+    assert_eq!(carry, 1);
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_mul() {
+    use std::arch::asm;
+
+    // let mut carry = 1u8;
+    let mut a = u64::MAX;
+    let b = u64::MAX;
+    let msb: u64;
+
+    unsafe {
+        asm!(
+            "mul {b}",
+            b = in(reg) b,
+            inout("rax") a,
+            out("rdx") msb,
+            options(nostack),
+        );
+    }
+
+    assert_eq!(a, 1u64);
+    assert_eq!(msb, u64::MAX - 1);
+}
+
+#[cfg(target_arch = "x86_64")]
+#[test]
+fn test_asm_u64_big_mul() {
+    use std::arch::asm;
+
+    let mut carry = u64::MAX;
+    let mut r = u64::MAX;
+    let a = u64::MAX;
+    let b = u64::MAX;
+
+    unsafe {
+        asm!(
+            "mov rax, {a}",
+
+            "mul {b}",
+            "add rax, {c}",
+            "adc rdx, 0",
+            "add rax, {r}",
+            "adc rdx, 0",
+
+            "mov {c}, rdx",
+            "mov {r}, rax",
+            out("rax") _,
+            out("rdx") _,
+            b = in(reg) b,
+            a = in(reg) a,
+            r = inout(reg) r,
+            c = inout(reg) carry,
+        );
+    }
+
+    assert_eq!(r, u64::MAX);
+    assert_eq!(carry, u64::MAX);
 }

@@ -1,10 +1,62 @@
+use std::any::TypeId;
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXorAssign, Div, Mul, Rem, Shl,
-    ShlAssign, Shr, ShrAssign, Sub,
+    ShlAssign, Shr, ShrAssign, Sub, SubAssign,
 };
 
+pub trait ToPtr {
+    fn to_ptr<T: 'static>(&self) -> Option<*const T>;
+    fn to_mut_ptr<T: 'static>(&mut self) -> Option<*mut T>;
+    fn from_ptr<T: 'static>(ptr: *const T) -> Option<*const Self>;
+}
+
+impl<T: Digit> ToPtr for T {
+    fn to_ptr<T2: 'static>(&self) -> Option<*const T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some((self as *const T).cast())
+        } else {
+            None
+        }
+    }
+    fn to_mut_ptr<T2: 'static>(&mut self) -> Option<*mut T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some((self as *mut T).cast())
+        } else {
+            None
+        }
+    }
+    fn from_ptr<T2: 'static>(ptr: *const T2) -> Option<*const Self> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some(ptr as *const T)
+        } else {
+            None
+        }
+    }
+}
+
+impl<T: Digit> ToPtr for [T] {
+    fn to_ptr<T2: 'static>(&self) -> Option<*const T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some(self.as_ptr().cast())
+        } else {
+            None
+        }
+    }
+    fn to_mut_ptr<T2: 'static>(&mut self) -> Option<*mut T2> {
+        if TypeId::of::<T>() == TypeId::of::<T2>() {
+            Some(self.as_mut_ptr().cast())
+        } else {
+            None
+        }
+    }
+    fn from_ptr<T2: 'static>(_: *const T2) -> Option<*const Self> {
+        unimplemented!();
+    }
+}
+
 pub trait Digit:
-    Copy
+    'static
+    + Copy
     + std::fmt::Debug
     + std::fmt::Display
     + std::fmt::Binary
@@ -19,6 +71,7 @@ pub trait Digit:
     + TryFrom<Self::Double>
     + PartialEq
     + AddAssign
+    + SubAssign
     + Add<Output = Self>
     + Sub<Output = Self>
     + Shr<usize, Output = Self>
@@ -29,6 +82,9 @@ pub trait Digit:
     + BitAndAssign
     + BitOrAssign
     + BitXorAssign
+    + ToPtr
+where
+    [Self]: ToPtr,
 {
     const ZERO: Self;
     const ONE: Self;
