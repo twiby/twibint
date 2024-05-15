@@ -129,14 +129,14 @@ fn div_rem_1<T: Digit>() {
         BigInt::<T>::from("10") % three,
     );
     assert_eq!(q, BigInt::<T>::from(3));
-    assert_eq!(r, T::ONE);
+    assert_eq!(r.to_string(), "1");
 
     let (q, r) = (
         BigInt::<T>::from("-10") / three,
         BigInt::<T>::from("-10") % three,
     );
     assert_eq!(q, BigInt::<T>::from(-4));
-    assert_eq!(r, two);
+    assert_eq!(r.to_string(), "2");
 }
 
 #[test_with(u32, u64)]

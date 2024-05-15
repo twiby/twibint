@@ -52,13 +52,37 @@ impl<T: Digit> RemDiv<T> for BigUint<T> {
 impl<T: Digit> RemAssign<T> for BigUint<T> {
     fn rem_assign(&mut self, other: T) {
         let value = &*self % other;
-        *self = BigUint::<T>::new(value);
+        *self = value;
+    }
+}
+impl<T: Digit> RemAssign<&T> for BigUint<T> {
+    fn rem_assign(&mut self, other: &T) {
+        let value = &*self % *other;
+        *self = value;
+    }
+}
+impl<T: Digit> Rem<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: T) -> Self::Output {
+        BigUint::new(RemDiv::rem(&self, &other).unwrap())
     }
 }
 impl<T: Digit> Rem<T> for &BigUint<T> {
-    type Output = T;
-    fn rem(self, other: T) -> T {
-        RemDiv::rem(self, &other).unwrap()
+    type Output = BigUint<T>;
+    fn rem(self, other: T) -> Self::Output {
+        BigUint::new(RemDiv::rem(self, &other).unwrap())
+    }
+}
+impl<T: Digit> Rem<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: &T) -> Self::Output {
+        BigUint::new(RemDiv::rem(&self, other).unwrap())
+    }
+}
+impl<T: Digit> Rem<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: &T) -> Self::Output {
+        BigUint::new(RemDiv::rem(self, other).unwrap())
     }
 }
 
@@ -67,10 +91,33 @@ impl<T: Digit> DivAssign<T> for BigUint<T> {
         *self = &*self / other;
     }
 }
+impl<T: Digit> DivAssign<&T> for BigUint<T> {
+    fn div_assign(&mut self, other: &T) {
+        *self = &*self / *other;
+    }
+}
 impl<T: Digit> Div<T> for &BigUint<T> {
     type Output = BigUint<T>;
     fn div(self, other: T) -> BigUint<T> {
         RemDiv::div(self, &other).unwrap()
+    }
+}
+impl<T: Digit> Div<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: &T) -> BigUint<T> {
+        RemDiv::div(self, other).unwrap()
+    }
+}
+impl<T: Digit> Div<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: T) -> BigUint<T> {
+        RemDiv::div(&self, &other).unwrap()
+    }
+}
+impl<T: Digit> Div<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: &T) -> BigUint<T> {
+        RemDiv::div(&self, other).unwrap()
     }
 }
 
@@ -145,10 +192,38 @@ impl<T: Digit> RemAssign<&BigUint<T>> for BigUint<T> {
         *self = &*self % other;
     }
 }
+impl<T: Digit> RemAssign<BigUint<T>> for BigUint<T> {
+    fn rem_assign(&mut self, other: BigUint<T>) {
+        *self = &*self % &other;
+    }
+}
 impl<T: Digit> Rem<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
     fn rem(self, other: &BigUint<T>) -> BigUint<T> {
         RemDiv::rem(self, other).unwrap()
+    }
+}
+impl<T: Digit> Rem<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: &BigUint<T>) -> BigUint<T> {
+        RemDiv::rem(&self, other).unwrap()
+    }
+}
+impl<T: Digit> Rem<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: BigUint<T>) -> BigUint<T> {
+        RemDiv::rem(&self, &other).unwrap()
+    }
+}
+impl<T: Digit> Rem<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn rem(self, other: BigUint<T>) -> BigUint<T> {
+        RemDiv::rem(self, &other).unwrap()
+    }
+}
+impl<T: Digit> DivAssign<BigUint<T>> for BigUint<T> {
+    fn div_assign(&mut self, other: BigUint<T>) {
+        *self = &*self / &other;
     }
 }
 impl<T: Digit> DivAssign<&BigUint<T>> for BigUint<T> {
@@ -160,5 +235,23 @@ impl<T: Digit> Div<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
     fn div(self, other: &BigUint<T>) -> BigUint<T> {
         RemDiv::div(self, other).unwrap()
+    }
+}
+impl<T: Digit> Div<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: BigUint<T>) -> BigUint<T> {
+        RemDiv::div(&self, &other).unwrap()
+    }
+}
+impl<T: Digit> Div<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: BigUint<T>) -> BigUint<T> {
+        RemDiv::div(self, &other).unwrap()
+    }
+}
+impl<T: Digit> Div<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn div(self, other: &BigUint<T>) -> BigUint<T> {
+        RemDiv::div(&self, other).unwrap()
     }
 }

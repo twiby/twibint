@@ -219,24 +219,3 @@ fn from_f32_fail3<T: Digit>() {
     let f: f32 = f32::NAN;
     let _ = BigInt::<T>::try_from(f).unwrap();
 }
-
-// test_panic_functions!(
-//     parse_fail, parse_fail_u32, parse_fail_u64;
-//     from_f64_fail2, from_f64_fail2_u32, from_f64_fail2_u64;
-//     from_f64_fail3, from_f64_fail3_u32, from_f64_fail3_u64;
-//     from_f32_fail2, from_f32_fail2_u32, from_f32_fail2_u64;
-//     from_f32_fail3, from_f32_fail3_u32, from_f32_fail3_u64;
-// );
-
-// test_functions!(
-//     creation, creation_u32, creation_u64;
-//     sign, sign_u32, sign_u64;
-//     hash, hash_u32, hash_u64;
-//     f32, f32_u32, f32_u64;
-//     f64, f64_u32, f64_u64;
-//     binary, binary_u32, binary_u64;
-//     parse, parse_u32, parse_u64;
-//     hex, hex_u32, hex_u64;
-//     from_f32, from_f32_u32, from_f32_u64;
-//     from_f64, from_f64_u32, from_f64_u64;
-// );

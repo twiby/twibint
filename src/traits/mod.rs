@@ -5,6 +5,11 @@ mod digit;
 pub use digit::Digit;
 pub(crate) use digit::{DoubleDigit, SignedDigit, ToPtr};
 
+/// Defines traits and tests to ensure coherence and completeness of
+/// binary op coverage
+#[cfg(test)]
+mod check_implementations;
+
 /// Shorthand for the result of a division or modulo operation.
 /// Is an error in case of a division by zero.
 pub type DivisionResult<T> = Result<T, crate::errors::DivisionByZero>;

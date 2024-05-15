@@ -33,6 +33,12 @@ impl<T: Digit> BigInt<T> {
             sign: val.is_positive(),
         }
     }
+    pub fn from_unsigned(val: T) -> BigInt<T> {
+        BigInt::<T> {
+            uint: BigUint::<T>::new(val),
+            sign: true,
+        }
+    }
 
     /// Returns true if the integer is strictly higher than 0, false otherwise
     pub fn is_sign_positive(&self) -> bool {

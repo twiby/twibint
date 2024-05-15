@@ -13,6 +13,32 @@ impl<T: Digit> Add<T> for &BigUint<T> {
         return ret;
     }
 }
+impl<T: Digit> Add<T> for BigUint<T> {
+    type Output = BigUint<T>;
+
+    fn add(mut self, other: T) -> Self::Output {
+        self += &other;
+        self
+    }
+}
+
+impl<T: Digit> Add<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+
+    fn add(self, other: &T) -> Self::Output {
+        let mut ret: BigUint<T> = self.clone();
+        ret += other;
+        return ret;
+    }
+}
+impl<T: Digit> Add<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+
+    fn add(mut self, other: &T) -> Self::Output {
+        self += other;
+        self
+    }
+}
 impl<T: Digit> Add<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
 
@@ -30,12 +56,20 @@ impl<T: Digit> Add<BigUint<T>> for BigUint<T> {
         self
     }
 }
-impl<T: Digit> Add<T> for BigUint<T> {
+impl<T: Digit> Add<&BigUint<T>> for BigUint<T> {
     type Output = BigUint<T>;
 
-    fn add(mut self, other: T) -> Self::Output {
-        self += &other;
+    fn add(mut self, other: &BigUint<T>) -> Self::Output {
+        self += other;
         self
+    }
+}
+impl<T: Digit> Add<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+
+    fn add(self, mut other: BigUint<T>) -> Self::Output {
+        other += self;
+        other
     }
 }
 
@@ -74,6 +108,11 @@ impl<T: Digit> SubAssign<T> for BigUint<T> {
         *self -= &BigUint::<T>::new(other);
     }
 }
+impl<T: Digit> SubAssign<&T> for BigUint<T> {
+    fn sub_assign(&mut self, other: &T) {
+        *self -= *other;
+    }
+}
 impl<T: Digit> SubAssign<BigUint<T>> for BigUint<T> {
     fn sub_assign(&mut self, other: BigUint<T>) {
         *self -= &other;
@@ -96,6 +135,48 @@ impl<T: Digit> Sub<T> for &BigUint<T> {
         let mut ret = self.clone();
         ret -= other;
         return ret;
+    }
+}
+impl<T: Digit> Sub<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(self, other: &T) -> BigUint<T> {
+        let mut ret = self.clone();
+        ret -= other;
+        return ret;
+    }
+}
+impl<T: Digit> Sub<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(mut self, other: T) -> BigUint<T> {
+        self -= other;
+        self
+    }
+}
+impl<T: Digit> Sub<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(mut self, other: &T) -> BigUint<T> {
+        self -= other;
+        self
+    }
+}
+impl<T: Digit> Sub<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(mut self, other: BigUint<T>) -> BigUint<T> {
+        self -= other;
+        self
+    }
+}
+impl<T: Digit> Sub<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(mut self, other: &BigUint<T>) -> BigUint<T> {
+        self -= other;
+        self
+    }
+}
+impl<T: Digit> Sub<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn sub(self, other: BigUint<T>) -> BigUint<T> {
+        self - &other
     }
 }
 impl<T: Digit> Sub<&BigUint<T>> for &BigUint<T> {

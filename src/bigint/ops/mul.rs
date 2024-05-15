@@ -32,10 +32,24 @@ impl<T: Digit> Mul<T> for &BigInt<T> {
         ret
     }
 }
+impl<T: Digit> Mul<&T> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn mul(self, other: &T) -> BigInt<T> {
+        let mut ret = self.clone();
+        ret *= *other;
+        ret
+    }
+}
 impl<T: Digit> Mul<T> for BigInt<T> {
     type Output = BigInt<T>;
     fn mul(self, other: T) -> BigInt<T> {
         &self * other
+    }
+}
+impl<T: Digit> Mul<&T> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn mul(self, other: &T) -> BigInt<T> {
+        &self * *other
     }
 }
 impl<T: Digit> Mul<&BigInt<T>> for &BigInt<T> {
@@ -51,6 +65,18 @@ impl<T: Digit> Mul<BigInt<T>> for BigInt<T> {
     type Output = BigInt<T>;
     fn mul(self, other: BigInt<T>) -> BigInt<T> {
         &self * &other
+    }
+}
+impl<T: Digit> Mul<BigInt<T>> for &BigInt<T> {
+    type Output = BigInt<T>;
+    fn mul(self, other: BigInt<T>) -> BigInt<T> {
+        self * &other
+    }
+}
+impl<T: Digit> Mul<&BigInt<T>> for BigInt<T> {
+    type Output = BigInt<T>;
+    fn mul(self, other: &BigInt<T>) -> BigInt<T> {
+        &self * other
     }
 }
 

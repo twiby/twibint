@@ -17,6 +17,27 @@ impl<T: Digit> BitAnd<&BigUint<T>> for &BigUint<T> {
         ret
     }
 }
+impl<T: Digit> BitAnd<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(mut self, other: &BigUint<T>) -> BigUint<T> {
+        self &= other;
+        self
+    }
+}
+impl<T: Digit> BitAnd<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(self, mut other: BigUint<T>) -> BigUint<T> {
+        other &= self;
+        other
+    }
+}
+impl<T: Digit> BitAnd<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(mut self, other: BigUint<T>) -> BigUint<T> {
+        self &= &other;
+        self
+    }
+}
 impl<T: Digit> BitAndAssign<&BigUint<T>> for BigUint<T> {
     fn bitand_assign(&mut self, other: &BigUint<T>) {
         self.val
@@ -30,6 +51,46 @@ impl<T: Digit> BitAndAssign<&BigUint<T>> for BigUint<T> {
 impl<T: Digit> BitAndAssign<BigUint<T>> for BigUint<T> {
     fn bitand_assign(&mut self, other: BigUint<T>) {
         *self &= &other;
+    }
+}
+impl<T: Digit> BitAndAssign<T> for BigUint<T> {
+    fn bitand_assign(&mut self, other: T) {
+        *self &= BigUint::new(other)
+    }
+}
+impl<T: Digit> BitAndAssign<&T> for BigUint<T> {
+    fn bitand_assign(&mut self, other: &T) {
+        *self &= BigUint::new(*other)
+    }
+}
+impl<T: Digit> BitAnd<T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(self, other: T) -> Self::Output {
+        let mut ret = self.clone();
+        ret &= other;
+        ret
+    }
+}
+impl<T: Digit> BitAnd<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(self, other: &T) -> Self::Output {
+        let mut ret = self.clone();
+        ret &= other;
+        ret
+    }
+}
+impl<T: Digit> BitAnd<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(mut self, other: T) -> Self::Output {
+        self &= other;
+        self
+    }
+}
+impl<T: Digit> BitAnd<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitand(mut self, other: &T) -> Self::Output {
+        self &= other;
+        self
     }
 }
 
@@ -47,6 +108,48 @@ impl<T: Digit> BitOr<&BigUint<T>> for &BigUint<T> {
         ret
     }
 }
+impl<T: Digit> BitOr<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: &BigUint<T>) -> Self::Output {
+        &self | other
+    }
+}
+impl<T: Digit> BitOr<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: BigUint<T>) -> Self::Output {
+        self | &other
+    }
+}
+impl<T: Digit> BitOr<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: BigUint<T>) -> Self::Output {
+        &self | &other
+    }
+}
+impl<T: Digit> BitOr<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: T) -> Self::Output {
+        &self | BigUint::new(other)
+    }
+}
+impl<T: Digit> BitOr<T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: T) -> Self::Output {
+        self | BigUint::new(other)
+    }
+}
+impl<T: Digit> BitOr<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: &T) -> Self::Output {
+        &self | BigUint::new(*other)
+    }
+}
+impl<T: Digit> BitOr<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitor(self, other: &T) -> Self::Output {
+        self | BigUint::new(*other)
+    }
+}
 impl<T: Digit> BitOrAssign<&BigUint<T>> for BigUint<T> {
     fn bitor_assign(&mut self, other: &BigUint<T>) {
         self.val
@@ -60,6 +163,16 @@ impl<T: Digit> BitOrAssign<&BigUint<T>> for BigUint<T> {
 impl<T: Digit> BitOrAssign<BigUint<T>> for BigUint<T> {
     fn bitor_assign(&mut self, other: BigUint<T>) {
         *self |= &other;
+    }
+}
+impl<T: Digit> BitOrAssign<T> for BigUint<T> {
+    fn bitor_assign(&mut self, other: T) {
+        *self |= BigUint::new(other)
+    }
+}
+impl<T: Digit> BitOrAssign<&T> for BigUint<T> {
+    fn bitor_assign(&mut self, other: &T) {
+        *self |= BigUint::new(*other)
     }
 }
 
@@ -77,6 +190,48 @@ impl<T: Digit> BitXor<&BigUint<T>> for &BigUint<T> {
         ret
     }
 }
+impl<T: Digit> BitXor<&BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: &BigUint<T>) -> Self::Output {
+        &self ^ other
+    }
+}
+impl<T: Digit> BitXor<BigUint<T>> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: BigUint<T>) -> Self::Output {
+        self ^ &other
+    }
+}
+impl<T: Digit> BitXor<BigUint<T>> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: BigUint<T>) -> Self::Output {
+        &self ^ &other
+    }
+}
+impl<T: Digit> BitXor<T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: T) -> Self::Output {
+        &self ^ BigUint::new(other)
+    }
+}
+impl<T: Digit> BitXor<&T> for BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: &T) -> Self::Output {
+        &self ^ BigUint::new(*other)
+    }
+}
+impl<T: Digit> BitXor<T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: T) -> Self::Output {
+        self ^ BigUint::new(other)
+    }
+}
+impl<T: Digit> BitXor<&T> for &BigUint<T> {
+    type Output = BigUint<T>;
+    fn bitxor(self, other: &T) -> Self::Output {
+        self ^ BigUint::new(*other)
+    }
+}
 impl<T: Digit> BitXorAssign<&BigUint<T>> for BigUint<T> {
     fn bitxor_assign(&mut self, other: &BigUint<T>) {
         self.val
@@ -91,5 +246,15 @@ impl<T: Digit> BitXorAssign<&BigUint<T>> for BigUint<T> {
 impl<T: Digit> BitXorAssign<BigUint<T>> for BigUint<T> {
     fn bitxor_assign(&mut self, other: BigUint<T>) {
         *self ^= &other;
+    }
+}
+impl<T: Digit> BitXorAssign<T> for BigUint<T> {
+    fn bitxor_assign(&mut self, other: T) {
+        *self ^= BigUint::new(other);
+    }
+}
+impl<T: Digit> BitXorAssign<&T> for BigUint<T> {
+    fn bitxor_assign(&mut self, other: &T) {
+        *self ^= BigUint::new(*other);
     }
 }
