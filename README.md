@@ -4,6 +4,9 @@ Rust crate for arbitrarily big integers, signed or unsigned.
 [![crate](https://img.shields.io/crates/v/twibint.svg)](https://crates.io/crates/twibint)
 [![documentation](https://docs.rs/twibint/badge.svg)](https://docs.rs/twibint)
 
+This crate does not need any dependency, and relies only on the standard 
+library. Some dependencies are optional, depending on a specific feature (see 
+list of features below).
 
 The main API of this crate is to export 2 types: BigUint and BigInt, 
 meant to represent unsigned or signed integers of arbitrarily large
@@ -20,16 +23,26 @@ the following:
 ```bash
 cargo build
 cargo docs
-cargo bench
+cargo bench --features=rand
 cargo test
 ```
 
 For benchmarks specifically, you might want to call only some of these:
 ```bash
-cargo bench mul
-cargo bench add
-cargo bench sub
+cargo bench mul --features=rand
+cargo bench add --features=rand
+cargo bench sub --features=rand
 ```
+
+Benchmarks won't compile/run without the `rand` feature enabled.
+
+## List of features
+
+- `rand`: enables the possibility to generate a random integer with a specific 
+number of bits. Uses `rand` crate as a dependency.
+- `pyo3`: Only used to generate python bindings, it's only meant to be used
+indirectly via the `pip install .` command.
+
 
 ## Install as a Python package
 Simply use from the base directory

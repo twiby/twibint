@@ -98,6 +98,7 @@ impl BigUint<u64> {
     }
 }
 
+#[cfg(feature = "rand")]
 #[pyfunction]
 fn gen_random_pybiguint(n: usize) -> PyBigUint {
     PyBigUint(crate::gen_random_biguint(n * 64))
@@ -115,6 +116,7 @@ fn gen_random_pybiguint(n: usize) -> PyBigUint {
 fn twibint(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyBigUint>()?;
     m.add_class::<PyBigInt>()?;
+#[cfg(feature = "rand")]
     m.add_function(wrap_pyfunction!(gen_random_pybiguint, m)?)?;
     return Ok(());
 }

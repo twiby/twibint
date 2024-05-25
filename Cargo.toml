@@ -12,6 +12,9 @@ categories = ["mathematics"]
 [lib]
 name = "twibint"
 
+[features]
+default = []
+
 [dependencies.pyo3]
 version = "0.19.0"
 features = ["extension-module"]
@@ -19,6 +22,7 @@ optional = true
 
 [dependencies.rand]
 version = "0.8"
+optional = true
 
 [dev-dependencies]
 criterion = "0.5"
@@ -28,7 +32,9 @@ typed_test_gen = "0.1"
 [[bench]]
 name = "biguint"
 harness = false
+required-features = ["rand"]
 
-# [[bench]]
-# name = "num-bigint"
-# harness = false
+[[bench]]
+name = "num-bigint"
+harness = false
+required-features = ["rand"]
