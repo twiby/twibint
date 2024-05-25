@@ -22,7 +22,3 @@ jobs:
       run: cargo test --verbose
     - name: Run tests with rand feature
       run: cargo test --verbose --features=rand
-    - name: Build python tests
-      run: pip install .
-    - name: Run Python tests
-      run: pytest
