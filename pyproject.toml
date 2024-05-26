@@ -1,9 +1,7 @@
 [project]
 name = "twibint"
 version = "0.2.2"
-dependencies = [
-"maturin==1.1.0",
-"pytest==7.3.2",]
+dependencies = ["maturin==1.1.0"]
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]
