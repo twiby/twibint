@@ -731,3 +731,30 @@ fn test_asm_u64_big_mul() {
     assert_eq!(r, u64::MAX);
     assert_eq!(carry, u64::MAX);
 }
+
+#[test]
+fn test_alignment() {
+    let test: Vec<u32> = vec![0,1,2,3,4,5];
+
+    assert_eq!(test.as_ptr().align_offset(std::mem::align_of::<u32>()), 0);
+    assert_eq!(
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
+        1 - test.as_ptr().wrapping_add(1).align_offset(std::mem::align_of::<u64>()));
+    assert_eq!(
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
+        test.as_ptr().wrapping_add(2).align_offset(std::mem::align_of::<u64>()));
+}
+
+#[test]
+fn test_alignment2() {
+    let v: Vec<u64> = vec![0,1,2,3,4,5];
+    let test: &[u64] = &v;
+
+    assert_eq!(test.as_ptr().align_offset(std::mem::align_of::<u64>()), 0);
+    assert_eq!(
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
+        test.as_ptr().wrapping_add(1).align_offset(std::mem::align_of::<u64>()));
+    assert_eq!(
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
+        test.as_ptr().wrapping_add(2).align_offset(std::mem::align_of::<u64>()));
+}
