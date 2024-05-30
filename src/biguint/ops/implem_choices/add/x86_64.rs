@@ -9,8 +9,13 @@ use std::arch::asm;
 pub(super) unsafe fn schoolbook_add_assign_x64_64(
     rhs: *mut u64,
     lhs: *const u64,
-    size: usize,
+    mut size: usize,
 ) -> (bool, usize) {
+    if size <= 5 {
+        return (false, 0);
+    }
+    size -= 5;
+
     let mut c = 0u8;
     let mut idx = 0;
 
