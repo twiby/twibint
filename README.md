@@ -68,3 +68,6 @@ repercussions on many other features.
 These acceleration are mostly due to dropping inline assembly for core loops, and are 
 based on `unsafe` Rust. Other `unsafe` features used include smartly swapping between 
 `&[u32]` and `&[u64]` slices via pointers.
+
+To disable any `unsafe` code, use with the flag `--no-default-features` for a slower
+experience, but fully compiled in safe Rust.
