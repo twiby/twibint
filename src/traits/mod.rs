@@ -3,7 +3,9 @@
 /// Defines the Digit trait: which defines types that can be used as a digit
 mod digit;
 pub use digit::Digit;
-pub(crate) use digit::{DoubleDigit, SignedDigit, ToPtr};
+pub(crate) use digit::{DoubleDigit, SignedDigit};
+#[cfg(feature = "unsafe")]
+pub(crate) use digit::ToPtr;
 
 /// Defines traits and tests to ensure coherence and completeness of
 /// binary op coverage

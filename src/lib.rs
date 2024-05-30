@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "unsafe"), forbid(unsafe_code))]
+
 mod bigint;
 mod biguint;
 mod errors;
