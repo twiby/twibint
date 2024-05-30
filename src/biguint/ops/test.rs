@@ -611,7 +611,7 @@ fn maxed_out_mul() {
     );
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
 #[test]
 fn test_asm_u64_sum() {
     use std::arch::asm;
@@ -642,7 +642,7 @@ fn test_asm_u64_sum() {
     assert_eq!(carry, 1);
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
 #[test]
 fn test_asm_u64_sub() {
     use std::arch::asm;
@@ -673,7 +673,7 @@ fn test_asm_u64_sub() {
     assert_eq!(carry, 1);
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
 #[test]
 fn test_asm_u64_mul() {
     use std::arch::asm;
@@ -697,7 +697,7 @@ fn test_asm_u64_mul() {
     assert_eq!(msb, u64::MAX - 1);
 }
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
 #[test]
 fn test_asm_u64_big_mul() {
     use std::arch::asm;
