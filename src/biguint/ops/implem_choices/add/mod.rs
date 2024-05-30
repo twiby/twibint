@@ -28,6 +28,7 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
     schoolbook_add_assign(rhs, lhs, false)
 }
 
+/// Tries hardware acceleration before classic algorithm
 #[cfg(feature = "unsafe")]
 unsafe fn add_assign_u64(rhs: *mut u64, rhs_size: usize, lhs: *const u64, lhs_size: usize) -> bool {
     debug_assert!(rhs_size >= lhs_size);

@@ -42,6 +42,8 @@ Benchmarks won't compile/run without the `rand` feature enabled.
 number of bits. Uses `rand` crate as a dependency.
 - `pyo3`: Only used to generate python bindings, it's only meant to be used
 indirectly via the `pip install .` command.
+- `unsafe`: Enables accelerations that use unsafe Rust. Enabled by default. 
+Disabled via the flag `--no-default-features` for pure safe Rust (compile time enforced).
 
 
 ## Install as a Python package
