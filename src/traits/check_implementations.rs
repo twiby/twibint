@@ -22,6 +22,7 @@ use std::ops::AddAssign;
 
 macro_rules! op_bound_def {
     ($trait_name: ident, $op: ident) => {
+        #[allow(unused)]
         trait $trait_name<T: Digit>
         where
             Self: $op<T>,
