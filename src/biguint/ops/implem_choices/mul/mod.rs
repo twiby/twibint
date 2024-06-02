@@ -67,7 +67,7 @@ unsafe fn single_digit_add_assign_mul_u64(ret: *mut u64, rhs: *const u64, rhs_si
     #[cfg(target_arch = "x86_64")]
     let (carry, done) = x86_64::single_digit_add_assign_mul_x86_64(ret, rhs, b, rhs_size);
     #[cfg(not(target_arch = "x86_64"))]
-    let (carry, done) = (false, 0);
+    let (carry, done) = (0, 0);
 
     schoolbook_single_digit_add_assign_mul_u64(ret.wrapping_add(done), rhs.wrapping_add(done), rhs_size - done, b, carry)
 }
