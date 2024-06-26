@@ -15,8 +15,10 @@ pub(super) unsafe fn schoolbook_add_assign_x64_64(
         return (false, 0);
     }
     size -= 5;
+    size /= 5;
+    size += 1;
 
-    let mut c = 0u8;
+    let mut c: u8;
     let mut idx = 0;
 
     asm!(
@@ -36,13 +38,7 @@ pub(super) unsafe fn schoolbook_add_assign_x64_64(
         "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
         "mov {b_tmp5}, qword ptr [{b} + 8*{idx} + 32]",
 
-        // Set the carry flag if there was a previous carry
-        "cmp {c}, 0",
-        "jle 2f",
-        "stc",
-
         // Perform the addition
-        "2:",
         "adc {a_tmp1}, {b_tmp1}",
         "adc {a_tmp2}, {b_tmp2}",
         "adc {a_tmp3}, {b_tmp3}",
@@ -56,19 +52,23 @@ pub(super) unsafe fn schoolbook_add_assign_x64_64(
         "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
         "mov qword ptr [{a} + 8*{idx} + 32], {a_tmp5}",
 
-        // Output and clear the carry flag
+        // Increment loop counter
+        "inc {idx}",
+        "inc {idx}",
+        "inc {idx}",
+        "inc {idx}",
+        "inc {idx}",
+        "dec {size}",
+        "jnz 3b",
+
+        // Output carry flag and clear
         "setc {c}",
         "clc",
-
-        // Increment loop counter
-        "add {idx}, 5",
-        "cmp {idx}, {size}",
-        "jle 3b",
 
         size = in(reg) size,
         a = in(reg) rhs,
         b = in(reg) lhs,
-        c = inout(reg_byte) c,
+        c = lateout(reg_byte) c,
         idx = inout(reg) idx,
 
         a_tmp1 = out(reg) _,
