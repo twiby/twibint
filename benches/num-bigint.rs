@@ -45,8 +45,8 @@ pub fn sub<const N: usize>(c: &mut Criterion) {
     let mut name = "num-bigint sub ".to_string();
     name.push_str(&N.to_string());
 
-    let n1 = BigUint::new(gen_n_random_values::<u32>(N+1));
-    let n2 = BigUint::new(gen_n_random_values::<u32>(N));
+    let n1 = BigUint::new(gen_n_random_values::<u32>(N / 32 + 1));
+    let n2 = BigUint::new(gen_n_random_values::<u32>(N / 32));
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 - &n2)));
 }
 
@@ -69,8 +69,8 @@ pub fn mul<const N: usize>(c: &mut Criterion) {
     let mut name = "num-bigint mul ".to_string();
     name.push_str(&N.to_string());
 
-    let n1 = BigUint::new(gen_n_random_values::<u32>(N));
-    let n2 = BigUint::new(gen_n_random_values::<u32>(N));
+    let n1 = BigUint::new(gen_n_random_values::<u32>(N / 32));
+    let n2 = BigUint::new(gen_n_random_values::<u32>(N / 32));
     c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 * &n2)));
 }
 

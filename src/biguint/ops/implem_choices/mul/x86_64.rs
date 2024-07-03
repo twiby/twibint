@@ -105,3 +105,24 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
 
     (carry, idx)
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn full_carrying_mul() {
+        let a = vec![u64::MAX; 16];
+        let b = u64::MAX;
+        let mut c = vec![u64::MAX; 16];
+
+        unsafe {
+            let (carry, done) =
+                super::single_digit_add_assign_mul_x86_64(c.as_mut_ptr(), a.as_ptr(), b, 16);
+            c.push(carry);
+            assert_eq!(done, 16);
+        }
+
+        let mut shoud_get = vec![u64::MAX; 16];
+        shoud_get.insert(0, 0u64);
+        assert_eq!(c, shoud_get);
+    }
+}
