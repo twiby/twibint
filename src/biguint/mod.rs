@@ -65,7 +65,7 @@ impl<T: Digit> BigUint<T> {
     #[inline]
     pub(crate) fn remove_trailing_zeros(&mut self) {
         let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == T::ZERO).count();
-        self.val.resize(std::cmp::max(count, 1), T::ZERO);
+        self.val.truncate(std::cmp::max(count, 1));
     }
 }
 

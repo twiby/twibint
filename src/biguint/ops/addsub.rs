@@ -4,11 +4,19 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 use crate::traits::Digit;
 use crate::BigUint;
 
+impl<T: Digit> BigUint<T> {
+    pub(crate) fn clone_for_addition_with(&self, other_len: usize) -> Self {
+        let mut data = Vec::<T>::with_capacity(self.val.len().max(other_len) + 1);
+        data.extend_from_slice(&self.val);
+        BigUint::<T> { val: data }
+    }
+}
+
 impl<T: Digit> Add<T> for &BigUint<T> {
     type Output = BigUint<T>;
 
     fn add(self, other: T) -> Self::Output {
-        let mut ret: BigUint<T> = self.clone();
+        let mut ret: BigUint<T> = self.clone_for_addition_with(1);
         ret += other;
         return ret;
     }
@@ -26,7 +34,7 @@ impl<T: Digit> Add<&T> for &BigUint<T> {
     type Output = BigUint<T>;
 
     fn add(self, other: &T) -> Self::Output {
-        let mut ret: BigUint<T> = self.clone();
+        let mut ret: BigUint<T> = self.clone_for_addition_with(1);
         ret += other;
         return ret;
     }
@@ -43,7 +51,7 @@ impl<T: Digit> Add<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
 
     fn add(self, other: &BigUint<T>) -> Self::Output {
-        let mut ret = self.clone();
+        let mut ret = self.clone_for_addition_with(other.val.len());
         ret += other;
         return ret;
     }
@@ -92,13 +100,12 @@ impl<T: Digit> AddAssign<BigUint<T>> for BigUint<T> {
 }
 impl<T: Digit> AddAssign<&BigUint<T>> for BigUint<T> {
     fn add_assign(&mut self, other: &BigUint<T>) {
-        if self.val.len() < other.val.len() {
-            self.val.resize(other.val.len(), T::ZERO)
-        }
+        let target_length = self.val.len().max(other.val.len()) + 1;
+        self.val.resize(target_length, T::ZERO);
 
         let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
+        debug_assert!(!carry);
 
-        self.val.push(T::from(carry));
         self.remove_trailing_zeros();
     }
 }

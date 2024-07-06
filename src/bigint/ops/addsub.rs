@@ -5,6 +5,16 @@ use core::ops::{Add, AddAssign, Sub, SubAssign};
 use crate::traits::Digit;
 use crate::{BigInt, BigUint};
 
+impl<T: Digit> BigInt<T> {
+    fn clone_for_addition_with(&self, other_len: usize) -> Self {
+        let uint = self.uint.clone_for_addition_with(other_len);
+        BigInt {
+            uint,
+            sign: self.sign,
+        }
+    }
+}
+
 impl<T: Digit> Add<T> for BigInt<T> {
     type Output = BigInt<T>;
 
@@ -25,7 +35,7 @@ impl<T: Digit> Add<T> for &BigInt<T> {
     type Output = BigInt<T>;
 
     fn add(self, other: T) -> Self::Output {
-        let mut ret: BigInt<T> = self.clone();
+        let mut ret: BigInt<T> = self.clone_for_addition_with(1);
         ret += other;
         return ret;
     }
@@ -34,7 +44,7 @@ impl<T: Digit> Add<&T> for &BigInt<T> {
     type Output = BigInt<T>;
 
     fn add(self, other: &T) -> Self::Output {
-        let mut ret: BigInt<T> = self.clone();
+        let mut ret: BigInt<T> = self.clone_for_addition_with(1);
         ret += other;
         return ret;
     }
@@ -43,7 +53,7 @@ impl<T: Digit> Add<&BigInt<T>> for &BigInt<T> {
     type Output = BigInt<T>;
 
     fn add(self, other: &BigInt<T>) -> Self::Output {
-        let mut ret = self.clone();
+        let mut ret = self.clone_for_addition_with(other.uint.val.len());
         ret += other;
         return ret;
     }
@@ -91,16 +101,16 @@ impl<T: Digit> AddAssign<BigInt<T>> for BigInt<T> {
 impl<T: Digit> AddAssign<&BigInt<T>> for BigInt<T> {
     fn add_assign(&mut self, other: &BigInt<T>) {
         // Case same sign: pure addition of components
-        match (self.sign, other.sign) {
-            (some_bool, other_bool) if some_bool == other_bool => {
-                self.uint += &other.uint;
-                return;
-            }
-            _ => (),
-        };
+        if self.sign == other.sign {
+            self.uint += &other.uint;
+            return;
+        }
 
         match self.uint.cmp(&other.uint) {
-            Ordering::Equal => *self = BigInt::<T>::default(),
+            Ordering::Equal => {
+                self.uint.val.clear();
+                self.uint.val.push(T::ZERO);
+            }
             Ordering::Greater => self.uint -= &other.uint,
             Ordering::Less => {
                 self.uint = &other.uint - &self.uint;
@@ -122,18 +132,33 @@ impl<T: Digit> SubAssign<T> for BigInt<T> {
 }
 impl<T: Digit> SubAssign<&BigInt<T>> for BigInt<T> {
     fn sub_assign(&mut self, other: &BigInt<T>) {
-        *self += -other;
+        if self.sign != other.sign {
+            self.uint += &other.uint;
+            return;
+        }
+
+        match self.uint.cmp(&other.uint) {
+            Ordering::Equal => {
+                self.uint.val.clear();
+                self.uint.val.push(T::ZERO);
+            }
+            Ordering::Greater => self.uint -= &other.uint,
+            Ordering::Less => {
+                self.uint = &other.uint - &self.uint;
+                self.sign = !self.sign;
+            }
+        }
     }
 }
 impl<T: Digit> SubAssign<BigInt<T>> for BigInt<T> {
     fn sub_assign(&mut self, other: BigInt<T>) {
-        *self += -other;
+        *self -= &other;
     }
 }
 impl<T: Digit> Sub<T> for &BigInt<T> {
     type Output = BigInt<T>;
     fn sub(self, other: T) -> BigInt<T> {
-        let mut ret = self.clone();
+        let mut ret = self.clone_for_addition_with(1);
         ret -= other;
         return ret;
     }
@@ -141,7 +166,7 @@ impl<T: Digit> Sub<T> for &BigInt<T> {
 impl<T: Digit> Sub<&T> for &BigInt<T> {
     type Output = BigInt<T>;
     fn sub(self, other: &T) -> BigInt<T> {
-        let mut ret = self.clone();
+        let mut ret = self.clone_for_addition_with(1);
         ret -= other;
         return ret;
     }
@@ -163,7 +188,7 @@ impl<T: Digit> Sub<&T> for BigInt<T> {
 impl<T: Digit> Sub<&BigInt<T>> for &BigInt<T> {
     type Output = BigInt<T>;
     fn sub(self, other: &BigInt<T>) -> BigInt<T> {
-        let mut ret = self.clone();
+        let mut ret = self.clone_for_addition_with(other.uint.val.len());
         ret -= other;
         ret
     }

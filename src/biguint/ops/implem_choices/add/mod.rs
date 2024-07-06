@@ -3,9 +3,9 @@
 use crate::traits::{Digit, DoubleDigit};
 
 #[cfg(feature = "unsafe")]
-use crate::traits::ToPtr;
-#[cfg(feature = "unsafe")]
 use super::u32_ptrs_aligned;
+#[cfg(feature = "unsafe")]
+use crate::traits::ToPtr;
 
 /// Specialization of addition for x86_64 machines
 #[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
@@ -20,8 +20,9 @@ pub(crate) fn add_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
         if u32_ptrs_aligned(rhs_cast, lhs_cast) {
             // Case pointers correctly aligned: pretend they are u64
             let size = lhs.len() / 2;
-            let carry: bool = unsafe { add_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
-            return schoolbook_add_assign(&mut rhs[size*2..], &lhs[size*2..], carry);
+            let carry: bool =
+                unsafe { add_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
+            return schoolbook_add_assign(&mut rhs[size * 2..], &lhs[size * 2..], carry);
         } else {
             // Case pointers are misaligned: base safe algo
             return schoolbook_add_assign(rhs, lhs, false);
@@ -46,12 +47,24 @@ unsafe fn add_assign_u64(rhs: *mut u64, rhs_size: usize, lhs: *const u64, lhs_si
     #[cfg(not(target_arch = "x86_64"))]
     let (carry, done) = (false, 0);
 
-    schoolbook_add_assign_u64(rhs.wrapping_add(done), rhs_size - done, lhs.wrapping_add(done), lhs_size - done, carry)
+    schoolbook_add_assign_u64(
+        rhs.wrapping_add(done),
+        rhs_size - done,
+        lhs.wrapping_add(done),
+        lhs_size - done,
+        carry,
+    )
 }
 
 /// Unsafe version operates directly in pointers
 #[cfg(feature = "unsafe")]
-unsafe fn schoolbook_add_assign_u64(mut rhs: *mut u64, mut rhs_size: usize, mut lhs: *const u64, mut lhs_size: usize, carry: bool) -> bool {
+unsafe fn schoolbook_add_assign_u64(
+    mut rhs: *mut u64,
+    mut rhs_size: usize,
+    mut lhs: *const u64,
+    mut lhs_size: usize,
+    carry: bool,
+) -> bool {
     debug_assert!(rhs_size >= lhs_size);
     rhs_size -= lhs_size;
 
@@ -102,7 +115,7 @@ mod tests {
     fn misaligned_add() {
         let a = vec![u32::MAX, u32::MAX, u32::MAX];
         let b = vec![u32::MAX, u32::MAX, u32::MAX];
-        let ret_full = vec![u32::MAX-1, u32::MAX, u32::MAX];
+        let ret_full = vec![u32::MAX - 1, u32::MAX, u32::MAX];
         let ret_part = vec![u32::MAX - 1, u32::MAX];
 
         let mut temp = a.clone();
