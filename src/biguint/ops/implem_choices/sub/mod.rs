@@ -3,9 +3,9 @@
 use crate::traits::Digit;
 
 #[cfg(feature = "unsafe")]
-use crate::traits::ToPtr;
-#[cfg(feature = "unsafe")]
 use super::u32_ptrs_aligned;
+#[cfg(feature = "unsafe")]
+use crate::traits::ToPtr;
 
 /// Specialization of subtraction for x86_64 machines
 #[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
@@ -19,8 +19,9 @@ pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
         if u32_ptrs_aligned(rhs_cast, lhs_cast) {
             // Case pointers correctly aligned: pretend they are u64
             let size = lhs.len() / 2;
-            let carry: bool = unsafe { sub_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
-            return schoolbook_sub_assign(&mut rhs[size*2..], &lhs[size*2..], carry);
+            let carry: bool =
+                unsafe { sub_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
+            return schoolbook_sub_assign(&mut rhs[size * 2..], &lhs[size * 2..], carry);
         } else {
             // Case pointers are misaligned: base safe algo
             return schoolbook_sub_assign(rhs, lhs, false);
@@ -40,18 +41,29 @@ pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
 unsafe fn sub_assign_u64(rhs: *mut u64, rhs_size: usize, lhs: *const u64, lhs_size: usize) -> bool {
     debug_assert!(rhs_size >= lhs_size);
 
-
     #[cfg(target_arch = "x86_64")]
-    let (carry, done) = x86_64::schoolbook_sub_assign_x64_64(rhs, lhs, lhs_size);
+    let (carry, done) = x86_64::schoolbook_sub_assign_x86_64(rhs, lhs, lhs_size);
     #[cfg(not(target_arch = "x86_64"))]
     let (carry, done) = (false, 0);
 
-    schoolbook_sub_assign_u64(rhs.wrapping_add(done), rhs_size - done, lhs.wrapping_add(done), lhs_size - done, carry)
+    schoolbook_sub_assign_u64(
+        rhs.wrapping_add(done),
+        rhs_size - done,
+        lhs.wrapping_add(done),
+        lhs_size - done,
+        carry,
+    )
 }
 
 /// Unsafe version operates directly on pointers
 #[cfg(feature = "unsafe")]
-unsafe fn schoolbook_sub_assign_u64(mut rhs: *mut u64, mut rhs_size: usize, mut lhs: *const u64, mut lhs_size: usize, mut carry: bool) -> bool {
+unsafe fn schoolbook_sub_assign_u64(
+    mut rhs: *mut u64,
+    mut rhs_size: usize,
+    mut lhs: *const u64,
+    mut lhs_size: usize,
+    mut carry: bool,
+) -> bool {
     debug_assert!(rhs_size >= lhs_size);
     rhs_size -= lhs_size;
 

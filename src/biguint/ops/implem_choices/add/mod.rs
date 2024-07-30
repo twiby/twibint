@@ -43,7 +43,7 @@ unsafe fn add_assign_u64(rhs: *mut u64, rhs_size: usize, lhs: *const u64, lhs_si
     debug_assert!(rhs_size >= lhs_size);
 
     #[cfg(target_arch = "x86_64")]
-    let (carry, done) = x86_64::schoolbook_add_assign_x64_64(rhs, lhs, lhs_size);
+    let (carry, done) = x86_64::schoolbook_add_assign_x86_64(rhs, lhs, lhs_size);
     #[cfg(not(target_arch = "x86_64"))]
     let (carry, done) = (false, 0);
 

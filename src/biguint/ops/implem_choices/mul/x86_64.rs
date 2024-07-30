@@ -20,14 +20,14 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
         "3:",
 
         // Get data
-        "mov rax, qword ptr[{a} + 8*{i}]",
-        "mov {temp_a_2}, qword ptr [{a} + 8*{i} + 8]",
-        "mov {temp_a_3}, qword ptr [{a} + 8*{i} + 16]",
-        "mov {temp_a_4}, qword ptr [{a} + 8*{i} + 24]",
-        "mov {temp_r_1}, qword ptr[{r} + 8*{i}]",
-        "mov {temp_r_2}, qword ptr[{r} + 8*{i} + 8]",
-        "mov {temp_r_3}, qword ptr[{r} + 8*{i} + 16]",
-        "mov {temp_r_4}, qword ptr[{r} + 8*{i} + 24]",
+        "mov rax, qword ptr[{a:r} + 8*{i:r}]",
+        "mov {temp_a_2}, qword ptr [{a:r} + 8*{i:r} + 8]",
+        "mov {temp_a_3}, qword ptr [{a:r} + 8*{i:r} + 16]",
+        "mov {temp_a_4}, qword ptr [{a:r} + 8*{i:r} + 24]",
+        "mov {temp_r_1}, qword ptr[{r:r} + 8*{i:r}]",
+        "mov {temp_r_2}, qword ptr[{r:r} + 8*{i:r} + 8]",
+        "mov {temp_r_3}, qword ptr[{r:r} + 8*{i:r} + 16]",
+        "mov {temp_r_4}, qword ptr[{r:r} + 8*{i:r} + 24]",
 
         // Multiply
         "mul {b}",
@@ -39,7 +39,7 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
         "adc rdx, 0",
         // Get results
         "mov {c}, rdx",
-        "mov qword ptr [{r} + 8*{i}], rax",
+        "mov qword ptr [{r:r} + 8*{i:r}], rax",
 
         // Next mul
         "mov rax, {temp_a_2}",
@@ -52,7 +52,7 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
         "adc rdx, 0",
         // Get results
         "mov {c}, rdx",
-        "mov qword ptr [{r} + 8*{i} + 8], rax",
+        "mov qword ptr [{r:r} + 8*{i:r} + 8], rax",
 
         // Next mul
         "mov rax, {temp_a_3}",
@@ -65,7 +65,7 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
         "adc rdx, 0",
         // Get results
         "mov {c}, rdx",
-        "mov qword ptr [{r} + 8*{i} + 16], rax",
+        "mov qword ptr [{r:r} + 8*{i:r} + 16], rax",
 
         // Next mul
         "mov rax, {temp_a_4}",
@@ -78,11 +78,11 @@ pub(super) unsafe fn single_digit_add_assign_mul_x86_64(
         "adc rdx, 0",
         // Get results
         "mov {c}, rdx",
-        "mov qword ptr [{r} + 8*{i} + 24], rax",
+        "mov qword ptr [{r:r} + 8*{i:r} + 24], rax",
 
         // Increment loop counter
-        "add {i}, 4",
-        "cmp {i}, {len}",
+        "add {i:r}, 4",
+        "cmp {i:r}, {len:r}",
         "jle 3b",
 
         out("rax") _,
