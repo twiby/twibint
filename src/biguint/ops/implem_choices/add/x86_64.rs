@@ -6,22 +6,23 @@ use std::arch::asm;
 
 /// Performs a part of the addition. Returns a tuple containing the carry state
 /// and the number of digits currently added
-pub(super) unsafe fn schoolbook_add_assign_x64_64(
+pub(super) unsafe fn schoolbook_add_assign_x86_64(
     rhs: *mut u64,
     lhs: *const u64,
     mut size: usize,
 ) -> (bool, usize) {
-    if size <= 5 {
+    size /= 5;
+    if size == 0 {
         return (false, 0);
     }
-    size -= 5;
-    size /= 5;
-    size += 1;
 
     let mut c: u8;
     let mut idx = 0;
 
     asm!(
+        // Clear carry flag
+        "clc",
+
         "3:",
 
         // Copy a in registers
