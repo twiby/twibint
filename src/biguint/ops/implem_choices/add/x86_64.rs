@@ -26,18 +26,18 @@ pub(super) unsafe fn schoolbook_add_assign_x86_64(
         "3:",
 
         // Copy a in registers
-        "mov {a_tmp1}, qword ptr [{a} + 8*{idx}]",
-        "mov {a_tmp2}, qword ptr [{a} + 8*{idx} + 8]",
-        "mov {a_tmp3}, qword ptr [{a} + 8*{idx} + 16]",
-        "mov {a_tmp4}, qword ptr [{a} + 8*{idx} + 24]",
-        "mov {a_tmp5}, qword ptr [{a} + 8*{idx} + 32]",
+        "mov {a_tmp1}, qword ptr [{a:r} + 8*{idx:r}]",
+        "mov {a_tmp2}, qword ptr [{a:r} + 8*{idx:r} + 8]",
+        "mov {a_tmp3}, qword ptr [{a:r} + 8*{idx:r} + 16]",
+        "mov {a_tmp4}, qword ptr [{a:r} + 8*{idx:r} + 24]",
+        "mov {a_tmp5}, qword ptr [{a:r} + 8*{idx:r} + 32]",
 
         // Copy b in registers
-        "mov {b_tmp1}, qword ptr [{b} + 8*{idx}]",
-        "mov {b_tmp2}, qword ptr [{b} + 8*{idx} + 8]",
-        "mov {b_tmp3}, qword ptr [{b} + 8*{idx} + 16]",
-        "mov {b_tmp4}, qword ptr [{b} + 8*{idx} + 24]",
-        "mov {b_tmp5}, qword ptr [{b} + 8*{idx} + 32]",
+        "mov {b_tmp1}, qword ptr [{b:r} + 8*{idx:r}]",
+        "mov {b_tmp2}, qword ptr [{b:r} + 8*{idx:r} + 8]",
+        "mov {b_tmp3}, qword ptr [{b:r} + 8*{idx:r} + 16]",
+        "mov {b_tmp4}, qword ptr [{b:r} + 8*{idx:r} + 24]",
+        "mov {b_tmp5}, qword ptr [{b:r} + 8*{idx:r} + 32]",
 
         // Perform the addition
         "adc {a_tmp1}, {b_tmp1}",
@@ -47,19 +47,19 @@ pub(super) unsafe fn schoolbook_add_assign_x86_64(
         "adc {a_tmp5}, {b_tmp5}",
 
         // Copy the return values
-        "mov qword ptr [{a} + 8*{idx}], {a_tmp1}",
-        "mov qword ptr [{a} + 8*{idx} + 8], {a_tmp2}",
-        "mov qword ptr [{a} + 8*{idx} + 16], {a_tmp3}",
-        "mov qword ptr [{a} + 8*{idx} + 24], {a_tmp4}",
-        "mov qword ptr [{a} + 8*{idx} + 32], {a_tmp5}",
+        "mov qword ptr [{a:r} + 8*{idx:r}], {a_tmp1}",
+        "mov qword ptr [{a:r} + 8*{idx:r} + 8], {a_tmp2}",
+        "mov qword ptr [{a:r} + 8*{idx:r} + 16], {a_tmp3}",
+        "mov qword ptr [{a:r} + 8*{idx:r} + 24], {a_tmp4}",
+        "mov qword ptr [{a:r} + 8*{idx:r} + 32], {a_tmp5}",
 
         // Increment loop counter
-        "inc {idx}",
-        "inc {idx}",
-        "inc {idx}",
-        "inc {idx}",
-        "inc {idx}",
-        "dec {size}",
+        "inc {idx:r}",
+        "inc {idx:r}",
+        "inc {idx:r}",
+        "inc {idx:r}",
+        "inc {idx:r}",
+        "dec {size:r}",
         "jnz 3b",
 
         // Output carry flag and clear

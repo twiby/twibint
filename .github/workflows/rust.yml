@@ -17,11 +17,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --verbose
+      run: 
+        cargo build --verbose
     - name: Build Windows 32 bits
       run: |
         rustup target add i686-pc-windows-msvc
         cargo build --target i686-pc-windows-msvc
+    - name: Build 64 bit CPU, 32 bit address space
+      run: |
+        rustup target add x86_64-unknown-linux-gnux32
+        cargo build --target x86_64-unknown-linux-gnux32
     - name: Run tests
       run: cargo test --verbose
     - name: Run tests with rand feature
