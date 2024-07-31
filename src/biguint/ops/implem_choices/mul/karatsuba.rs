@@ -2,7 +2,7 @@ use crate::traits::Digit;
 
 use super::super::add_assign;
 use super::super::sub_assign;
-use super::schoolbook_add_assign_mul;
+use super::schoolbook_mul;
 
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
@@ -33,6 +33,7 @@ pub(super) fn karatsuba<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
     ret.resize(rhs.len() + lhs.len(), T::ZERO);
     ret
 }
+
 fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     ret: &mut [T],
     rhs: &[T],
@@ -49,7 +50,7 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
 
     // Early exit
     if size < THRESHOLD {
-        schoolbook_add_assign_mul(ret, rhs, lhs);
+        schoolbook_mul(ret, rhs, lhs);
         return;
     }
 
@@ -78,10 +79,7 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     z1_last_bit += T::from(x_carry && y_carry);
 
     // z0 and z2
-    ret[..size].fill(T::ZERO);
-    new_buff.fill(T::ZERO);
     _karatsuba::<THRESHOLD, _>(&mut ret[..size], x0, y0, new_buff);
-    new_buff.fill(T::ZERO);
     _karatsuba::<THRESHOLD, _>(&mut ret[size..], x1, y1, new_buff);
 
     // subtract z0 and z2 from z1
