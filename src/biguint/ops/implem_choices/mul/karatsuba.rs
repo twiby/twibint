@@ -29,33 +29,28 @@ pub(super) fn karatsuba<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
 
     let mut ret = vec![T::ZERO; target_length << 1];
     let mut buff = vec![T::ZERO; target_length << 1];
-    _karatsuba::<KARATSUBA_INTERNAL_THRESHOLD, _>(&mut ret, &x, &y, &mut buff);
+    _karatsuba(&mut ret, &x, &y, &mut buff);
     ret.resize(rhs.len() + lhs.len(), T::ZERO);
     ret
 }
 
-fn _karatsuba<const THRESHOLD: usize, T: Digit>(
-    ret: &mut [T],
-    rhs: &[T],
-    lhs: &[T],
-    buff: &mut [T],
-) {
-    debug_assert!(rhs.len() == lhs.len());
-    debug_assert!(rhs.len().is_power_of_two());
-    debug_assert_eq!(ret.len(), 2 * rhs.len());
-    debug_assert_eq!(buff.len(), 2 * rhs.len());
+fn _karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T]) {
+    debug_assert!(x.len() == y.len());
+    debug_assert!(x.len().is_power_of_two());
+    debug_assert_eq!(ret.len(), 2 * x.len());
+    debug_assert_eq!(buff.len(), 2 * x.len());
 
-    let size = rhs.len();
+    let size = x.len();
     let half_size = size >> 1;
 
     // Early exit
-    if size < THRESHOLD {
-        schoolbook_mul(ret, rhs, lhs);
+    if size < KARATSUBA_INTERNAL_THRESHOLD {
+        schoolbook_mul(ret, x, y);
         return;
     }
 
-    let (x0, x1) = rhs.split_at(half_size);
-    let (y0, y1) = lhs.split_at(half_size);
+    let (x0, x1) = x.split_at(half_size);
+    let (y0, y1) = y.split_at(half_size);
 
     // Compute (x0+x1) and (y0+y1), using ret as a buffer,
     // but specifically handle their last bit
@@ -69,7 +64,7 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     // but specifically handle its last bit
     let (z1, new_buff) = buff.split_at_mut(size);
     let mut z1_last_bit = T::ZERO;
-    _karatsuba::<THRESHOLD, _>(&mut z1[..size], x_temp, y_temp, new_buff);
+    _karatsuba(&mut z1[..size], x_temp, y_temp, new_buff);
     if x_carry {
         z1_last_bit += T::from(add_assign(&mut z1[half_size..], &y_temp));
     }
@@ -79,8 +74,8 @@ fn _karatsuba<const THRESHOLD: usize, T: Digit>(
     z1_last_bit += T::from(x_carry && y_carry);
 
     // z0 and z2
-    _karatsuba::<THRESHOLD, _>(&mut ret[..size], x0, y0, new_buff);
-    _karatsuba::<THRESHOLD, _>(&mut ret[size..], x1, y1, new_buff);
+    _karatsuba(&mut ret[..size], x0, y0, new_buff);
+    _karatsuba(&mut ret[size..], x1, y1, new_buff);
 
     // subtract z0 and z2 from z1
     if sub_assign(z1, &ret[..size]) {
