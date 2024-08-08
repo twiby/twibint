@@ -4,18 +4,6 @@ use super::super::add_assign;
 use super::super::sub_assign;
 use super::schoolbook_mul;
 
-const DEBUG: bool = false;
-fn debug(msg: String) {
-    if DEBUG {
-        println!("{:?}", msg);
-    }
-}
-macro_rules! debug {
-    ($($arg:tt)*) => {{
-        debug(format! { $($arg)* })
-    }};
-}
-
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 7;
@@ -58,19 +46,13 @@ fn exit_karatsuba(size: usize) -> bool {
 fn symetric_karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T]) {
     // Early exit
     if exit_karatsuba(x.len()) {
-        debug!("EXIT");
         schoolbook_mul(ret, x, y);
         return;
     }
 
-    debug!("ret {:?}", ret.len());
-    debug!("x {:?}", x.len());
-    debug!("y {:?}", y.len());
-    debug!("buff {:?}", buff.len());
-
     debug_assert_eq!(x.len(), y.len());
     debug_assert_eq!(ret.len(), x.len() + y.len());
-    debug_assert!(buff.len() >= x.len() + y.len());
+    debug_assert!(buff.len() > ret.len());
 
     let size = x.len();
     let half_size = (size >> 1) + (size % 2);
@@ -91,20 +73,17 @@ fn symetric_karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T])
     // Compute z1 in ret
     let z1 = &mut ret[half_size..half_size + size + 2];
     symetric_karatsuba(&mut z1[..size], x_cross, y_cross, sub_buff);
-    z1[size] = T::ZERO;
-    z1[size + 1] = T::ZERO;
+    z1[size] = T::from(x_carry && y_carry);
     if x_carry {
         debug_assert!(!add_assign(&mut z1[half_size..], y_cross))
     }
     if y_carry {
         debug_assert!(!add_assign(&mut z1[half_size..], x_cross))
     }
-    z1[size] += T::from(x_carry && y_carry);
 
     // Compute z2 in buff
     let z2 = &mut buff[..2 * small_half_size];
     symetric_karatsuba(z2, x1, y1, sub_buff);
-    debug_assert_eq!(ret[half_size + size + 1], T::ZERO);
     ret[half_size + size + 1..].copy_from_slice(&z2[half_size + 1..]);
     add_assign(&mut ret[size..], &z2[..half_size + 1]);
     sub_assign(&mut ret[half_size..], &z2);
