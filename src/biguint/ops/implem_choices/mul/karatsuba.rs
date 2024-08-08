@@ -18,9 +18,9 @@ macro_rules! debug {
 
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
-const KARATSUBA_INTERNAL_THRESHOLD: usize = 2;
+const KARATSUBA_INTERNAL_THRESHOLD: usize = 7;
 #[cfg(debug_assertions)]
-const KARATSUBA_EXTERNAL_THRESHOLD: usize = 2;
+const KARATSUBA_EXTERNAL_THRESHOLD: usize = 7;
 
 #[cfg(not(debug_assertions))]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
@@ -46,20 +46,23 @@ pub(super) fn karatsuba<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
 
     let mut ret = vec![T::ZERO; x.len() + y.len()];
     let mut buff = vec![T::ZERO; target_length << 1];
-    debug!("ENTER");
     symetric_karatsuba(&mut ret, &x, &y, &mut buff);
     ret
 }
 
-/// Rule is :
-/// - if both sizes are below threshold, exit
-/// - if one of them is 1 (or 0), exit
 #[inline]
 fn exit_karatsuba(size: usize) -> bool {
     size < KARATSUBA_INTERNAL_THRESHOLD
 }
 
 fn symetric_karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T]) {
+    // Early exit
+    if exit_karatsuba(x.len()) {
+        debug!("EXIT");
+        schoolbook_mul(ret, x, y);
+        return;
+    }
+
     debug!("ret {:?}", ret.len());
     debug!("x {:?}", x.len());
     debug!("y {:?}", y.len());
@@ -71,70 +74,45 @@ fn symetric_karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T])
 
     let size = x.len();
     let half_size = (size >> 1) + (size % 2);
-    debug!("size: {size}");
-    debug!("half_size: {half_size}");
+    let small_half_size = size >> 1;
+    let size = half_size << 1;
 
-    // Early exit
-    if exit_karatsuba(size) {
-        debug!("EXIT");
-        schoolbook_mul(ret, x, y);
-        return;
-    }
-
+    let (buff, sub_buff) = buff.split_at_mut(size);
     let (x0, x1) = x.split_at(half_size);
     let (y0, y1) = y.split_at(half_size);
-    assert!(x0.len() >= x1.len());
-    assert!(y0.len() >= y1.len());
 
-    // Compute (x0+x1) and (y0+y1), using ret as a buffer,
-    // but specifically handle their last bit
-    let (mut x_temp, mut y_temp) = ret.split_at_mut(size);
-    x_temp = &mut x_temp[..half_size];
-    y_temp = &mut y_temp[..half_size];
-    debug_assert_eq!(x_temp.len(), half_size);
-    debug_assert_eq!(y_temp.len(), half_size);
-    x_temp.copy_from_slice(x0);
-    y_temp.copy_from_slice(y0);
-    debug!("FIRST ADDS");
-    let x_carry = add_assign(x_temp, x1);
-    let y_carry = add_assign(y_temp, y1);
+    // Compute x0 + x1 and y0 + y1 in buff
+    let (x_cross, y_cross) = buff.split_at_mut(half_size);
+    x_cross.copy_from_slice(x0);
+    y_cross.copy_from_slice(y0);
+    let x_carry = add_assign(x_cross, x1);
+    let y_carry = add_assign(y_cross, y1);
 
-    // compute z1 in a separate buffer
-    // but specifically handle its last bit
-    let (z1, new_buff) = buff.split_at_mut(half_size * 2);
-    let mut z1_last_bit = T::ZERO;
-    debug!("MIXED KARATSUBE");
-    symetric_karatsuba(z1, x_temp, y_temp, new_buff);
-    debug!("Z1 COMPLETION");
+    // Compute z1 in ret
+    let z1 = &mut ret[half_size..half_size + size + 2];
+    symetric_karatsuba(&mut z1[..size], x_cross, y_cross, sub_buff);
+    z1[size] = T::ZERO;
+    z1[size + 1] = T::ZERO;
     if x_carry {
-        z1_last_bit += T::from(add_assign(&mut z1[half_size..], &y_temp));
+        debug_assert!(!add_assign(&mut z1[half_size..], y_cross))
     }
     if y_carry {
-        z1_last_bit += T::from(add_assign(&mut z1[half_size..], &x_temp));
+        debug_assert!(!add_assign(&mut z1[half_size..], x_cross))
     }
-    z1_last_bit += T::from(x_carry && y_carry);
+    z1[size] += T::from(x_carry && y_carry);
 
-    // z0 and z2
-    debug!("MAIN KARATSUBAS");
-    symetric_karatsuba(&mut ret[..half_size * 2], x0, y0, new_buff);
-    symetric_karatsuba(&mut ret[half_size * 2..], x1, y1, new_buff);
+    // Compute z2 in buff
+    let z2 = &mut buff[..2 * small_half_size];
+    symetric_karatsuba(z2, x1, y1, sub_buff);
+    debug_assert_eq!(ret[half_size + size + 1], T::ZERO);
+    ret[half_size + size + 1..].copy_from_slice(&z2[half_size + 1..]);
+    add_assign(&mut ret[size..], &z2[..half_size + 1]);
+    sub_assign(&mut ret[half_size..], &z2);
 
-    // subtract z0 and z2 from z1
-    debug!("SUBS");
-    if sub_assign(z1, &ret[..half_size * 2]) {
-        z1_last_bit -= T::ONE;
-    }
-    if sub_assign(z1, &ret[half_size * 2..]) {
-        z1_last_bit -= T::ONE;
-    }
-
-    // add z1
-    debug!("FINAL ADDS");
-    if half_size + z1.len() >= ret.len() {
-        debug_assert_eq!(z1_last_bit, T::ZERO);
-    }
-    add_assign(&mut ret[half_size..], z1);
-    if z1_last_bit != T::ZERO {
-        add_assign(&mut ret[half_size + z1.len()..], &[z1_last_bit]);
-    }
+    // Compute z0 in buff
+    let z0 = &mut buff[..size];
+    symetric_karatsuba(z0, x0, y0, sub_buff);
+    ret[..half_size].copy_from_slice(&z0[..half_size]);
+    add_assign(&mut ret[half_size..], &z0[half_size..]);
+    sub_assign(&mut ret[half_size..], &z0);
 }

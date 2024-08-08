@@ -306,4 +306,63 @@ mod tests {
         assert_eq!(mul(&a[1..], &b[..2]), ret_part);
         assert_eq!(mul(&a[1..], &b[1..]), ret_part);
     }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint(n: usize) {
+        use num_bigint::BigUint;
+        use rand::distributions::Standard;
+        use rand::prelude::Distribution;
+        use rand::{thread_rng, Rng};
+
+        fn gen_n_random_values<T>(n: usize) -> Vec<T>
+        where
+            Standard: Distribution<T>,
+        {
+            let mut ret = Vec::<T>::with_capacity(n);
+            for _ in 0..n {
+                ret.push(thread_rng().gen::<T>());
+            }
+            ret
+        }
+
+        println!("STEP {n}");
+
+        const SIZE: usize = 1000;
+        // const SIZE: usize = 20;
+        let vec_a = gen_n_random_values::<u32>(SIZE);
+        let vec_b = gen_n_random_values::<u32>(SIZE);
+
+        let a = BigUint::new(vec_a.clone());
+        let b = BigUint::new(vec_b.clone());
+        let c = &a * &b;
+        let should_get = c.to_u32_digits();
+
+        let got_main = mul(&vec_a, &vec_b);
+        let mut got_schoolbook = vec![0u32; SIZE + SIZE];
+        super::schoolbook_mul(&mut got_schoolbook, &vec_a, &vec_b);
+
+        if should_get != got_main {
+            assert_eq!(got_schoolbook, should_get);
+            assert_eq!(should_get.len(), got_main.len());
+            for (i, (a, b)) in should_get.iter().zip(got_main.iter()).enumerate() {
+                if a > b {
+                    println!("digit {i}, diff {}", a - b);
+                } else if b > a {
+                    println!("digit {i}, diff {}", b - a);
+                }
+            }
+        }
+
+        assert_eq!(should_get, got_main);
+    }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_many() {
+        for n in 0..100 {
+            coherence_with_num_bigint(n);
+        }
+    }
 }

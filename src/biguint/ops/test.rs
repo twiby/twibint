@@ -596,19 +596,25 @@ fn long_mul<T: Digit>() {
     assert_eq!(n3.val, ret);
 }
 
-#[test]
-fn maxed_out_mul() {
-    let n1 = BigUint::<u32>::from(vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]);
-    let n2 = BigUint::<u32>::from(vec![u32::MAX, u32::MAX, u32::MAX, u32::MAX]);
+#[test_with(u32, u64)]
+fn maxed_out_mul<T: Digit>() {
+    const SIZE: usize = 100;
+    let n1 = BigUint::<T>::from(vec![T::MAX; SIZE]);
+    let n2 = BigUint::<T>::from(vec![T::MAX; SIZE]);
+
+    let mut ret = vec![];
+    ret.push(T::ONE);
+    for _ in 1..SIZE {
+        ret.push(T::ZERO);
+    }
+    ret.push(T::MAX - T::ONE);
+    for _ in 1..SIZE {
+        ret.push(T::MAX)
+    }
+    let ret = BigUint::<T>::from(ret);
 
     let n3 = &n1 * &n2;
-
-    assert_eq!(
-        n3,
-        BigUint::<u32>::from(
-            "115792089237316195423570985008687907852589419931798687112530834793049593217025"
-        )
-    );
+    assert_eq!(n3, ret);
 }
 
 #[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
@@ -734,27 +740,40 @@ fn test_asm_u64_big_mul() {
 
 #[test]
 fn test_alignment() {
-    let test: Vec<u32> = vec![0,1,2,3,4,5];
+    let test: Vec<u32> = vec![0, 1, 2, 3, 4, 5];
 
     assert_eq!(test.as_ptr().align_offset(std::mem::align_of::<u32>()), 0);
     assert_eq!(
-        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
-        1 - test.as_ptr().wrapping_add(1).align_offset(std::mem::align_of::<u64>()));
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()),
+        1 - test
+            .as_ptr()
+            .wrapping_add(1)
+            .align_offset(std::mem::align_of::<u64>())
+    );
     assert_eq!(
-        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
-        test.as_ptr().wrapping_add(2).align_offset(std::mem::align_of::<u64>()));
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()),
+        test.as_ptr()
+            .wrapping_add(2)
+            .align_offset(std::mem::align_of::<u64>())
+    );
 }
 
 #[test]
 fn test_alignment2() {
-    let v: Vec<u64> = vec![0,1,2,3,4,5];
+    let v: Vec<u64> = vec![0, 1, 2, 3, 4, 5];
     let test: &[u64] = &v;
 
     assert_eq!(test.as_ptr().align_offset(std::mem::align_of::<u64>()), 0);
     assert_eq!(
-        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
-        test.as_ptr().wrapping_add(1).align_offset(std::mem::align_of::<u64>()));
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()),
+        test.as_ptr()
+            .wrapping_add(1)
+            .align_offset(std::mem::align_of::<u64>())
+    );
     assert_eq!(
-        test.as_ptr().align_offset(std::mem::align_of::<u64>()), 
-        test.as_ptr().wrapping_add(2).align_offset(std::mem::align_of::<u64>()));
+        test.as_ptr().align_offset(std::mem::align_of::<u64>()),
+        test.as_ptr()
+            .wrapping_add(2)
+            .align_offset(std::mem::align_of::<u64>())
+    );
 }
