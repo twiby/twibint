@@ -223,7 +223,12 @@ pub(crate) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
     }
 
     let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
-    karatsuba::karatsuba(&mut ret, rhs, lhs);
+    if karatsuba::exit_karatsuba(lhs.len().min(rhs.len())) {
+        // small input: got to schoolbook
+        schoolbook_mul(&mut ret, rhs, lhs);
+    } else {
+        karatsuba::karatsuba(&mut ret, rhs, lhs);
+    }
     ret
 }
 

@@ -22,9 +22,7 @@ pub(super) fn karatsuba<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
         return karatsuba(ret, lhs, rhs);
     }
 
-    if exit_karatsuba(lhs.len()) {
-        schoolbook_mul(ret, rhs, lhs);
-    } else if rhs.len() == lhs.len() {
+    if rhs.len() == lhs.len() {
         let mut buff = allocate_buffer(lhs.len().next_power_of_two() << 1);
         symetric_karatsuba(ret, rhs, lhs, &mut buff);
     } else {
@@ -83,7 +81,7 @@ fn asymetric_karatsuba<'a, T: Digit>(
 }
 
 #[inline]
-fn exit_karatsuba(size: usize) -> bool {
+pub(crate) fn exit_karatsuba(size: usize) -> bool {
     size < KARATSUBA_THRESHOLD
 }
 
