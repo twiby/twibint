@@ -15,6 +15,7 @@ mod x86_64;
 /// adds the multiplicatin of rhs and lhs to ret
 fn schoolbook_mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
     if lhs.len() == 0 {
+        ret[..rhs.len()].fill(T::ZERO);
         return;
     }
 
@@ -221,14 +222,9 @@ pub(crate) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
         return unsafe { mul_u32(rhs, rhs_cast, lhs, lhs_cast) };
     }
 
-    // Arrays are not big enough for karatsuba to be worth it
-    if rhs.len() * lhs.len() < karatsuba::KARATSUBA_EXTERNAL_THRESHOLD_SQUARED {
-        let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
-        schoolbook_mul(&mut ret, rhs, lhs);
-        return ret;
-    }
-
-    karatsuba::karatsuba(rhs, lhs)
+    let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
+    karatsuba::karatsuba(&mut ret, rhs, lhs);
+    ret
 }
 
 /// Special code for efficiently handling u32 case
