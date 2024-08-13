@@ -133,13 +133,14 @@ where
     rand::distributions::Standard: rand::prelude::Distribution<T>,
 {
     let small_size = N / 10;
-    let small_size = small_size + rand::thread_rng().gen_range(0..small_size);
+    let small_size_with_noise = small_size + rand::thread_rng().gen_range(0..small_size);
 
     let n1 = gen_random_biguint::<T>(N);
-    let n2 = gen_random_biguint::<T>(small_size);
+    let n2 = gen_random_biguint::<T>(small_size_with_noise);
 
     let mut name = "asymetric mul ".to_string();
-    name.push_str(&n2.nb_bits().to_string());
+    name.push('~');
+    name.push_str(&small_size.to_string());
     name.push('x');
     name.push_str(&n1.nb_bits().to_string());
     name.push(' ');
