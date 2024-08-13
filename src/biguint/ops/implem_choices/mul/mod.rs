@@ -328,18 +328,24 @@ mod tests {
 
         println!("STEP {n}");
 
-        const SIZE: usize = 1000;
-        // const SIZE: usize = 20;
-        let vec_a = gen_n_random_values::<u32>(SIZE);
-        let vec_b = gen_n_random_values::<u32>(SIZE);
+        const SIZE1: usize = 100;
+        const SIZE2: usize = 1000;
+        let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+        let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
+
+        let vec_a = gen_n_random_values::<u32>(size_1);
+        let vec_b = gen_n_random_values::<u32>(size_2);
 
         let a = BigUint::new(vec_a.clone());
         let b = BigUint::new(vec_b.clone());
-        let c = &a * &b;
+        let c = a * b;
         let should_get = c.to_u32_digits();
 
-        let got_main = mul(&vec_a, &vec_b);
-        let mut got_schoolbook = vec![0u32; SIZE + SIZE];
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        let got_biguint = biguinta * biguintb;
+        let got_main = got_biguint.val;
+        let mut got_schoolbook = vec![0u32; size_1 + size_2];
         super::schoolbook_mul(&mut got_schoolbook, &vec_a, &vec_b);
 
         if should_get != got_main {

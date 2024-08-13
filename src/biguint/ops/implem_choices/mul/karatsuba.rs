@@ -50,14 +50,14 @@ fn symetric_karatsuba<T: Digit>(ret: &mut [T], x: &[T], y: &[T], buff: &mut [T])
         return;
     }
 
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(ret.len(), x.len() + y.len());
-    debug_assert!(buff.len() > ret.len());
-
     let size = x.len();
     let half_size = (size >> 1) + (size % 2);
     let small_half_size = size >> 1;
     let size = half_size << 1;
+
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(ret.len(), x.len() + y.len());
+    debug_assert!(buff.len() >= 2 * size);
 
     let (buff, sub_buff) = buff.split_at_mut(size);
     let (x0, x1) = x.split_at(half_size);
