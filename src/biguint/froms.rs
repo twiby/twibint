@@ -110,6 +110,10 @@ impl<T: Digit> From<BigUint<T>> for String {
 
 impl<T: Digit> From<Vec<T>> for BigUint<T> {
     fn from(v: Vec<T>) -> BigUint<T> {
+        let v = match v.len() > 0 {
+            true => v,
+            false => vec![T::ZERO],
+        };
         let mut ret = BigUint::<T> { val: v };
         ret.remove_trailing_zeros();
         ret
