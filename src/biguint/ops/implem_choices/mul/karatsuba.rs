@@ -8,10 +8,10 @@ use super::schoolbook_mul;
 
 // Below this number of digits, multiplication is schoolbook
 #[cfg(debug_assertions)]
-const KARATSUBA_INTERNAL_THRESHOLD: usize = 7;
+const KARATSUBA_THRESHOLD: usize = 7;
 
 #[cfg(not(debug_assertions))]
-const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
+const KARATSUBA_THRESHOLD: usize = 25;
 
 fn allocate_buffer<T: Digit>(n: usize) -> impl Deref<Target = [T]> + DerefMut {
     vec![T::ZERO; n]
@@ -84,7 +84,7 @@ fn asymetric_karatsuba<'a, T: Digit>(
 
 #[inline]
 fn exit_karatsuba(size: usize) -> bool {
-    size < KARATSUBA_INTERNAL_THRESHOLD
+    size < KARATSUBA_THRESHOLD
 }
 
 /// multiplies big and small, puts the result in ret.
