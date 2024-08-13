@@ -34,8 +34,3 @@ typed_test_gen = "0.1"
 name = "biguint"
 harness = false
 required-features = ["rand"]
-
-[[bench]]
-name = "num-bigint"
-harness = false
-required-features = ["rand"]

@@ -74,6 +74,7 @@ fn bits<T: Digit>() {
     let b1 = BigUint::<T>::new(T::ZERO);
     let b2 = BigUint::<T>::new(T::MAX);
     let mut b3 = BigUint::<T>::new(T::ONE);
+    assert_eq!(b3.nb_bits(), 1);
     b3 <<= T::NB_BITS - 1;
     let b4 = &b3 >> 1;
 

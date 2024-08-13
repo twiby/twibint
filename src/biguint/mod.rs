@@ -37,8 +37,12 @@ impl<T: Digit> BigUint<T> {
     /// Returns the minimal number of bits necessary for a binary representation.
     #[inline]
     pub fn nb_bits(&self) -> usize {
-        T::NB_BITS * (self.val.len() - 1)
-            + (T::NB_BITS - self.val.iter().last().unwrap().leading_zeros() as usize)
+        match self.val.last() {
+            None => 0,
+            Some(last) => {
+                T::NB_BITS * (self.val.len() - 1) + (T::NB_BITS - last.leading_zeros() as usize)
+            }
+        }
     }
 
     /// Returns the bth bit as a bool. Since we represent an infinite number of bits,
