@@ -138,4 +138,62 @@ mod tests {
         add_assign(&mut temp, &b[1..]);
         assert_eq!(temp, ret_part);
     }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint(n: usize) {
+        use num_bigint::BigUint;
+        use rand::distributions::Standard;
+        use rand::prelude::Distribution;
+        use rand::{thread_rng, Rng};
+
+        fn gen_n_random_values<T>(n: usize) -> Vec<T>
+        where
+            Standard: Distribution<T>,
+        {
+            let mut ret = Vec::<T>::with_capacity(n);
+            for _ in 0..n {
+                ret.push(thread_rng().gen::<T>());
+            }
+            ret
+        }
+
+        println!("STEP {n}");
+
+        const SIZE: usize = 1000;
+        let vec_a = gen_n_random_values::<u32>(SIZE);
+        let vec_b = gen_n_random_values::<u32>(SIZE);
+
+        let a = BigUint::new(vec_a.clone());
+        let b = BigUint::new(vec_b.clone());
+        let c = &a + &b;
+        let should_get = c.to_u32_digits();
+
+        let mut got = vec_a.clone();
+        if add_assign(&mut got, &vec_b) {
+            got.push(1);
+        }
+
+        if should_get != got {
+            assert_eq!(should_get.len(), got.len());
+            for (i, (a, b)) in should_get.iter().zip(got.iter()).enumerate() {
+                if a > b {
+                    println!("digit {i}, diff {}", a - b);
+                } else if b > a {
+                    println!("digit {i}, diff {}", b - a);
+                }
+            }
+        }
+
+        assert_eq!(should_get, got);
+    }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_many() {
+        for n in 0..100 {
+            coherence_with_num_bigint(n);
+        }
+    }
 }
