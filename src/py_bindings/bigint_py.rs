@@ -1,32 +1,53 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pyclass::CompareOp::*;
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 use crate::traits::{Pow, RemDiv, TrueDiv};
-use crate::BigUint;
 
 #[pyclass]
 #[derive(Clone)]
-pub struct PyBigUint(pub BigUint<u64>);
+pub struct BigInt(pub crate::BigInt<u64>);
 
-impl AsRef<BigUint<u64>> for PyBigUint {
-    fn as_ref(&self) -> &BigUint<u64> {
+impl Deref for BigInt {
+    type Target = crate::BigInt<u64>;
+    fn deref(&self) -> &crate::BigInt<u64> {
+        &self.0
+    }
+}
+
+impl DerefMut for BigInt {
+    fn deref_mut(&mut self) -> &mut crate::BigInt<u64> {
+        &mut self.0
+    }
+}
+
+impl AsRef<crate::BigInt<u64>> for BigInt {
+    fn as_ref(&self) -> &crate::BigInt<u64> {
         &self.0
     }
 }
 
 #[pymethods]
-impl PyBigUint {
+impl BigInt {
     #[new]
-    /// Python constructor for BigUint, implicitely using the TryFrom<PyAny> implementation. \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// Python constructor for BigInt, implicitely using the TryFrom<PyAny> implementation. \
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __init__(n: &PyAny) -> PyResult<Self> {
         Ok(Self::try_from(n)?)
     }
 
     /// Python binding of the `abs` operation
     pub fn __abs__(&self) -> Self {
-        self.clone()
+        let mut ret = self.clone();
+        ret.0.sign = true;
+        ret
+    }
+
+    /// Python binding to the unary neg operation.
+    pub fn __neg__(&self) -> Self {
+        Self(-self.as_ref())
     }
 
     /// Python binding to convert to a float (returns a double
@@ -36,127 +57,127 @@ impl PyBigUint {
     }
 
     /// Python binding to convert to a int
-    // TODO: not efficient at all, fail between 10000 and 100000 digits
     pub fn __int__(&self, py: Python<'_>) -> PyResult<PyObject> {
-        self.as_ref().__int__(py)
+        if self.0.sign {
+            self.0.uint.__int__(py)
+        } else {
+            Ok(self.0.uint.__int__(py)?.call_method0(py, "__neg__")?)
+        }
     }
 
     /// Python binding for the `+` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __add__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() + Self::try_from(other)?.as_ref()))
     }
     /// Python binding for the `+=` operation, specifically binded here because
     /// the crate implements an actual add assign operation, more efficient than
     /// add + clone. \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __iadd__(&mut self, other: &PyAny) -> PyResult<()> {
         self.0 += Self::try_from(other)?.as_ref();
         Ok(())
     }
     /// Python binding for the reverse `+` operation, allowing performing an addition
-    /// of the form (Python int) + (BigUint). \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// of the form (Python int) + (BigInt). \
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __radd__(&self, other: &PyAny) -> PyResult<Self> {
         self.__add__(other)
     }
 
     /// Python binding for the `-` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint, or
-    /// if the subtraction will underflow.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __sub__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() - Self::try_from(other)?.as_ref()))
     }
     /// Python binding for the `-=` operation, specifically binded here because
     /// the crate implements an actual sub assign operation, more efficient than
     /// sub + clone. \
-    /// This will raise an error if the operand is not compatible with a BigUint, or
-    /// if the subtraction will underflow.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __isub__(&mut self, other: &PyAny) -> PyResult<()> {
         self.0 -= Self::try_from(other)?.as_ref();
         Ok(())
     }
     /// Python binding for the reverse `-` operation, allowing performing an subtraction
-    /// of the form (Python int) - (BigUint). \
-    /// This will raise an error if the operand is not compatible with a BigUint, or
-    /// if the subtraction will underflow.
+    /// of the form (Python int) - (BigInt). \
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __rsub__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(Self::try_from(other)?.as_ref() - self.as_ref()))
     }
 
     /// Python binding to the `*` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __mul__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() * Self::try_from(other)?.as_ref()))
     }
     /// Python binding for the reverse `*` operation, allowing performing an multiplication
-    /// of the form (Python int) * (BigUint). \
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// of the form (Python int) * (BigInt). \
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __rmul__(&self, other: &PyAny) -> PyResult<Self> {
         self.__mul__(other)
     }
 
     /// Python binding to the `//` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __floordiv__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() / Self::try_from(other)?.as_ref()))
     }
     /// Python binding to the reverse `//` operation, allowing performing a floor division
-    /// of the form (Python int) // (BigUint). \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// of the form (Python int) // (BigInt). \
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __rfloordiv__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(Self::try_from(other)?.as_ref() / self.as_ref()))
     }
 
     /// Python binding to the `%` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __mod__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() % Self::try_from(other)?.as_ref()))
     }
     /// Python binding to the reverse `%` operation, allowing performing a floor division
-    /// of the form (Python int) % (BigUint). \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// of the form (Python int) % (BigInt). \
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __rmod__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(Self::try_from(other)?.as_ref() % self.as_ref()))
     }
 
     /// Python binding to the `divmod` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __divmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
-        let (q, r) = BigUint::<u64>::rem_div(self.as_ref(), Self::try_from(other)?.as_ref())?;
+        let (q, r) = crate::BigInt::<u64>::rem_div(self.as_ref(), Self::try_from(other)?.as_ref())?;
         Ok((Self(q), Self(r)))
     }
     /// Python binding to the reverse `divmod` operation. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     pub fn __rdivmod__(&self, other: &PyAny) -> PyResult<(Self, Self)> {
-        let (q, r) = BigUint::<u64>::rem_div(Self::try_from(other)?.as_ref(), self.as_ref())?;
+        let (q, r) = crate::BigInt::<u64>::rem_div(Self::try_from(other)?.as_ref(), self.as_ref())?;
         Ok((Self(q), Self(r)))
     }
 
     /// Python binding to the `/` operation (returns a double precision float).
     /// Only implemented for systems with a little endian float format. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     #[cfg(target_endian = "little")]
     pub fn __truediv__(&self, other: &PyAny) -> PyResult<f64> {
-        Ok(BigUint::<u64>::truediv(
+        Ok(crate::BigInt::<u64>::truediv(
             self.as_ref(),
             Self::try_from(other)?.as_ref(),
         )?)
     }
     /// Python binding to the reverse `/` operation (returns a double precision float).
     /// Only implemented for systems with a little endian float format. \
-    /// This will raise an error if the operand is not compatible with a BigUint,
+    /// This will raise an error if the operand is not compatible with a BigInt,
     /// or in the case of a divison by zero.
     #[cfg(target_endian = "little")]
     pub fn __rtruediv__(&self, other: &PyAny) -> PyResult<f64> {
-        Ok(BigUint::<u64>::truediv(
+        Ok(crate::BigInt::<u64>::truediv(
             Self::try_from(other)?.as_ref(),
             self.as_ref(),
         )?)
@@ -170,7 +191,7 @@ impl PyBigUint {
                 "Modulus argument of pow function not supported",
             ))
         } else {
-            Ok(Self(BigUint::<u64>::pow(self.as_ref(), other)))
+            Ok(Self(crate::BigInt::<u64>::pow(self.as_ref(), other)))
         }
     }
 
@@ -192,58 +213,63 @@ impl PyBigUint {
     }
 
     /// Python binding to the `&` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __and__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() & Self::try_from(other)?.as_ref()))
     }
     /// Python binding to the `&=` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __iand__(&mut self, other: &PyAny) -> PyResult<()> {
         self.0 &= Self::try_from(other)?.as_ref();
         Ok(())
     }
     /// Python binding to the reverse `&` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __rand__(&self, other: &PyAny) -> PyResult<Self> {
         self.__and__(other)
     }
 
     /// Python binding to the `|` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __or__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() | Self::try_from(other)?.as_ref()))
     }
     /// Python binding to the `|=` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __ior__(&mut self, other: &PyAny) -> PyResult<()> {
         self.0 |= Self::try_from(other)?.as_ref();
         Ok(())
     }
     /// Python binding to the reverse `|` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __ror__(&self, other: &PyAny) -> PyResult<Self> {
         self.__or__(other)
     }
 
     /// Python binding to the `^` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __xor__(&self, other: &PyAny) -> PyResult<Self> {
         Ok(Self(self.as_ref() ^ Self::try_from(other)?.as_ref()))
     }
     /// Python binding to the `^=` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __ixor__(&mut self, other: &PyAny) -> PyResult<()> {
         self.0 ^= Self::try_from(other)?.as_ref();
         Ok(())
     }
     /// Python binding to the reverse `^` operation.
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __rxor__(&self, other: &PyAny) -> PyResult<Self> {
         self.__xor__(other)
     }
 
+    /// Python binding to the invert `~` operation.
+    pub fn __invert__(&self) -> Self {
+        Self(!self.as_ref())
+    }
+
     /// Python binding to all the comparators: `==`, `!=`, `<`, `<=`, `>`, and `>=`
-    /// This will raise an error if the operand is not compatible with a BigUint.
+    /// This will raise an error if the operand is not compatible with a BigInt.
     pub fn __richcmp__(&self, other: &PyAny, cmp: pyo3::basic::CompareOp) -> PyResult<bool> {
         let int = Self::try_from(other)?;
         Ok(match cmp {
@@ -258,7 +284,7 @@ impl PyBigUint {
 
     /// Python binding to the `bool` function
     pub fn __bool__(&self) -> bool {
-        self.as_ref() != &BigUint::default()
+        self.0.uint != crate::BigUint::default()
     }
 
     /// Python binding to the `str` function
@@ -274,6 +300,6 @@ impl PyBigUint {
     /// as this returns internal information that aren't supposed to be useful
     /// for the users of this module.
     pub fn __len__(&self) -> usize {
-        self.0.val.len()
+        self.0.uint.val.len()
     }
 }

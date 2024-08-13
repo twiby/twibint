@@ -30,11 +30,10 @@ cargo bench add --features=rand
 cargo bench sub --features=rand
 ```
 
-Benchmarks won't compile/run without the `rand` feature enabled.
+Benchmarks won't run without the `rand` feature enabled.
 
 # Performance
-The ambitious and naive goal of this project is to be as performant or better than 
-any state of the art crate on these methods.
+The ambitious and naive goal of this project is to be as performant as humanly possible.
 
 I choose to compare myself to `num-bigint` first, as it's quite standard at this 
 point.
@@ -44,8 +43,8 @@ around 10000 bits. It is on par for multiplication, starting 1000 bits.
 
 # List of features
 
-- `rand`: enables the possibility to generate a random integer with a specific 
-number of bits. Uses `rand` crate as a dependency.
+- `rand`: exports the function `gen_random_biguint`: enables the possibility to generate 
+a random integer with a specific number of bits. Uses `rand` crate as a dependency.
 - `pyo3`: Only used to generate python bindings, it's only meant to be used
 indirectly via the `pip install .` command. Uses `pyo3` crate as a dependency.
 - `unsafe`: Enables accelerations that use unsafe Rust. Enabled by default. 
@@ -62,13 +61,25 @@ This crate seems faster than the default Python integers for addition and multip
 above a certain numbers of bits (between 1000 and 10000 bits).
 
 Python tests are available to be run in the `pytest` framework. They are located
-in the `tests` folder and should provide ample example usage.
+in the `tests` folder and should provide ample example usage. Run the tests with 
+```python
+pytest tests
+```
+
+### Why as a python package?
+Some integer operations performed using this package are faster than default Python integers.
+Additions and multiplications are faster, but division is much slower, so depending on 
+your use case, using `twibint` might improve performance.
+
+A small basic benchmark script is available at `benches/benches.py` to evaluate at different 
+scales.
+
 
 
 # Changelog for version 0.2
 This new version contains extensive accelerations for addition, subtraction, and 
 multiplication on x86_64 machines. I used no modern extensions of x86, so these 
-acceleration should be portable accross this family of mahcines. These will probably also 
+acceleration should be portable accross this family of machines. These will probably also 
 have performance repercussions on many other features.
 
 These acceleration are mostly due to dropping inline assembly for core loops, and are 
