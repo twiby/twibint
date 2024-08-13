@@ -56,9 +56,7 @@ impl<T: Digit> Mul<&T> for BigUint<T> {
 impl<T: Digit> Mul<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: &BigUint<T>) -> BigUint<T> {
-        let mut ret: BigUint<T> = super::implem_choices::mul(&self.val, &other.val).into();
-        ret.remove_trailing_zeros();
-        ret
+        super::implem_choices::mul(&self.val, &other.val).into()
     }
 }
 impl<T: Digit> Mul<BigUint<T>> for BigUint<T> {
