@@ -1,4 +1,6 @@
 use crate::traits::Digit;
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 use super::super::add_assign;
 use super::super::sub_assign;
@@ -11,11 +13,8 @@ const KARATSUBA_INTERNAL_THRESHOLD: usize = 7;
 #[cfg(not(debug_assertions))]
 const KARATSUBA_INTERNAL_THRESHOLD: usize = 20;
 
-fn allocate_buffer<T: Digit>(big: &[T], small: &[T]) -> Vec<T> {
-    debug_assert!(big.len() >= small.len());
-    let target_length = small.len().next_power_of_two();
-    assert!(target_length < usize::MAX >> 1);
-    vec![T::ZERO; target_length << 1]
+fn allocate_buffer<T: Digit>(n: usize) -> impl Deref<Target = [T]> + DerefMut {
+    vec![T::ZERO; n]
 }
 
 pub(super) fn karatsuba<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
@@ -26,11 +25,11 @@ pub(super) fn karatsuba<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
     if exit_karatsuba(lhs.len()) {
         schoolbook_mul(ret, rhs, lhs);
     } else if rhs.len() == lhs.len() {
-        let mut buff = allocate_buffer(rhs, lhs);
+        let mut buff = allocate_buffer(lhs.len().next_power_of_two() << 1);
         symetric_karatsuba(ret, rhs, lhs, &mut buff);
     } else {
-        let mut buff_1 = allocate_buffer(rhs, lhs);
-        let mut buff_2 = allocate_buffer(rhs, lhs);
+        let mut buff_1 = allocate_buffer(lhs.len() << 1);
+        let mut buff_2 = allocate_buffer(lhs.len().next_power_of_two() << 1);
         asymetric_karatsuba(ret, rhs, lhs, &mut buff_1, &mut buff_2);
     }
 }
