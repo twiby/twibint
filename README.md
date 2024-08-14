@@ -19,33 +19,23 @@ the following:
 ```bash
 cargo build
 cargo docs
-cargo bench --features=rand
 cargo test
 ```
 
-For benchmarks specifically, you might want to call only some of these:
-```bash
-cargo bench mul --features=rand
-cargo bench add --features=rand
-cargo bench sub --features=rand
-```
-
-Benchmarks won't compile/run without the `rand` feature enabled.
+For benchmarks, please visit the `benches` folder.
 
 # Performance
-The ambitious and naive goal of this project is to be as performant or better than 
-any state of the art crate on these methods.
+More details and scripts about performance are available in the `benches` 
+folder.
 
-I choose to compare myself to `num-bigint` first, as it's quite standard at this 
-point.
-
-Today, on x86, `twibint` is faster than `num-bigint` v0.4 for addition, above 
-around 10000 bits. It is on par for multiplication, starting 1000 bits. 
+TL;DR -> The current state of `twibint`s performance (v0.2.7) is: Addition, 
+Subtraction and Multiplication are faster than for Python integers, and faster 
+then `num-bigint` at some scales. Division remains extremely slow.
 
 # List of features
 
-- `rand`: enables the possibility to generate a random integer with a specific 
-number of bits. Uses `rand` crate as a dependency.
+- `rand`: exports the function `gen_random_biguint`: enables the possibility to generate 
+a random integer with a specific number of bits. Uses `rand` crate as a dependency.
 - `pyo3`: Only used to generate python bindings, it's only meant to be used
 indirectly via the `pip install .` command. Uses `pyo3` crate as a dependency.
 - `unsafe`: Enables accelerations that use unsafe Rust. Enabled by default. 
@@ -62,14 +52,20 @@ This crate seems faster than the default Python integers for addition and multip
 above a certain numbers of bits (between 1000 and 10000 bits).
 
 Python tests are available to be run in the `pytest` framework. They are located
-in the `tests` folder and should provide ample example usage.
+in the `tests` folder and should provide ample example usage. Run the tests with 
+```python
+pytest tests
+```
+
+Performance comparison with Python's default integers are available in the
+`benches` folder.
 
 
 # Changelog for version 0.2
 This new version contains extensive accelerations for addition, subtraction, and 
 multiplication on x86_64 machines. I used no modern extensions of x86, so these 
-acceleration should be portable accross this family of mahcines. These will probably also 
-have performance repercussions on many other features.
+acceleration should be portable accross this family of machines. These 
+will probably also have performance repercussions on many other features.
 
 These acceleration are mostly due to dropping inline assembly for core loops, and are 
 based on `unsafe` Rust. Other `unsafe` features used include smartly swapping between 

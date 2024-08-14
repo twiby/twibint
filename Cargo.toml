@@ -26,11 +26,5 @@ version = "0.8"
 optional = true
 
 [dev-dependencies]
-criterion = "0.5"
 num-bigint = "0.4"
 typed_test_gen = "0.1"
-
-[[bench]]
-name = "biguint"
-harness = false
-required-features = ["rand"]

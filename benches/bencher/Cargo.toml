@@ -1,0 +1,24 @@
+[package]
+name = "bencher"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+rand = "0.8"
+
+[dependencies.twibint]
+path = "../../"
+features = ["rand"]
+optional = true
+
+[dependencies.num-bigint]
+version = "0.4"
+features = ["rand"]
+optional = true
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "biguint"
+harness = false
