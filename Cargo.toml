@@ -1,6 +1,6 @@
 [package]
 name = "twibint"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2021"
 license = "GPL-3.0-only"
 description = "Crate for arithmetic on arbitrarily large integers. Provides Python bindings as well."
