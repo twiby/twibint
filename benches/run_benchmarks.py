@@ -7,6 +7,11 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+VERSIONS = {
+	"num-bigint": "0.4.6",
+	"twibint": "0.2.7",
+}
+
 def run_benchmark(crate):
 	print("Running benchmarks for crate \"" + crate + "\"")
 	working_directory = os.getcwd()
@@ -73,7 +78,7 @@ def draw_benchmark_results(data, figures):
 		Y2 = np.array([op_data[x]["upper"] for x in X])
 		Y = (Y1 + Y2) / 2
 
-		plt.plot(X, Y, label = crate)
+		plt.plot(X, Y, label = crate + " " + VERSIONS[crate])
 		plt.ylabel("time in ns")
 		plt.xlabel("number of bits")
 		plt.yscale("log")
