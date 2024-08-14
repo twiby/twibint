@@ -20,3 +20,9 @@ significant one, to ensure they always have the same size). We measure the
 non-assign version of the operation (we never use mul_assign or add_assign 
 for example). Sometimes we also measure an "asymetric" version of a binary 
 operation, where one operand is around 3 times bigger than the other.
+
+![alt text](plots/sub.png "Subtraction")
+![alt text](plots/add.png "Addition")
+![alt text](plots/div.png "Division")
+![alt text](plots/mul.png "Multiplication")
+![alt text](plots/asymetric_mul.png "Asymetric multiplication")
