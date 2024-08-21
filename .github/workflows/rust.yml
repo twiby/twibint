@@ -35,6 +35,10 @@ jobs:
       run: |
         rustup target add armv7-unknown-linux-gnueabi
         cargo build --target armv7-unknown-linux-gnueabi
+    - name: Build x86_64 apple
+      run: |
+        rustup target add x86_64-apple-darwin
+        cargo build --target x86_64-apple-darwin
     - name: Run tests
       run: cargo test --verbose
     - name: Run tests with rand feature
