@@ -69,7 +69,7 @@ fn small_shr_assign<T: Digit>(n: &mut BigUint<T>, b: usize) {
         carry = underflowing_bits
     }
 
-    n.remove_trailing_zeros();
+    n.remove_leading_zeros();
 }
 
 impl<T: Digit> Shr<usize> for &BigUint<T> {

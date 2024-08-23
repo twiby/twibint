@@ -95,6 +95,7 @@ where
     fn to_double(self) -> Self::Double;
     fn overflowing_sub(self, other: Self) -> (Self, bool);
     fn leading_zeros(self) -> u32;
+    fn trailing_zeros(self) -> u32;
     fn decomposition_from_u32(n: u32) -> Vec<Self>;
     fn decomposition_from_u64(n: u64) -> Vec<Self>;
 }
@@ -138,6 +139,9 @@ impl Digit for u32 {
     fn leading_zeros(self) -> u32 {
         self.leading_zeros()
     }
+    fn trailing_zeros(self) -> u32 {
+        self.trailing_zeros()
+    }
     fn decomposition_from_u32(n: u32) -> Vec<Self> {
         vec![n]
     }
@@ -180,6 +184,9 @@ impl Digit for u64 {
     }
     fn leading_zeros(self) -> u32 {
         self.leading_zeros()
+    }
+    fn trailing_zeros(self) -> u32 {
+        self.trailing_zeros()
     }
     fn decomposition_from_u32(n: u32) -> Vec<Self> {
         vec![n as u64]

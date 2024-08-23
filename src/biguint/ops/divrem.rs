@@ -29,7 +29,7 @@ impl<T: Digit> RemDiv<T> for BigUint<T> {
             ret += BigUint::<T>::from(div.split()) << (T::NB_BITS * idx);
         }
 
-        ret.remove_trailing_zeros();
+        ret.remove_leading_zeros();
         Ok((ret, msb.truncate_upper()))
     }
 
@@ -146,7 +146,7 @@ impl<T: Digit> RemDiv<BigUint<T>> for BigUint<T> {
         // Loop on the digits of self
         for (idx, digit) in self.val.iter().enumerate().rev() {
             remainder.val.insert(0, *digit);
-            remainder.remove_trailing_zeros();
+            remainder.remove_leading_zeros();
 
             // Get the quotient remainder/other
             let quotient: T = match remainder.cmp(other) {
@@ -183,7 +183,7 @@ impl<T: Digit> RemDiv<BigUint<T>> for BigUint<T> {
             let _ = add_assign(&mut ret.val[idx..], &[quotient]);
         }
 
-        ret.remove_trailing_zeros();
+        ret.remove_leading_zeros();
         Ok((ret, remainder))
     }
 }

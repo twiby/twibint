@@ -20,7 +20,9 @@ impl<T: Digit> Shr<usize> for BigInt<T> {
 }
 impl<T: Digit> ShrAssign<usize> for BigInt<T> {
     fn shr_assign(&mut self, other: usize) {
-        if *self == BigInt::<T>::default() {
+        if other == 0 {
+            return;
+        } else if *self == BigInt::<T>::default() {
             return;
         } else if self.sign {
             self.uint >>= other;

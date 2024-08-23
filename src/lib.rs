@@ -1,10 +1,12 @@
 #![cfg_attr(not(feature = "unsafe"), forbid(unsafe_code))]
 
+mod bigfloat;
 mod bigint;
 mod biguint;
 mod errors;
 pub mod traits;
 
+pub(crate) use crate::bigfloat::BigFloat;
 pub use crate::bigint::BigInt;
 pub use crate::biguint::BigUint;
 

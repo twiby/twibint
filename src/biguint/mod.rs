@@ -67,7 +67,7 @@ impl<T: Digit> BigUint<T> {
     /// (private) clean trailing zeros of the representation, if any, after an
     /// operation has been performed.
     #[inline]
-    pub(crate) fn remove_trailing_zeros(&mut self) {
+    pub(crate) fn remove_leading_zeros(&mut self) {
         let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == T::ZERO).count();
         self.val.truncate(std::cmp::max(count, 1));
     }

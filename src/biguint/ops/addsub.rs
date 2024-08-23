@@ -106,7 +106,7 @@ impl<T: Digit> AddAssign<&BigUint<T>> for BigUint<T> {
         let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
         debug_assert!(!carry);
 
-        self.remove_trailing_zeros();
+        self.remove_leading_zeros();
     }
 }
 
@@ -133,7 +133,7 @@ impl<T: Digit> SubAssign<&BigUint<T>> for BigUint<T> {
 
         super::implem_choices::sub_assign(&mut self.val, &other.val);
 
-        self.remove_trailing_zeros();
+        self.remove_leading_zeros();
     }
 }
 impl<T: Digit> Sub<T> for &BigUint<T> {

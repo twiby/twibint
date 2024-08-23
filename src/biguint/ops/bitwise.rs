@@ -240,7 +240,7 @@ impl<T: Digit> BitXorAssign<&BigUint<T>> for BigUint<T> {
             .iter_mut()
             .zip(other.val.iter())
             .for_each(|(a, b)| *a ^= *b);
-        self.remove_trailing_zeros();
+        self.remove_leading_zeros();
     }
 }
 impl<T: Digit> BitXorAssign<BigUint<T>> for BigUint<T> {
