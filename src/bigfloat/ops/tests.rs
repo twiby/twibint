@@ -49,6 +49,17 @@ fn shl_3<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn shl_4<T: Digit>() {
+    let int = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX - T::ONE, T::MAX, T::MAX]));
+
+    let mut f = BigFloat::from(int.clone());
+    f <<= T::NB_BITS - 1;
+
+    assert_eq!(f.int.uint.val, vec![T::MAX, T::MAX, T::MAX >> 1]);
+    assert_eq!(f.scale, 1);
+}
+
+#[test_with(u32, u64)]
 fn shr_0<T: Digit>() {
     let int = BigInt::<T>::from(BigUint::<T>::from(vec![T::MAX, T::MAX, T::MAX]));
 

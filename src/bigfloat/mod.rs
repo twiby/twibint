@@ -22,9 +22,22 @@ pub(crate) struct BigFloat<T: Digit> {
     scale: isize,
 }
 
-// impl<T: Digit> BigFloat<T> {
-//     fn
-// }
+impl<T: Digit> BigFloat<T> {
+    /// Remove zero-digits at the beginning
+    fn simplify(&mut self) {
+        let nb_zeros: usize = self
+            .int
+            .uint
+            .val
+            .iter()
+            .take_while(|n| **n == T::ZERO)
+            .count()
+            .try_into()
+            .unwrap();
+        self.scale += nb_zeros as isize;
+        self.int.uint.val.drain(..nb_zeros);
+    }
+}
 
 impl<T: Digit> std::hash::Hash for BigFloat<T> {
     fn hash<H>(&self, state: &mut H)

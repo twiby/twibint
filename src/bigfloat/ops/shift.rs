@@ -28,6 +28,7 @@ impl<T: Digit> ShlAssign<usize> for BigFloat<T> {
         self.int <<= b % T::NB_BITS;
         let scale_offset: isize = (b / T::NB_BITS).try_into().unwrap();
         self.scale += scale_offset;
+        self.simplify();
     }
 }
 
