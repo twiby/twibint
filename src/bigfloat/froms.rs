@@ -31,3 +31,9 @@ impl<T: Digit> From<BigUint<T>> for BigFloat<T> {
         }
     }
 }
+
+impl<T: Digit> From<Vec<T>> for BigFloat<T> {
+    fn from(val: Vec<T>) -> Self {
+        Self::from(BigUint::from(val))
+    }
+}

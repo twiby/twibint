@@ -130,3 +130,63 @@ fn shr_4<T: Digit>() {
     assert_eq!(f.int.uint.val, vec![T::MAX, T::MAX, T::MAX]);
     assert_eq!(f.scale, -1);
 }
+
+#[test_with(u32, u64)]
+fn mul<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE, T::ONE]);
+    let b = BigFloat::from(vec![T::ONE, T::ONE]);
+
+    let c = a * b;
+    assert_eq!(c.scale, 0);
+    assert_eq!(c.int.uint.val, vec![T::ONE, T::ONE + T::ONE, T::ONE]);
+}
+
+#[test_with(u32, u64)]
+fn mul_2<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE, T::ONE]) << 2 * T::NB_BITS;
+    let b = BigFloat::from(vec![T::ONE, T::ONE]);
+
+    let c = a * b;
+    assert_eq!(c.scale, 2);
+    assert_eq!(c.int.uint.val, vec![T::ONE, T::ONE + T::ONE, T::ONE]);
+}
+
+#[test_with(u32, u64)]
+fn mul_3<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE, T::ONE]);
+    let b = BigFloat::from(vec![T::ONE, T::ONE]) << 2 * T::NB_BITS;
+
+    let c = a * b;
+    assert_eq!(c.scale, 2);
+    assert_eq!(c.int.uint.val, vec![T::ONE, T::ONE + T::ONE, T::ONE]);
+}
+
+#[test_with(u32, u64)]
+fn mul_4<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE, T::ONE]) << 3 * T::NB_BITS;
+    let b = BigFloat::from(vec![T::ONE, T::ONE]) << 2 * T::NB_BITS;
+
+    let c = a * b;
+    assert_eq!(c.scale, 5);
+    assert_eq!(c.int.uint.val, vec![T::ONE, T::ONE + T::ONE, T::ONE]);
+}
+
+#[test_with(u32, u64)]
+fn mul_5<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE, T::ONE]) >> 3 * T::NB_BITS;
+    let b = BigFloat::from(vec![T::ONE, T::ONE]) << 2 * T::NB_BITS;
+
+    let c = a * b;
+    assert_eq!(c.scale, -1);
+    assert_eq!(c.int.uint.val, vec![T::ONE, T::ONE + T::ONE, T::ONE]);
+}
+
+#[test_with(u32, u64)]
+fn mul_6<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE << T::NB_BITS - 1]);
+    let b = BigFloat::from(vec![T::ONE + T::ONE]);
+
+    let c = a * b;
+    assert_eq!(c.scale, 1);
+    assert_eq!(c.int.uint.val, vec![T::ONE]);
+}

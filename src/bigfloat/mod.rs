@@ -4,6 +4,7 @@
 //! These numbers are not meant to be approximations, and every operation
 //! must be implemented in a lossless manner
 use crate::BigInt;
+use crate::BigUint;
 
 use crate::traits::Digit;
 
@@ -23,6 +24,10 @@ pub(crate) struct BigFloat<T: Digit> {
 }
 
 impl<T: Digit> BigFloat<T> {
+    fn new(val: T) -> Self {
+        Self::from(BigUint::<T>::new(val))
+    }
+
     /// Remove zero-digits at the beginning
     fn simplify(&mut self) {
         let nb_zeros: usize = self

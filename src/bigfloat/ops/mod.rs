@@ -1,3 +1,4 @@
+mod mul;
 mod shift;
 
 #[cfg(test)]
