@@ -5,6 +5,7 @@
 //! must be implemented in a lossless manner
 use crate::BigInt;
 use crate::BigUint;
+use std::cmp::Ordering;
 
 use crate::traits::Digit;
 
@@ -59,6 +60,40 @@ impl<T: Digit> BigFloat<T> {
         equal &= self.int.signed_eq(other_sign, &other[positive_scale..]);
         equal
     }
+
+    fn float_unsigned_ord(&self, other_scale: isize, other: &[T]) -> Ordering {
+        if self.scale == other_scale {
+            return self.int.uint.ord(other);
+        }
+
+        let self_size = self.scale + (self.int.uint.val.len() as isize);
+        let other_size = other_scale + (other.len() as isize);
+
+        if self_size < other_size {
+            return Ordering::Less;
+        }
+        if self_size > other_size {
+            return Ordering::Greater;
+        }
+
+        for (a, b) in self.int.uint.val.iter().rev().zip(other.iter().rev()) {
+            match a.cmp(b) {
+                Ordering::Equal => (),
+                o => return o,
+            };
+        }
+
+        self.int.uint.val.len().cmp(&other.len())
+    }
+
+    fn float_ord(&self, other_scale: isize, other_sign: bool, other: &[T]) -> Ordering {
+        match (self.int.sign, other_sign) {
+            (true, true) => self.float_unsigned_ord(other_scale, other),
+            (false, false) => self.float_unsigned_ord(other_scale, other).reverse(),
+            (true, false) => Ordering::Greater,
+            (false, true) => Ordering::Less,
+        }
+    }
 }
 
 impl<T: Digit> Default for BigFloat<T> {
@@ -101,5 +136,17 @@ impl<T: Digit> PartialEq<BigFloat<T>> for BigInt<T> {
 impl<T: Digit> PartialEq<BigFloat<T>> for BigUint<T> {
     fn eq(&self, other: &BigFloat<T>) -> bool {
         other.equal_int(true, &self.val)
+    }
+}
+
+impl<T: Digit> PartialOrd<BigFloat<T>> for BigFloat<T> {
+    fn partial_cmp(&self, other: &BigFloat<T>) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T: Digit> Ord for BigFloat<T> {
+    fn cmp(&self, other: &BigFloat<T>) -> Ordering {
+        self.float_ord(other.scale, other.int.sign, &other.int.uint.val)
     }
 }

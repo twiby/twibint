@@ -73,3 +73,73 @@ fn test_eq_bigint<T: Digit>() {
     assert_ne!(n5, n6);
     assert_ne!(n5, n7);
 }
+
+#[test_with(u32, u64)]
+fn test_ord<T: Digit>() {
+    use std::cmp::Ordering;
+
+    let n1 = BigFloat::<T>::from(vec![T::MAX, T::MAX]) >> T::NB_BITS;
+    let n2 = vec![T::ONE, T::MAX, T::MAX];
+    let n3 = vec![T::MAX];
+    let n4 = vec![T::MAX, T::MAX];
+    let n5 = vec![T::ONE, T::MAX];
+    let n6 = vec![T::MAX, T::MAX, T::ONE];
+
+    assert_eq!(n1.float_unsigned_ord(0, &n2), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-1, &n2), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-2, &n2), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-3, &n2), Ordering::Greater);
+
+    assert_eq!(n1.float_unsigned_ord(0, &n3), Ordering::Greater);
+    assert_eq!(n1.float_unsigned_ord(1, &n3), Ordering::Less);
+
+    assert_eq!(n1.float_unsigned_ord(0, &n4), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-1, &n4), Ordering::Equal);
+    assert_eq!(n1.float_unsigned_ord(-2, &n4), Ordering::Greater);
+
+    assert_eq!(n1.float_unsigned_ord(0, &n5), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-1, &n5), Ordering::Greater);
+    assert_eq!(n1.float_unsigned_ord(-2, &n5), Ordering::Greater);
+
+    assert_eq!(n1.float_unsigned_ord(0, &n6), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-1, &n6), Ordering::Less);
+    assert_eq!(n1.float_unsigned_ord(-2, &n6), Ordering::Greater);
+    assert_eq!(n1.float_unsigned_ord(-3, &n6), Ordering::Greater);
+}
+
+#[test_with(u32, u64)]
+fn test_ord_2<T: Digit>() {
+    let mut n1 = BigFloat::<T>::from(vec![T::MAX, T::MAX]) >> T::NB_BITS;
+    let n2 = BigFloat::<T>::from(vec![T::ONE, T::MAX, T::MAX]);
+    let n3 = BigFloat::<T>::from(vec![T::MAX]);
+    let n4 = BigFloat::<T>::from(vec![T::MAX, T::MAX]);
+    let n5 = BigFloat::<T>::from(vec![T::ONE, T::MAX]);
+    let n6 = BigFloat::<T>::from(vec![T::MAX, T::MAX, T::ONE]);
+
+    assert!(n1 < n2);
+    assert!(n1 < (&n2 >> T::NB_BITS));
+    assert!(n1 < (&n2 >> 2 * T::NB_BITS));
+    assert!(n1 > (&n2 >> 3 * T::NB_BITS));
+
+    assert!(n1 > n3);
+    assert!(n1 < (&n3 << T::NB_BITS));
+
+    assert!(n1 < n4);
+    assert!(n1 == (&n4 >> T::NB_BITS));
+    assert!(n1 > (&n4 >> 2 * T::NB_BITS));
+
+    assert!(n1 < n5);
+    assert!(n1 > (&n5 >> T::NB_BITS));
+    assert!(n1 > (&n5 >> 2 * T::NB_BITS));
+
+    assert!(n1 < n6);
+    assert!(n1 < (&n6 >> T::NB_BITS));
+    assert!(n1 > (&n6 >> 2 * T::NB_BITS));
+
+    n1.int.sign = false;
+    assert!(n1 < (n2 >> 3 * T::NB_BITS));
+    assert!(n1 < n3);
+    assert!(n1 < (n4 >> 2 * T::NB_BITS));
+    assert!(n1 < (n5 >> 2 * T::NB_BITS));
+    assert!(n1 < (n6 >> 2 * T::NB_BITS));
+}
