@@ -71,6 +71,21 @@ impl<T: Digit> BigUint<T> {
         let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == T::ZERO).count();
         self.val.truncate(std::cmp::max(count, 1));
     }
+
+    #[inline]
+    pub(crate) fn ord(&self, other: &[T]) -> Ordering {
+        match self.val.len().cmp(&other.len()) {
+            Ordering::Equal => (),
+            o => return o,
+        };
+        for (a, b) in self.val.iter().zip(other.iter()).rev() {
+            match a.cmp(b) {
+                Ordering::Equal => continue,
+                o => return o,
+            };
+        }
+        Ordering::Equal
+    }
 }
 
 /// Default implementation for BigUint: returns 0.
@@ -97,16 +112,6 @@ impl<T: Digit> PartialOrd<BigUint<T>> for BigUint<T> {
 
 impl<T: Digit> Ord for BigUint<T> {
     fn cmp(&self, other: &BigUint<T>) -> Ordering {
-        match self.val.len().cmp(&other.val.len()) {
-            Ordering::Equal => (),
-            o => return o,
-        };
-        for (a, b) in self.val.iter().zip(other.val.iter()).rev() {
-            match a.cmp(b) {
-                Ordering::Equal => continue,
-                o => return o,
-            };
-        }
-        Ordering::Equal
+        self.ord(&other.val)
     }
 }
