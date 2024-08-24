@@ -132,6 +132,18 @@ fn shr_4<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn shift_coherence<T: Digit>() {
+    let mut n1 = BigInt::from(vec![T::ZERO, T::ZERO, T::MAX, T::MAX >> 5, T::ONE << 10]);
+    n1.sign = false;
+    let n2 = BigFloat::from(n1.clone());
+
+    assert_eq!(n1, n2);
+    assert_eq!(&n1 << T::NB_BITS, &n2 << T::NB_BITS);
+    assert_eq!(&n1 << 5, &n2 << 5);
+    assert_eq!(&n1 << T::NB_BITS + 5, &n2 << T::NB_BITS + 5);
+}
+
+#[test_with(u32, u64)]
 fn mul<T: Digit>() {
     let a = BigFloat::from(vec![T::ONE, T::ONE]);
     let b = BigFloat::from(vec![T::ONE, T::ONE]);
