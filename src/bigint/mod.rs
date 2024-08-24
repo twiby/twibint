@@ -42,11 +42,15 @@ impl<T: Digit> BigInt<T> {
 
     /// Returns true if the integer is strictly higher than 0, false otherwise
     pub fn is_sign_positive(&self) -> bool {
-        self.uint != Default::default() && self.sign
+        self.uint != BigUint::default() && self.sign
     }
     /// Returns true if the integer is strictly lower than 0, false otherwise
     pub fn is_sign_negative(&self) -> bool {
-        self.uint != Default::default() && !self.sign
+        self.uint != BigUint::default() && !self.sign
+    }
+
+    pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {
+        &self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
     }
 }
 
@@ -93,6 +97,18 @@ impl<T: Digit> Ord for BigInt<T> {
 /// sign. In that case the test still returns true.
 impl<T: Digit> PartialEq for BigInt<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![T::ZERO]))
+        self.signed_eq(other.sign, &other.uint.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigUint<T>> for BigInt<T> {
+    fn eq(&self, other: &BigUint<T>) -> bool {
+        self.signed_eq(true, &other.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigInt<T>> for BigUint<T> {
+    fn eq(&self, other: &BigInt<T>) -> bool {
+        other.signed_eq(true, &self.val)
     }
 }

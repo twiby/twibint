@@ -17,7 +17,7 @@ mod tests;
 /// The BigFloat type represents a signed floating point number.
 /// It is composed of a `BigInt` represeting the mantissa, and a scale
 /// specifying by how many digits it is supposed to be shifted
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct BigFloat<T: Digit> {
     int: BigInt<T>,
     scale: isize,
@@ -42,6 +42,32 @@ impl<T: Digit> BigFloat<T> {
         self.scale += nb_zeros as isize;
         self.int.uint.val.drain(..nb_zeros);
     }
+
+    #[inline]
+    fn equal_int(&self, other_sign: bool, other: &[T]) -> bool {
+        let positive_scale = if self.scale >= 0isize {
+            self.scale as usize
+        } else {
+            return false;
+        };
+
+        if positive_scale >= other.len() {
+            return false;
+        }
+
+        let mut equal = other[..positive_scale].iter().all(|n| *n == T::ZERO);
+        equal &= self.int.signed_eq(other_sign, &other[positive_scale..]);
+        equal
+    }
+}
+
+impl<T: Digit> Default for BigFloat<T> {
+    fn default() -> Self {
+        BigFloat {
+            int: Default::default(),
+            scale: 0,
+        }
+    }
 }
 
 impl<T: Digit> std::hash::Hash for BigFloat<T> {
@@ -51,5 +77,29 @@ impl<T: Digit> std::hash::Hash for BigFloat<T> {
     {
         self.int.hash(state);
         self.scale.hash(state);
+    }
+}
+
+impl<T: Digit> PartialEq<BigInt<T>> for BigFloat<T> {
+    fn eq(&self, other: &BigInt<T>) -> bool {
+        self.equal_int(other.sign, &other.uint.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigUint<T>> for BigFloat<T> {
+    fn eq(&self, other: &BigUint<T>) -> bool {
+        self.equal_int(true, &other.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigFloat<T>> for BigInt<T> {
+    fn eq(&self, other: &BigFloat<T>) -> bool {
+        other.equal_int(self.sign, &self.uint.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigFloat<T>> for BigUint<T> {
+    fn eq(&self, other: &BigFloat<T>) -> bool {
+        other.equal_int(true, &self.val)
     }
 }
