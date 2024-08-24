@@ -52,6 +52,15 @@ impl<T: Digit> BigInt<T> {
     pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {
         &self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
     }
+
+    pub(crate) fn signed_ord(&self, other_sign: bool, other: &[T]) -> Ordering {
+        match (self.sign, other_sign) {
+            (true, true) => self.uint.ord(other),
+            (true, false) => Ordering::Greater,
+            (false, true) => Ordering::Less,
+            (false, false) => self.uint.ord(other).reverse(),
+        }
+    }
 }
 
 /// Default implementation for BigUint: returns 0 with positive sign.
@@ -74,6 +83,18 @@ impl<T: Digit> std::hash::Hash for BigInt<T> {
     }
 }
 
+impl<T: Digit> PartialOrd<BigUint<T>> for BigInt<T> {
+    fn partial_cmp(&self, other: &BigUint<T>) -> Option<Ordering> {
+        Some(self.signed_ord(true, &other.val))
+    }
+}
+
+impl<T: Digit> PartialOrd<BigInt<T>> for BigUint<T> {
+    fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
+        Some(other.signed_ord(true, &self.val).reverse())
+    }
+}
+
 impl<T: Digit> PartialOrd<BigInt<T>> for BigInt<T> {
     fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -82,12 +103,7 @@ impl<T: Digit> PartialOrd<BigInt<T>> for BigInt<T> {
 
 impl<T: Digit> Ord for BigInt<T> {
     fn cmp(&self, other: &BigInt<T>) -> Ordering {
-        match (self.sign, other.sign) {
-            (true, true) => self.uint.cmp(&other.uint),
-            (true, false) => Ordering::Greater,
-            (false, true) => Ordering::Less,
-            (false, false) => self.uint.cmp(&other.uint).reverse(),
-        }
+        self.signed_ord(other.sign, &other.uint.val)
     }
 }
 
