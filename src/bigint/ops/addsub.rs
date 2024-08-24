@@ -3,7 +3,7 @@ use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 
 use crate::traits::Digit;
-use crate::{BigInt, BigUint};
+use crate::BigInt;
 
 impl<T: Digit> BigInt<T> {
     fn clone_for_addition_with(&self, other_len: usize) -> Self {
@@ -12,6 +12,36 @@ impl<T: Digit> BigInt<T> {
             uint,
             sign: self.sign,
         }
+    }
+
+    #[inline]
+    pub(crate) fn add_assign(&mut self, other_sign: bool, other: &[T]) {
+        // Case same sign: pure addition of components
+        if self.sign == other_sign {
+            self.uint.add_assign(other);
+            return;
+        }
+
+        match self.uint.ord(other) {
+            Ordering::Equal => {
+                self.uint.val.clear();
+                self.uint.val.push(T::ZERO);
+            }
+            Ordering::Greater => self.uint.sub_assign(other),
+            Ordering::Less => {
+                let mut ret = BigInt {
+                    sign: !self.sign,
+                    uint: other.into(),
+                };
+                ret.uint.sub_assign(&self.uint.val);
+                *self = ret;
+            }
+        }
+    }
+
+    #[inline]
+    pub(crate) fn sub_assign(&mut self, other_sign: bool, other: &[T]) {
+        self.add_assign(!other_sign, other);
     }
 }
 
@@ -83,8 +113,7 @@ impl<T: Digit> Add<&BigInt<T>> for BigInt<T> {
 
 impl<T: Digit> AddAssign<T> for BigInt<T> {
     fn add_assign(&mut self, other: T) {
-        let other = BigInt::<T>::from(BigUint::<T>::new(other));
-        *self += other;
+        self.add_assign(true, &[other])
     }
 }
 impl<T: Digit> AddAssign<&T> for BigInt<T> {
@@ -100,23 +129,7 @@ impl<T: Digit> AddAssign<BigInt<T>> for BigInt<T> {
 }
 impl<T: Digit> AddAssign<&BigInt<T>> for BigInt<T> {
     fn add_assign(&mut self, other: &BigInt<T>) {
-        // Case same sign: pure addition of components
-        if self.sign == other.sign {
-            self.uint += &other.uint;
-            return;
-        }
-
-        match self.uint.cmp(&other.uint) {
-            Ordering::Equal => {
-                self.uint.val.clear();
-                self.uint.val.push(T::ZERO);
-            }
-            Ordering::Greater => self.uint -= &other.uint,
-            Ordering::Less => {
-                self.uint = &other.uint - &self.uint;
-                self.sign = !self.sign;
-            }
-        }
+        self.add_assign(other.sign, &other.uint.val);
     }
 }
 
@@ -127,27 +140,12 @@ impl<T: Digit> SubAssign<&T> for BigInt<T> {
 }
 impl<T: Digit> SubAssign<T> for BigInt<T> {
     fn sub_assign(&mut self, other: T) {
-        *self -= &BigInt::<T>::from(BigUint::<T>::new(other));
+        self.sub_assign(true, &[other]);
     }
 }
 impl<T: Digit> SubAssign<&BigInt<T>> for BigInt<T> {
     fn sub_assign(&mut self, other: &BigInt<T>) {
-        if self.sign != other.sign {
-            self.uint += &other.uint;
-            return;
-        }
-
-        match self.uint.cmp(&other.uint) {
-            Ordering::Equal => {
-                self.uint.val.clear();
-                self.uint.val.push(T::ZERO);
-            }
-            Ordering::Greater => self.uint -= &other.uint,
-            Ordering::Less => {
-                self.uint = &other.uint - &self.uint;
-                self.sign = !self.sign;
-            }
-        }
+        self.sub_assign(other.sign, &other.uint.val);
     }
 }
 impl<T: Digit> SubAssign<BigInt<T>> for BigInt<T> {

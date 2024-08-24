@@ -120,6 +120,12 @@ impl<T: Digit> From<Vec<T>> for BigUint<T> {
     }
 }
 
+impl<T: Digit> From<&[T]> for BigUint<T> {
+    fn from(v: &[T]) -> BigUint<T> {
+        Self::from(v.to_vec())
+    }
+}
+
 impl<T: Digit> From<&str> for BigUint<T> {
     fn from(s: &str) -> BigUint<T> {
         s.parse().unwrap()
