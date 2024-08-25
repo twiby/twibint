@@ -145,6 +145,34 @@ impl<T: Digit> PartialOrd<BigFloat<T>> for BigFloat<T> {
     }
 }
 
+impl<T: Digit> PartialOrd<BigUint<T>> for BigFloat<T> {
+    fn partial_cmp(&self, other: &BigUint<T>) -> Option<Ordering> {
+        if self.int.sign {
+            Some(self.float_unsigned_ord(0, &other.val))
+        } else {
+            Some(Ordering::Less)
+        }
+    }
+}
+
+impl<T: Digit> PartialOrd<BigFloat<T>> for BigUint<T> {
+    fn partial_cmp(&self, other: &BigFloat<T>) -> Option<Ordering> {
+        other.partial_cmp(self).map(|o| o.reverse())
+    }
+}
+
+impl<T: Digit> PartialOrd<BigInt<T>> for BigFloat<T> {
+    fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
+        Some(self.float_ord(0, other.sign, &other.uint.val))
+    }
+}
+
+impl<T: Digit> PartialOrd<BigFloat<T>> for BigInt<T> {
+    fn partial_cmp(&self, other: &BigFloat<T>) -> Option<Ordering> {
+        other.partial_cmp(self).map(|o| o.reverse())
+    }
+}
+
 impl<T: Digit> Ord for BigFloat<T> {
     fn cmp(&self, other: &BigFloat<T>) -> Ordering {
         self.float_ord(other.scale, other.int.sign, &other.int.uint.val)
