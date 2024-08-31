@@ -67,10 +67,30 @@ impl<T: Digit> BigUint<T> {
     /// (private) clean trailing zeros of the representation, if any, after an
     /// operation has been performed.
     #[inline]
-    pub(crate) fn remove_trailing_zeros(&mut self) {
+    pub(crate) fn remove_leading_zeros(&mut self) {
         let count = self.val.len() - self.val.iter().rev().take_while(|n| **n == T::ZERO).count();
         self.val.truncate(std::cmp::max(count, 1));
     }
+
+    #[inline]
+    pub(crate) fn ord(&self, other: &[T]) -> Ordering {
+        ord(&self.val, other)
+    }
+}
+
+#[inline]
+pub(crate) fn ord<T: Digit>(a: &[T], b: &[T]) -> Ordering {
+    match a.len().cmp(&b.len()) {
+        Ordering::Equal => (),
+        o => return o,
+    };
+    for (a, b) in a.iter().zip(b.iter()).rev() {
+        match a.cmp(b) {
+            Ordering::Equal => continue,
+            o => return o,
+        };
+    }
+    Ordering::Equal
 }
 
 /// Default implementation for BigUint: returns 0.
@@ -97,16 +117,6 @@ impl<T: Digit> PartialOrd<BigUint<T>> for BigUint<T> {
 
 impl<T: Digit> Ord for BigUint<T> {
     fn cmp(&self, other: &BigUint<T>) -> Ordering {
-        match self.val.len().cmp(&other.val.len()) {
-            Ordering::Equal => (),
-            o => return o,
-        };
-        for (a, b) in self.val.iter().zip(other.val.iter()).rev() {
-            match a.cmp(b) {
-                Ordering::Equal => continue,
-                o => return o,
-            };
-        }
-        Ordering::Equal
+        self.ord(&other.val)
     }
 }

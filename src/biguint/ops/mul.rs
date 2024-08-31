@@ -27,17 +27,13 @@ impl<T: Digit> MulAssign<BigUint<T>> for BigUint<T> {
 impl<T: Digit> Mul<T> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: T) -> BigUint<T> {
-        let mut ret = self.clone();
-        ret *= other;
-        ret
+        self * BigUint::<T>::new(other)
     }
 }
 impl<T: Digit> Mul<&T> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: &T) -> BigUint<T> {
-        let mut ret = self.clone();
-        ret *= *other;
-        ret
+        self * *other
     }
 }
 impl<T: Digit> Mul<T> for BigUint<T> {

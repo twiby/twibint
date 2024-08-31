@@ -42,11 +42,24 @@ impl<T: Digit> BigInt<T> {
 
     /// Returns true if the integer is strictly higher than 0, false otherwise
     pub fn is_sign_positive(&self) -> bool {
-        self.uint != Default::default() && self.sign
+        self.uint != BigUint::default() && self.sign
     }
     /// Returns true if the integer is strictly lower than 0, false otherwise
     pub fn is_sign_negative(&self) -> bool {
-        self.uint != Default::default() && !self.sign
+        self.uint != BigUint::default() && !self.sign
+    }
+
+    pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {
+        &self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
+    }
+
+    pub(crate) fn signed_ord(&self, other_sign: bool, other: &[T]) -> Ordering {
+        match (self.sign, other_sign) {
+            (true, true) => self.uint.ord(other),
+            (true, false) => Ordering::Greater,
+            (false, true) => Ordering::Less,
+            (false, false) => self.uint.ord(other).reverse(),
+        }
     }
 }
 
@@ -70,6 +83,18 @@ impl<T: Digit> std::hash::Hash for BigInt<T> {
     }
 }
 
+impl<T: Digit> PartialOrd<BigUint<T>> for BigInt<T> {
+    fn partial_cmp(&self, other: &BigUint<T>) -> Option<Ordering> {
+        Some(self.signed_ord(true, &other.val))
+    }
+}
+
+impl<T: Digit> PartialOrd<BigInt<T>> for BigUint<T> {
+    fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
+        Some(other.signed_ord(true, &self.val).reverse())
+    }
+}
+
 impl<T: Digit> PartialOrd<BigInt<T>> for BigInt<T> {
     fn partial_cmp(&self, other: &BigInt<T>) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -78,12 +103,7 @@ impl<T: Digit> PartialOrd<BigInt<T>> for BigInt<T> {
 
 impl<T: Digit> Ord for BigInt<T> {
     fn cmp(&self, other: &BigInt<T>) -> Ordering {
-        match (self.sign, other.sign) {
-            (true, true) => self.uint.cmp(&other.uint),
-            (true, false) => Ordering::Greater,
-            (false, true) => Ordering::Less,
-            (false, false) => self.uint.cmp(&other.uint).reverse(),
-        }
+        self.signed_ord(other.sign, &other.uint.val)
     }
 }
 
@@ -93,6 +113,18 @@ impl<T: Digit> Ord for BigInt<T> {
 /// sign. In that case the test still returns true.
 impl<T: Digit> PartialEq for BigInt<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.uint == other.uint && ((self.sign == other.sign) || (self.uint.val == vec![T::ZERO]))
+        self.signed_eq(other.sign, &other.uint.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigUint<T>> for BigInt<T> {
+    fn eq(&self, other: &BigUint<T>) -> bool {
+        self.signed_eq(true, &other.val)
+    }
+}
+
+impl<T: Digit> PartialEq<BigInt<T>> for BigUint<T> {
+    fn eq(&self, other: &BigInt<T>) -> bool {
+        other.signed_eq(true, &self.val)
     }
 }

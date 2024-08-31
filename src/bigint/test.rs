@@ -10,6 +10,9 @@ fn creation<T: Digit>() {
     let n3 = BigInt::<T>::from(129u64);
     let n4 = BigInt::<T>::from(-128i64);
 
+    let n5 = BigUint::<T>::from(128u32);
+    let n6 = BigUint::<T>::from(129u32);
+
     assert_eq!(
         n1,
         BigInt::<T> {
@@ -45,6 +48,17 @@ fn creation<T: Digit>() {
     assert!(n2 < n3);
     assert!(n2 < n4);
     assert!(n3 > n4);
+
+    assert_eq!(n1, n5);
+    assert_eq!(n3, n6);
+    assert!(n1 < n6);
+    assert!(n6 > n1);
+    assert!(n5 < n3);
+    assert!(n3 > n5);
+    assert!(n5 > n2);
+    assert!(n5 > n4);
+    assert!(n6 > n2);
+    assert!(n6 > n4);
 }
 
 #[test_with(u32, u64)]
@@ -67,6 +81,23 @@ fn sign<T: Digit>() {
     assert!(n3.is_sign_negative());
 
     assert_eq!(n2, n4);
+}
+
+#[test_with(u32, u64)]
+fn equality_with_uint<T: Digit>() {
+    let n1 = BigUint::<T>::from(5u32);
+    let n2 = BigInt::<T>::from(5u32);
+    let n3 = BigInt::<T>::from(-5i32);
+    let n4 = BigInt::<T>::from(0i32);
+    let n5 = BigInt::<T> {
+        uint: BigUint::<T>::default(),
+        sign: false,
+    };
+
+    assert_eq!(n1, n2);
+    assert_eq!(n4, n5);
+    assert_ne!(n1, n3);
+    assert_ne!(n2, n3);
 }
 
 #[test_with(u32, u64)]

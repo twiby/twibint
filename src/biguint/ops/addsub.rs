@@ -1,5 +1,8 @@
+use crate::biguint::ops::add_assign;
+use crate::biguint::ops::sub_assign;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
+use std::cmp::Ordering;
 
 use crate::traits::Digit;
 use crate::BigUint;
@@ -9,6 +12,32 @@ impl<T: Digit> BigUint<T> {
         let mut data = Vec::<T>::with_capacity(self.val.len().max(other_len) + 1);
         data.extend_from_slice(&self.val);
         BigUint::<T> { val: data }
+    }
+
+    #[inline]
+    pub(crate) fn add_assign(&mut self, other: &[T]) {
+        let target_length = self.val.len().max(other.len()) + 1;
+        self.val.resize(target_length, T::ZERO);
+
+        let carry = add_assign(&mut self.val, other);
+        debug_assert!(!carry);
+
+        self.remove_leading_zeros();
+    }
+
+    #[inline]
+    pub(crate) fn sub_assign(&mut self, other: &[T]) {
+        match self.ord(other) {
+            Ordering::Equal => {
+                self.val.clear();
+                self.val.push(T::ZERO);
+            }
+            Ordering::Less => panic!("Attempt at subtraction with underflow"),
+            Ordering::Greater => {
+                sub_assign(&mut self.val, other);
+                self.remove_leading_zeros();
+            }
+        }
     }
 }
 
@@ -98,15 +127,10 @@ impl<T: Digit> AddAssign<BigUint<T>> for BigUint<T> {
         *self += &other;
     }
 }
+
 impl<T: Digit> AddAssign<&BigUint<T>> for BigUint<T> {
     fn add_assign(&mut self, other: &BigUint<T>) {
-        let target_length = self.val.len().max(other.val.len()) + 1;
-        self.val.resize(target_length, T::ZERO);
-
-        let carry = super::implem_choices::add_assign(&mut self.val, &other.val);
-        debug_assert!(!carry);
-
-        self.remove_trailing_zeros();
+        self.add_assign(&other.val);
     }
 }
 
@@ -127,13 +151,7 @@ impl<T: Digit> SubAssign<BigUint<T>> for BigUint<T> {
 }
 impl<T: Digit> SubAssign<&BigUint<T>> for BigUint<T> {
     fn sub_assign(&mut self, other: &BigUint<T>) {
-        if &*self < other {
-            panic!("Attempt at subtraction with underflow");
-        }
-
-        super::implem_choices::sub_assign(&mut self.val, &other.val);
-
-        self.remove_trailing_zeros();
+        self.sub_assign(&other.val);
     }
 }
 impl<T: Digit> Sub<T> for &BigUint<T> {

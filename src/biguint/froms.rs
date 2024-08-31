@@ -78,7 +78,7 @@ impl<T: Digit> std::str::FromStr for BigUint<T> {
             base *= BigUint::<T>::from(10u32);
         }
 
-        ret.remove_trailing_zeros();
+        ret.remove_leading_zeros();
         return Ok(ret);
     }
 }
@@ -115,8 +115,14 @@ impl<T: Digit> From<Vec<T>> for BigUint<T> {
             false => vec![T::ZERO],
         };
         let mut ret = BigUint::<T> { val: v };
-        ret.remove_trailing_zeros();
+        ret.remove_leading_zeros();
         ret
+    }
+}
+
+impl<T: Digit> From<&[T]> for BigUint<T> {
+    fn from(v: &[T]) -> BigUint<T> {
+        Self::from(v.to_vec())
     }
 }
 
