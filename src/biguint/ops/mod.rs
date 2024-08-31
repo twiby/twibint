@@ -10,6 +10,8 @@ pub(crate) mod shift;
 pub(crate) mod truediv;
 
 mod implem_choices;
+pub(crate) use implem_choices::add_assign;
+pub(crate) use implem_choices::sub_assign;
 
 #[cfg(test)]
 mod test;

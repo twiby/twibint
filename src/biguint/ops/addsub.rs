@@ -1,3 +1,5 @@
+use crate::biguint::ops::add_assign;
+use crate::biguint::ops::sub_assign;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
 use std::cmp::Ordering;
@@ -17,7 +19,7 @@ impl<T: Digit> BigUint<T> {
         let target_length = self.val.len().max(other.len()) + 1;
         self.val.resize(target_length, T::ZERO);
 
-        let carry = super::implem_choices::add_assign(&mut self.val, other);
+        let carry = add_assign(&mut self.val, other);
         debug_assert!(!carry);
 
         self.remove_leading_zeros();
@@ -32,7 +34,7 @@ impl<T: Digit> BigUint<T> {
             }
             Ordering::Less => panic!("Attempt at subtraction with underflow"),
             Ordering::Greater => {
-                super::implem_choices::sub_assign(&mut self.val, other);
+                sub_assign(&mut self.val, other);
                 self.remove_leading_zeros();
             }
         }

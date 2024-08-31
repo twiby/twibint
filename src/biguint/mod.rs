@@ -74,18 +74,23 @@ impl<T: Digit> BigUint<T> {
 
     #[inline]
     pub(crate) fn ord(&self, other: &[T]) -> Ordering {
-        match self.val.len().cmp(&other.len()) {
-            Ordering::Equal => (),
+        ord(&self.val, other)
+    }
+}
+
+#[inline]
+pub(crate) fn ord<T: Digit>(a: &[T], b: &[T]) -> Ordering {
+    match a.len().cmp(&b.len()) {
+        Ordering::Equal => (),
+        o => return o,
+    };
+    for (a, b) in a.iter().zip(b.iter()).rev() {
+        match a.cmp(b) {
+            Ordering::Equal => continue,
             o => return o,
         };
-        for (a, b) in self.val.iter().zip(other.iter()).rev() {
-            match a.cmp(b) {
-                Ordering::Equal => continue,
-                o => return o,
-            };
-        }
-        Ordering::Equal
     }
+    Ordering::Equal
 }
 
 /// Default implementation for BigUint: returns 0.
