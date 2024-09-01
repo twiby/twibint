@@ -1,4 +1,5 @@
 use crate::biguint::ops::add_assign;
+use crate::biguint::ops::rsub_assign;
 use crate::biguint::ops::sub_assign;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Sub, SubAssign};
@@ -35,6 +36,27 @@ impl<T: Digit> BigUint<T> {
             Ordering::Less => panic!("Attempt at subtraction with underflow"),
             Ordering::Greater => {
                 sub_assign(&mut self.val, other);
+                self.remove_leading_zeros();
+            }
+        }
+    }
+
+    /// Computes the subtraction of `self` from `other`, and stores the result in `self
+    ///
+    /// Very much like a subtraction where the operands are reversed
+    #[inline]
+    pub fn rsub_assign(&mut self, other: &BigUint<T>) {
+        match self.ord(&other.val) {
+            Ordering::Equal => {
+                self.val.clear();
+                self.val.push(T::ZERO);
+            }
+            Ordering::Greater => panic!("Attempt at subtraction with underflow"),
+            Ordering::Less => {
+                debug_assert!(other.val.len() >= self.val.len());
+                let prev_len = self.val.len();
+                self.val.resize(other.val.len(), T::ZERO);
+                rsub_assign(&mut self.val, &other.val, prev_len);
                 self.remove_leading_zeros();
             }
         }

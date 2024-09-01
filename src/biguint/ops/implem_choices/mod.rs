@@ -1,9 +1,11 @@
 mod add;
 mod mul;
+mod rsub;
 mod sub;
 
 pub(crate) use add::add_assign;
 pub(crate) use mul::mul;
+pub(crate) use rsub::rsub_assign;
 pub(crate) use sub::sub_assign;
 
 #[cfg(feature = "unsafe")]

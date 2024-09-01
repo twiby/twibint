@@ -90,6 +90,39 @@ fn sub_assign_overflow_big<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn rsub<T: Digit>() {
+    let mut b1 = BigUint::<T>::from(vec![T::MAX, T::MAX]);
+    b1 -= T::MAX;
+
+    assert_eq!(b1.val, vec![T::ZERO, T::MAX]);
+    b1 -= T::ONE;
+    assert_eq!(b1.val, vec![T::MAX, T::MAX - T::ONE]);
+
+    let mut c = BigUint::<T>::from(vec![T::MAX, T::MAX - T::ONE]);
+    c.rsub_assign(&b1);
+    assert_eq!(c, BigUint::<T>::default());
+}
+
+#[test_with(u32, u64)]
+fn rsub_full<T: Digit>() {
+    let n1 = BigUint::<T>::from("12345678910111213");
+    let n2 = BigUint::<T>::from("987654321");
+
+    let mut n3 = n2.clone();
+    n3.rsub_assign(&n1);
+    assert_eq!(String::from(&n3), "12345677922456892");
+}
+
+#[test_with(u32, u64)]
+fn rsub_assign_overflow_big<T: Digit>() {
+    let mut bg = BigUint::<T>::from(vec![T::MAX; 100]);
+    let mut other = BigUint::<T>::from(vec![T::MAX; 100]);
+    bg += T::ONE;
+    other.rsub_assign(&bg);
+    assert_eq!(String::from(other), "1");
+}
+
+#[test_with(u32, u64)]
 fn fibonacci<T: Digit>() {
     let mut n1 = BigUint::<T>::new(T::ZERO);
     let mut n2 = BigUint::<T>::new(T::ONE);
