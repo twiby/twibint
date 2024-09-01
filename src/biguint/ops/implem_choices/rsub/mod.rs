@@ -14,79 +14,90 @@ mod x86_64;
 /// Assumes len(rhs) == len(lhs)
 pub(crate) fn rsub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], rhs_len: usize) -> bool {
     // Specifically for u32 digits, we accelerate by reinterpreting arrays as u64
-    // #[cfg(feature = "unsafe")]
-    // if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u32>(), lhs.to_ptr::<u32>()) {
-    //     if u32_ptrs_aligned(rhs_cast, lhs_cast) {
-    //         // Case pointers correctly aligned: pretend they are u64
-    //         let size = lhs.len() / 2;
-    //         let carry: bool =
-    //             unsafe { sub_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
-    //         return schoolbook_sub_assign(&mut rhs[size * 2..], &lhs[size * 2..], carry);
-    //     } else {
-    //         // Case pointers are misaligned: base safe algo
-    //         return schoolbook_sub_assign(rhs, lhs, false);
-    //     }
-    // }
+    #[cfg(feature = "unsafe")]
+    if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u32>(), lhs.to_ptr::<u32>()) {
+        if u32_ptrs_aligned(rhs_cast, lhs_cast) {
+            // Case pointers correctly aligned: pretend they are u64
+            let size = rhs_len / 2;
+            let carry: bool =
+                unsafe { rsub_assign_u64(rhs_cast.cast(), size, lhs_cast.cast(), size) };
+            return schoolbook_rsub_assign(
+                &mut rhs[size * 2..],
+                &lhs[size * 2..],
+                rhs_len - size * 2,
+                carry,
+            );
+        } else {
+            // Case pointers are misaligned: base safe algo
+            return schoolbook_rsub_assign(rhs, lhs, rhs_len, false);
+        }
+    }
 
-    // #[cfg(feature = "unsafe")]
-    // if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u64>(), lhs.to_ptr::<u64>()) {
-    //     return unsafe { sub_assign_u64(rhs_cast, rhs.len(), lhs_cast, lhs.len()) };
-    // }
+    #[cfg(feature = "unsafe")]
+    if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u64>(), lhs.to_ptr::<u64>()) {
+        debug_assert_eq!(rhs.len(), lhs.len());
+        return unsafe { rsub_assign_u64(rhs_cast, rhs_len, lhs_cast, lhs.len()) };
+    }
 
     schoolbook_rsub_assign(rhs, lhs, rhs_len, false)
 }
 
-// /// Tries hardware acceleration before classical algorithm
-// #[cfg(feature = "unsafe")]
-// unsafe fn sub_assign_u64(rhs: *mut u64, rhs_size: usize, lhs: *const u64, lhs_size: usize) -> bool {
-//     debug_assert!(rhs_size >= lhs_size);
+/// Tries hardware acceleration before classical algorithm
+#[cfg(feature = "unsafe")]
+unsafe fn rsub_assign_u64(
+    rhs: *mut u64,
+    rhs_size: usize,
+    lhs: *const u64,
+    lhs_size: usize,
+) -> bool {
+    debug_assert!(rhs_size <= lhs_size);
 
-//     #[cfg(target_arch = "x86_64")]
-//     let (carry, done) = x86_64::schoolbook_rsub_assign_x86_64(rhs, lhs, lhs_size);
-//     #[cfg(not(target_arch = "x86_64"))]
-//     let (carry, done) = (false, 0);
+    #[cfg(target_arch = "x86_64")]
+    let (carry, done) = x86_64::schoolbook_rsub_assign_x86_64(rhs, lhs, lhs_size);
+    #[cfg(not(target_arch = "x86_64"))]
+    let (carry, done) = (false, 0);
 
-//     schoolbook_sub_assign_u64(
-//         rhs.wrapping_add(done),
-//         rhs_size - done,
-//         lhs.wrapping_add(done),
-//         lhs_size - done,
-//         carry,
-//     )
-// }
+    schoolbook_rsub_assign_u64(
+        rhs.wrapping_add(done),
+        rhs_size - done,
+        lhs.wrapping_add(done),
+        lhs_size - done,
+        carry,
+    )
+}
 
-// /// Unsafe version operates directly on pointers
-// #[cfg(feature = "unsafe")]
-// unsafe fn schoolbook_sub_assign_u64(
-//     mut rhs: *mut u64,
-//     mut rhs_size: usize,
-//     mut lhs: *const u64,
-//     mut lhs_size: usize,
-//     mut carry: bool,
-// ) -> bool {
-//     debug_assert!(rhs_size >= lhs_size);
-//     rhs_size -= lhs_size;
+/// Unsafe version operates directly on pointers
+#[cfg(feature = "unsafe")]
+unsafe fn schoolbook_rsub_assign_u64(
+    mut rhs: *mut u64,
+    mut rhs_size: usize,
+    mut lhs: *const u64,
+    mut lhs_size: usize,
+    mut carry: bool,
+) -> bool {
+    debug_assert!(rhs_size <= lhs_size);
+    lhs_size -= rhs_size;
 
-//     let mut carry_1: bool;
-//     let mut carry_2: bool;
-//     while lhs_size > 0 {
-//         (*rhs, carry_1) = (*rhs).overflowing_sub(*lhs);
-//         (*rhs, carry_2) = (*rhs).overflowing_sub(carry as u64);
-//         carry = carry_1 | carry_2;
+    let mut carry_1: bool;
+    let mut carry_2: bool;
+    while rhs_size > 0 {
+        (*rhs, carry_1) = (*lhs).overflowing_sub(*rhs);
+        (*rhs, carry_2) = (*rhs).overflowing_sub(carry as u64);
+        carry = carry_1 | carry_2;
 
-//         rhs = rhs.offset(1);
-//         lhs = lhs.offset(1);
-//         lhs_size -= 1;
-//     }
+        rhs = rhs.offset(1);
+        lhs = lhs.offset(1);
+        rhs_size -= 1;
+    }
 
-//     while rhs_size > 0 && carry {
-//         (*rhs, carry) = (*rhs).overflowing_sub(carry as u64);
-//         rhs = rhs.offset(1);
-//         rhs_size -= 1;
-//     }
+    while lhs_size > 0 && carry {
+        (*rhs, carry) = (*lhs).overflowing_sub(carry as u64);
+        rhs = rhs.offset(1);
+        lhs_size -= 1;
+    }
 
-//     carry
-// }
+    carry
+}
 
 /// Safe version of rsub_assign uses generic slices
 fn schoolbook_rsub_assign<T: Digit>(
