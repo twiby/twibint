@@ -41,7 +41,7 @@ impl<T: Digit> BigUint<T> {
         }
     }
 
-    /// Computes the subtraction of `self` from `other`, and stores the result in `self
+    /// Computes the subtraction of `self` from `other`, and stores the result in `self`
     ///
     /// Very much like a subtraction where the operands are reversed
     #[inline]
