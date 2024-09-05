@@ -93,6 +93,8 @@ where
     type Double: DoubleDigit<Single = Self>;
     type Signed: SignedDigit<Unsigned = Self>;
     fn to_double(self) -> Self::Double;
+    fn from_bool(b: bool) -> Self;
+    fn wrapping_add(self, other: Self) -> Self;
     fn overflowing_sub(self, other: Self) -> (Self, bool);
     fn leading_zeros(self) -> u32;
     fn trailing_zeros(self) -> u32;
@@ -136,6 +138,12 @@ impl Digit for u32 {
     fn overflowing_sub(self, other: Self) -> (Self, bool) {
         self.overflowing_sub(other)
     }
+    fn wrapping_add(self, other: Self) -> Self {
+        self.wrapping_add(other)
+    }
+    fn from_bool(b: bool) -> Self {
+        b as Self
+    }
     fn leading_zeros(self) -> u32 {
         self.leading_zeros()
     }
@@ -178,6 +186,12 @@ impl Digit for u64 {
     type Signed = i64;
     fn to_double(self) -> u128 {
         self as u128
+    }
+    fn wrapping_add(self, other: Self) -> Self {
+        self.wrapping_add(other)
+    }
+    fn from_bool(b: bool) -> Self {
+        b as Self
     }
     fn overflowing_sub(self, other: Self) -> (Self, bool) {
         self.overflowing_sub(other)
