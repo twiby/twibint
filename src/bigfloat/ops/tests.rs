@@ -392,3 +392,29 @@ fn sub<T: Digit>() {
     );
     assert_eq!(c2.scale, -2);
 }
+
+#[test_with(u32, u64)]
+fn sub2<T: Digit>() {
+    let a = BigFloat::from(vec![T::MAX, T::MAX]);
+    let b = BigFloat::from(vec![T::ONE, T::ZERO, T::ONE]) >> 3 * T::NB_BITS;
+
+    let c1 = &a - b.clone();
+    assert_eq!(
+        c1.int.uint.val,
+        vec![T::MAX, T::MAX, T::MAX - T::ONE, T::MAX - T::ONE, T::MAX]
+    );
+    assert_eq!(c1.scale, -3);
+}
+
+#[test_with(u32, u64)]
+fn sub3<T: Digit>() {
+    let a = BigFloat::from(vec![T::MAX, T::MAX]);
+    let b = BigFloat::from(vec![T::ONE, T::MAX, T::ONE]) >> 3 * T::NB_BITS;
+
+    let c1 = &a - b.clone();
+    assert_eq!(
+        c1.int.uint.val,
+        vec![T::MAX, T::ZERO, T::MAX - T::ONE, T::MAX - T::ONE, T::MAX]
+    );
+    assert_eq!(c1.scale, -3);
+}

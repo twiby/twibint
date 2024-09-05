@@ -1,4 +1,5 @@
 use crate::biguint::ops::add_assign;
+use crate::biguint::ops::rsub_assign;
 use crate::biguint::ops::sub_assign;
 use crate::traits::Digit;
 use crate::BigInt;
@@ -90,6 +91,56 @@ impl<T: Digit> BigFloat<T> {
         }
     }
 
+    fn unsigned_rsub_bigger_scale(&mut self, other_scale: isize, other: &[T]) {
+        let scale_diff = other_scale - self.scale;
+        assert!(scale_diff >= 0);
+        let scale_diff = scale_diff as usize;
+
+        let prev_len = if self.int.uint.val.len() >= scale_diff {
+            self.int.uint.val.len() - scale_diff
+        } else {
+            0
+        };
+
+        self.int.uint.val.resize(other.len() + scale_diff, T::ZERO);
+        let carry = rsub_assign(&mut self.int.uint.val[scale_diff..], other, prev_len);
+        debug_assert!(!carry);
+
+        // We need an addition correction for digits "below" the subtraction
+        let mut remaining = T::ONE;
+        for d in &mut self.int.uint.val[..scale_diff] {
+            *d = (T::MAX - *d).wrapping_add(remaining);
+            remaining = T::from_bool(*d == T::ZERO && !(remaining == T::ZERO));
+        }
+
+        if remaining == T::ZERO {
+            sub_assign(&mut self.int.uint.val[scale_diff..], &[T::ONE]);
+        }
+
+        self.int.uint.remove_leading_zeros();
+        self.simplify();
+    }
+
+    fn unsigned_rsub_smaller_scale(&mut self, other_scale: isize, other: &[T]) {
+        let scale_diff = self.scale - other_scale;
+        assert!(scale_diff > 0);
+        let scale_diff = scale_diff as usize;
+
+        let target_length = self.int.uint.val.len().max(scale_diff + other.len()) + 1;
+        let shift = target_length - self.int.uint.val.len();
+        self.int <<= shift * T::NB_BITS;
+        self.scale -= shift as isize;
+        self.unsigned_rsub_bigger_scale(other_scale, other);
+    }
+
+    fn unsigned_rsub(&mut self, other_scale: isize, other: &[T]) {
+        if self.scale > other_scale {
+            self.unsigned_rsub_smaller_scale(other_scale, other);
+        } else {
+            self.unsigned_rsub_bigger_scale(other_scale, other);
+        }
+    }
+
     pub(crate) fn add_assign(&mut self, other_sign: bool, other_scale: isize, other: &[T]) {
         if self.int.sign == other_sign {
             self.unsigned_add(other_scale, other);
@@ -105,15 +156,8 @@ impl<T: Digit> BigFloat<T> {
             }
             Ordering::Greater => self.unsigned_sub(other_scale, other),
             Ordering::Less => {
-                let mut ret = BigFloat {
-                    int: BigInt {
-                        sign: !self.int.sign,
-                        uint: other.into(),
-                    },
-                    scale: other_scale,
-                };
-                ret.unsigned_sub(self.scale, &self.int.uint.val);
-                *self = ret;
+                self.int.sign = !self.int.sign;
+                self.unsigned_rsub(other_scale, other);
             }
         }
     }

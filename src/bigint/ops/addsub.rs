@@ -29,12 +29,8 @@ impl<T: Digit> BigInt<T> {
             }
             Ordering::Greater => self.uint.sub_assign(other),
             Ordering::Less => {
-                let mut ret = BigInt {
-                    sign: !self.sign,
-                    uint: other.into(),
-                };
-                ret.uint.sub_assign(&self.uint.val);
-                *self = ret;
+                self.uint._rsub_assign(other);
+                self.sign = !self.sign;
             }
         }
     }

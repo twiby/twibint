@@ -93,6 +93,14 @@ unsafe fn schoolbook_rsub_assign_u64(
     while lhs_size > 0 && carry {
         (*rhs, carry) = (*lhs).overflowing_sub(carry as u64);
         rhs = rhs.offset(1);
+        lhs = lhs.offset(1);
+        lhs_size -= 1;
+    }
+
+    while lhs_size > 0 {
+        *rhs = *lhs;
+        rhs = rhs.offset(1);
+        lhs = lhs.offset(1);
         lhs_size -= 1;
     }
 

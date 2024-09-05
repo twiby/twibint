@@ -41,25 +41,30 @@ impl<T: Digit> BigUint<T> {
         }
     }
 
-    /// Computes the subtraction of `self` from `other`, and stores the result in `self`
-    ///
-    /// Very much like a subtraction where the operands are reversed
-    #[inline]
-    pub fn rsub_assign(&mut self, other: &BigUint<T>) {
-        match self.ord(&other.val) {
+    pub(crate) fn _rsub_assign(&mut self, other: &[T]) {
+        match self.ord(other) {
             Ordering::Equal => {
                 self.val.clear();
                 self.val.push(T::ZERO);
             }
             Ordering::Greater => panic!("Attempt at subtraction with underflow"),
             Ordering::Less => {
-                debug_assert!(other.val.len() >= self.val.len());
+                debug_assert!(other.len() >= self.val.len());
                 let prev_len = self.val.len();
-                self.val.resize(other.val.len(), T::ZERO);
-                rsub_assign(&mut self.val, &other.val, prev_len);
+                self.val.resize(other.len(), T::ZERO);
+                rsub_assign(&mut self.val, other, prev_len);
                 self.remove_leading_zeros();
             }
         }
+    }
+
+    /// Computes the subtraction of `self` from `other`, and stores the result in `self`
+    ///
+    /// Very much like a subtraction where the operands are reversed. On this
+    /// unsigned type this can avoid an unnecessary allocation in some cases.
+    #[inline]
+    pub fn rsub_assign(&mut self, other: &BigUint<T>) {
+        self._rsub_assign(&other.val);
     }
 }
 
