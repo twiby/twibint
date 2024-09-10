@@ -57,6 +57,23 @@ impl<T: Digit> BigUint<T> {
         }
     }
 
+    /// Sets the bth bit of the integer. Since we represent an infinite number of bits,
+    /// b could be higher than `self.nb_bits()`
+    /// (but realistically to be other than 0 it will fit in a usize)
+    #[inline]
+    pub fn set_bit(&mut self, b: usize, val: bool) {
+        if val {
+            self.val
+                .resize((b / T::NB_BITS + 1).max(self.val.len()), T::ZERO);
+            let mask = T::ONE << (b % T::NB_BITS);
+            self.val[b / T::NB_BITS] |= mask;
+        } else {
+            let mask = T::MAX - (T::ONE << (b % T::NB_BITS));
+            self.val[b / T::NB_BITS] &= mask;
+            self.remove_leading_zeros();
+        }
+    }
+
     /// Return an iterator on the bits, returning `bool` values. The iterator will
     /// stop as soon as all the infinitely remaining bits are 0
     #[inline]

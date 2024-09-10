@@ -114,6 +114,44 @@ fn bits<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn set_bit<T: Digit>() {
+    let mut uint = BigUint::<T>::new(T::MAX);
+
+    uint.set_bit(0, false);
+    assert_eq!(uint.val, vec![T::MAX - T::ONE]);
+
+    uint.set_bit(T::NB_BITS - 1, false);
+    assert_eq!(uint.val, vec![(T::MAX >> 1) - T::ONE]);
+
+    uint.set_bit(4 * T::NB_BITS, true);
+    assert_eq!(
+        uint.val,
+        vec![(T::MAX >> 1) - T::ONE, T::ZERO, T::ZERO, T::ZERO, T::ONE]
+    );
+
+    uint.set_bit(3 * T::NB_BITS + 1, true);
+    assert_eq!(
+        uint.val,
+        vec![
+            (T::MAX >> 1) - T::ONE,
+            T::ZERO,
+            T::ZERO,
+            T::ONE + T::ONE,
+            T::ONE
+        ]
+    );
+
+    uint.set_bit(4 * T::NB_BITS, false);
+    assert_eq!(
+        uint.val,
+        vec![(T::MAX >> 1) - T::ONE, T::ZERO, T::ZERO, T::ONE + T::ONE]
+    );
+
+    uint.set_bit(3 * T::NB_BITS + 1, false);
+    assert_eq!(uint.val, vec![(T::MAX >> 1) - T::ONE]);
+}
+
+#[test_with(u32, u64)]
 fn binary<T: Digit>() {
     let a = BigUint::<T>::from(vec![T::MAX >> 1, T::MAX >> 1]);
     let mut s = "0".to_string();
