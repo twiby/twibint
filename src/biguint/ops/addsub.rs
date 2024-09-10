@@ -1,3 +1,4 @@
+use crate::biguint::nb_bits;
 use crate::biguint::ops::add_assign;
 use crate::biguint::ops::rsub_assign;
 use crate::biguint::ops::sub_assign;
@@ -17,7 +18,8 @@ impl<T: Digit> BigUint<T> {
 
     #[inline]
     pub(crate) fn add_assign(&mut self, other: &[T]) {
-        let target_length = self.val.len().max(other.len()) + 1;
+        let target_nb_bits = self.nb_bits().max(nb_bits(other)) + 1;
+        let target_length = (target_nb_bits - 1) / T::NB_BITS + 1;
         self.val.resize(target_length, T::ZERO);
 
         let carry = add_assign(&mut self.val, other);
@@ -139,13 +141,12 @@ impl<T: Digit> Add<BigUint<T>> for &BigUint<T> {
 
 impl<T: Digit> AddAssign<T> for BigUint<T> {
     fn add_assign(&mut self, other: T) {
-        let other = BigUint::<T>::new(other);
-        *self += other;
+        self.add_assign(&[other]);
     }
 }
 impl<T: Digit> AddAssign<&T> for BigUint<T> {
     fn add_assign(&mut self, other: &T) {
-        *self += *other;
+        self.add_assign(&[*other]);
     }
 }
 
