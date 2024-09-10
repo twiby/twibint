@@ -17,6 +17,8 @@ where
 }
 
 /// Generates a random BigUint with n bits
+///
+/// The only non random bits is the nth one, which guaranteed to be 1
 pub fn gen_random_biguint<T: Digit>(n: usize) -> BigUint<T>
 where
     Standard: Distribution<T>,
@@ -32,9 +34,8 @@ where
         ret = BigUint::from(1u32) << (n - 1);
     } else if nb_bits > n {
         ret >>= nb_bits - n;
-    } else if nb_bits < n {
-        ret <<= n - nb_bits;
     }
+    ret.set_bit(n - 1, true);
 
     debug_assert_eq!(ret.nb_bits(), n);
     ret
