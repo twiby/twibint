@@ -650,6 +650,25 @@ fn maxed_out_mul<T: Digit>() {
     assert_eq!(n3, ret);
 }
 
+#[test_with(u32, u64)]
+fn add_assign_alloc<T: Digit>() {
+    let mut n1 = BigUint::<T>::from(vec![T::MAX; 3]);
+    while n1.val.len() < n1.val.capacity() {
+        n1.val.push(T::MAX);
+    }
+    assert_eq!(n1.val.len(), n1.val.capacity());
+
+    n1 >>= 1;
+    for i in 0..n1.val.len() - 1 {
+        assert_eq!(n1.val[i], T::MAX);
+    }
+    assert_eq!(*n1.val.last().unwrap(), T::MAX >> 1);
+
+    let prev_capacity = n1.val.capacity();
+    n1 += T::ONE;
+    assert_eq!(prev_capacity, n1.val.capacity());
+}
+
 #[cfg(all(feature = "unsafe", target_arch = "x86_64"))]
 #[test]
 fn test_asm_u64_sum() {

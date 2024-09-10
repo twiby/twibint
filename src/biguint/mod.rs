@@ -37,12 +37,7 @@ impl<T: Digit> BigUint<T> {
     /// Returns the minimal number of bits necessary for a binary representation.
     #[inline]
     pub fn nb_bits(&self) -> usize {
-        match self.val.last() {
-            None => 0,
-            Some(last) => {
-                T::NB_BITS * (self.val.len() - 1) + (T::NB_BITS - last.leading_zeros() as usize)
-            }
-        }
+        nb_bits(&self.val)
     }
 
     /// Returns the bth bit as a bool. Since we represent an infinite number of bits,
@@ -92,6 +87,14 @@ impl<T: Digit> BigUint<T> {
     #[inline]
     pub(crate) fn ord(&self, other: &[T]) -> Ordering {
         ord(&self.val, other)
+    }
+}
+
+#[inline]
+pub(crate) fn nb_bits<T: Digit>(a: &[T]) -> usize {
+    match a.last() {
+        None => 0,
+        Some(last) => T::NB_BITS * (a.len() - 1) + (T::NB_BITS - last.leading_zeros() as usize),
     }
 }
 
