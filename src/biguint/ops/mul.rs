@@ -4,6 +4,35 @@ use core::ops::{Mul, MulAssign};
 use crate::traits::Digit;
 use crate::BigUint;
 
+impl<T: Digit> BigUint<T> {
+    /// Use this integer to store the multiplication of `a` and `b`
+    ///
+    /// This is handy when one wants to keep allocations around to store
+    /// the result of a multiplication
+    ///
+    /// ```
+    /// use twibint::BigUint;
+    ///
+    /// let mut n = BigUint::from(vec![u64::MAX; 4]);
+    /// let a = BigUint::from(2u64);
+    /// let b = BigUint::from(4u64);
+    ///
+    /// n.set_to_mul(&a, &b);
+    /// assert_eq!(n.try_into_digit().unwrap(), 8);
+    /// ```
+    #[inline]
+    pub fn set_to_mul(&mut self, a: &BigUint<T>, b: &BigUint<T>) {
+        self._set_to_mul(&a.val, &b.val);
+    }
+
+    #[inline]
+    pub(crate) fn _set_to_mul(&mut self, a: &[T], b: &[T]) {
+        self.val.resize(a.len() + b.len(), T::ZERO);
+        super::implem_choices::mul(&mut self.val, a, b);
+        self.remove_leading_zeros();
+    }
+}
+
 impl<T: Digit> MulAssign<T> for BigUint<T> {
     fn mul_assign(&mut self, other: T) {
         *self *= BigUint::<T>::new(other);
@@ -52,7 +81,9 @@ impl<T: Digit> Mul<&T> for BigUint<T> {
 impl<T: Digit> Mul<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: &BigUint<T>) -> BigUint<T> {
-        super::implem_choices::mul(&self.val, &other.val).into()
+        let mut ret = vec![T::ZERO; self.val.len() + other.val.len()];
+        super::implem_choices::mul(&mut ret, &self.val, &other.val);
+        ret.into()
     }
 }
 impl<T: Digit> Mul<BigUint<T>> for BigUint<T> {

@@ -651,6 +651,46 @@ fn maxed_out_mul<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn long_mul_on_buffer<T: Digit>() {
+    let n1 = BigUint::<T>::from(vec![T::ONE; 100]);
+    let n2 = BigUint::<T>::from(vec![T::ONE; 100]);
+    let mut n3 = BigUint::<T>::from(vec![T::MAX; 100 / 2]);
+
+    let mut ret = Vec::<T>::with_capacity(2 * 100 - 1);
+    for i in 0..100 {
+        ret.push(T::decomposition_from_u32(i + 1)[0]);
+    }
+    for i in (0..99).rev() {
+        ret.push(T::decomposition_from_u32(i + 1)[0]);
+    }
+
+    n3.set_to_mul(&n1, &n2);
+    assert_eq!(n3.val, ret);
+}
+
+#[test_with(u32, u64)]
+fn maxed_out_mul_on_buffer<T: Digit>() {
+    const SIZE: usize = 100;
+    let n1 = BigUint::<T>::from(vec![T::MAX; SIZE]);
+    let n2 = BigUint::<T>::from(vec![T::MAX; SIZE]);
+    let mut n3 = BigUint::<T>::from(vec![T::MAX; SIZE / 2]);
+
+    let mut ret = vec![];
+    ret.push(T::ONE);
+    for _ in 1..SIZE {
+        ret.push(T::ZERO);
+    }
+    ret.push(T::MAX - T::ONE);
+    for _ in 1..SIZE {
+        ret.push(T::MAX)
+    }
+    let ret = BigUint::<T>::from(ret);
+
+    n3._set_to_mul(&n1.val, &n2.val);
+    assert_eq!(n3, ret);
+}
+
+#[test_with(u32, u64)]
 fn add_assign_alloc<T: Digit>() {
     let mut n1 = BigUint::<T>::from(vec![T::MAX; 3]);
     while n1.val.len() < n1.val.capacity() {

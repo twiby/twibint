@@ -3,7 +3,9 @@
 use crate::traits::{Digit, DoubleDigit};
 
 #[cfg(feature = "unsafe")]
-use super::u32_ptrs_aligned;
+use super::u32_ptrs_aligned_2;
+#[cfg(feature = "unsafe")]
+use super::u32_ptrs_aligned_3;
 #[cfg(feature = "unsafe")]
 use crate::traits::ToPtr;
 
@@ -37,7 +39,7 @@ fn single_digit_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
         b.to_ptr::<u32>(),
     ) {
         // TODO: in this very case, alignment can be fixed via doing one step "manually"
-        if u32_ptrs_aligned(ret_cast, rhs_cast) {
+        if u32_ptrs_aligned_2(ret_cast, rhs_cast) {
             let size = rhs.len() / 2;
             let carry: T;
             unsafe {
@@ -81,7 +83,7 @@ fn single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b: T) {
         b.to_ptr::<u32>(),
     ) {
         // TODO: in this very case, alignment can be fixed via doing one step "manually"
-        if u32_ptrs_aligned(ret_cast, rhs_cast) {
+        if u32_ptrs_aligned_2(ret_cast, rhs_cast) {
             let size = rhs.len() / 2;
             let carry: T;
             unsafe {
@@ -214,55 +216,59 @@ fn schoolbook_single_digit_add_assign_mul<T: Digit>(ret: &mut [T], rhs: &[T], b:
 }
 
 /// Current implementation of multiplication
-pub(crate) fn mul<T: Digit>(rhs: &[T], lhs: &[T]) -> Vec<T> {
+pub(crate) fn mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
+    debug_assert_eq!(ret.len(), rhs.len() + lhs.len());
+
     // Specifically for u32 digits, we accelerate multiplication by reinterpreting
     // arrays as u64 (and add a correction if length is odd)
     #[cfg(feature = "unsafe")]
-    if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_ptr::<u32>(), lhs.to_ptr::<u32>()) {
-        return unsafe { mul_u32(rhs, rhs_cast, lhs, lhs_cast) };
+    if let (Some(ret_cast), Some(rhs_cast), Some(lhs_cast)) = (
+        ret.to_mut_ptr::<u32>(),
+        rhs.to_ptr::<u32>(),
+        lhs.to_ptr::<u32>(),
+    ) {
+        unsafe { mul_u32(ret, ret_cast, rhs, rhs_cast, lhs, lhs_cast) };
+        return;
     }
 
-    let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
     if karatsuba::exit_karatsuba(lhs.len().min(rhs.len())) {
         // small input: got to schoolbook
-        schoolbook_mul(&mut ret, rhs, lhs);
+        schoolbook_mul(ret, rhs, lhs);
     } else {
-        karatsuba::karatsuba(&mut ret, rhs, lhs);
+        ret.fill(T::ZERO);
+        karatsuba::karatsuba(ret, rhs, lhs);
     }
-    ret
 }
 
 /// Special code for efficiently handling u32 case
 #[cfg(feature = "unsafe")]
 unsafe fn mul_u32<T: Digit>(
+    ret: &mut [T],
+    ret_cast: *mut u32,
     rhs: &[T],
     rhs_cast: *const u32,
     lhs: &[T],
     lhs_cast: *const u32,
-) -> Vec<T> {
+) {
     // Do the multiplication on u64 arrays (with half length)
     let rhs_size = rhs.len() / 2;
     let lhs_size = lhs.len() / 2;
+    debug_assert!((rhs_size + lhs_size) * 2 <= ret.len());
 
-    if !u32_ptrs_aligned(rhs_cast, lhs_cast) {
-        // TODO: in this very case, alignment can be fixed via doing one step "manually"
-        let mut ret = vec![T::ZERO; rhs.len() + lhs.len()];
-        schoolbook_mul(&mut ret, rhs, lhs);
-        return ret;
+    if !u32_ptrs_aligned_3(ret_cast, rhs_cast, lhs_cast) {
+        // TODO: in this very case, alignment can probably be fixed via doing one step "manually" ?
+        schoolbook_mul(ret, rhs, lhs);
+        return;
     }
 
+    debug_assert_eq!(ret_cast.align_offset(std::mem::align_of::<u64>()), 0);
     debug_assert_eq!(rhs_cast.align_offset(std::mem::align_of::<u64>()), 0);
     debug_assert_eq!(lhs_cast.align_offset(std::mem::align_of::<u64>()), 0);
 
+    let ret_64: &mut [u64] = std::slice::from_raw_parts_mut(ret_cast.cast(), rhs_size + lhs_size);
     let rhs_64: &[u64] = std::slice::from_raw_parts(rhs_cast.cast(), rhs_size);
     let lhs_64: &[u64] = std::slice::from_raw_parts(lhs_cast.cast(), lhs_size);
-    let mut ret_64: Vec<u64> = mul(rhs_64, lhs_64);
-    let mut ret = Vec::<T>::from_raw_parts(
-        ret_64.as_mut_ptr().cast(),
-        ret_64.len() * 2,
-        ret_64.capacity() * 2,
-    );
-    std::mem::forget(ret_64);
+    mul(ret_64, rhs_64, lhs_64);
 
     // if the array lengths are odd, then the multiplication is not over
     let additional_rhs_term = (rhs.len() % 2 == 1).then_some(rhs.last().unwrap());
@@ -270,23 +276,17 @@ unsafe fn mul_u32<T: Digit>(
 
     match (additional_rhs_term, additional_lhs_term) {
         (Some(&a), None) => {
-            ret.push(T::ZERO);
             single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs, a);
         }
         (None, Some(&b)) => {
-            ret.push(T::ZERO);
             single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
         }
         (Some(&a), Some(&b)) => {
-            ret.push(T::ZERO);
-            ret.push(T::ZERO);
             single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs[..lhs.len() - 1], a);
             single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
         }
         (None, None) => (),
     }
-
-    ret
 }
 
 /// We want to test misalignments here
@@ -301,11 +301,22 @@ mod tests {
         let ret_full = vec![1, 0, 0, u32::MAX - 1, u32::MAX, u32::MAX];
         let ret_part = vec![1, 0, u32::MAX - 1, u32::MAX];
 
-        assert_eq!(mul(&a[..], &b[..]), ret_full);
-        assert_eq!(mul(&a[..2], &b[..2]), ret_part);
-        assert_eq!(mul(&a[..2], &b[1..]), ret_part);
-        assert_eq!(mul(&a[1..], &b[..2]), ret_part);
-        assert_eq!(mul(&a[1..], &b[1..]), ret_part);
+        let mut ret = vec![0u32; 6];
+
+        mul(&mut ret[..], &a[..], &b[..]);
+        assert_eq!(&ret[..], ret_full);
+
+        mul(&mut ret[..4], &a[..2], &b[..2]);
+        assert_eq!(&ret[..4], ret_part);
+
+        mul(&mut ret[..4], &a[..2], &b[1..]);
+        assert_eq!(&ret[..4], ret_part);
+
+        mul(&mut ret[..4], &a[1..], &b[..2]);
+        assert_eq!(&ret[..4], ret_part);
+
+        mul(&mut ret[..4], &a[1..], &b[1..]);
+        assert_eq!(&ret[..4], ret_part);
     }
 
     /// Randomize some tests to compare the result with num-bigint
