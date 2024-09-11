@@ -3,6 +3,8 @@
 use crate::traits::{Digit, DoubleDigit};
 
 #[cfg(feature = "unsafe")]
+use super::u32_ptr_aligned;
+#[cfg(feature = "unsafe")]
 use super::u32_ptrs_aligned_2;
 #[cfg(feature = "unsafe")]
 use super::u32_ptrs_aligned_3;
@@ -286,6 +288,83 @@ unsafe fn mul_u32<T: Digit>(
             single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
         }
         (None, None) => (),
+    }
+}
+
+/// Current implementation of multiplication by a digit. Assumes the last digit of `rhs` is
+/// zero (if it's not, will panic only in debug mode, and overwrite it as if it were zero)
+pub(crate) fn mul_assign_digit<T: Digit>(rhs: &mut [T], b: T) {
+    if rhs.len() <= 1 {
+        return;
+    } else if b == T::ZERO {
+        rhs.fill(T::ZERO);
+    } else if b == T::ONE {
+        return;
+    }
+
+    debug_assert_eq!(*rhs.last().unwrap(), T::ZERO);
+
+    // Specifically for u32 digits, we accelerate by reinterpreting arrays as u64
+    #[cfg(feature = "unsafe")]
+    if let (Some(rhs_cast), Some(b_cast)) = (rhs.to_mut_ptr::<u32>(), b.to_ptr::<u32>()) {
+        // TODO: in this very case, alignment can be fixed via doing one step "manually"
+        if u32_ptr_aligned(rhs_cast) {
+            let size = rhs.len() / 2;
+            let carry: T;
+            unsafe {
+                let c_64 = mul_assign_digit_u64(rhs_cast.cast(), size, *b_cast as u64);
+                let c_32 = c_64 as u32; // Guaranteed to fit, the carry will have the same size as b
+                carry = *T::from_ptr::<u32>(&c_32).unwrap();
+            }
+            schoolbook_mul_assign_digit(&mut rhs[size * 2..], b, carry);
+        } else {
+            schoolbook_mul_assign_digit(rhs, b, T::ZERO);
+        }
+        return;
+    }
+
+    #[cfg(feature = "unsafe")]
+    if let (Some(rhs_cast), Some(b)) = (rhs.to_mut_ptr::<u64>(), b.to_ptr::<u64>()) {
+        unsafe {
+            let carry = mul_assign_digit_u64(rhs_cast, rhs.len(), *b);
+            *rhs_cast.wrapping_add(rhs.len()) = carry
+        }
+        return;
+    }
+
+    schoolbook_mul_assign_digit(rhs, b, T::ZERO);
+}
+
+#[cfg(feature = "unsafe")]
+unsafe fn mul_assign_digit_u64(rhs: *mut u64, rhs_size: usize, b: u64) -> u64 {
+    #[cfg(target_arch = "x86_64")]
+    let (carry, done) = x86_64::single_digit_mul_x86_64(rhs, rhs, b, rhs_size);
+    #[cfg(not(target_arch = "x86_64"))]
+    let (carry, done) = (0, 0);
+
+    schoolbook_mul_assign_digit_u64(rhs.wrapping_add(done), rhs_size - done, b, carry)
+}
+
+#[cfg(feature = "unsafe")]
+unsafe fn schoolbook_mul_assign_digit_u64(
+    mut rhs: *mut u64,
+    mut rhs_size: usize,
+    b: u64,
+    mut carry: u64,
+) -> u64 {
+    while rhs_size > 0 {
+        let full = (*rhs as u128) * (b as u128) + (carry as u128);
+        (*rhs, carry) = full.split();
+        rhs = rhs.offset(1);
+        rhs_size -= 1;
+    }
+    carry
+}
+
+fn schoolbook_mul_assign_digit<T: Digit>(rhs: &mut [T], b: T, mut carry: T) {
+    for a in rhs.iter_mut() {
+        let full = a.to_double() * b.to_double() + carry.to_double();
+        (*a, carry) = full.split();
     }
 }
 

@@ -31,12 +31,18 @@ impl<T: Digit> BigUint<T> {
         super::implem_choices::mul(&mut self.val, a, b);
         self.remove_leading_zeros();
     }
+
+    #[inline]
+    pub(crate) fn mul_assign_digit(&mut self, b: T) {
+        self.val.push(T::ZERO);
+        super::implem_choices::mul_assign_digit(&mut self.val, b);
+        self.remove_leading_zeros();
+    }
 }
 
 impl<T: Digit> MulAssign<T> for BigUint<T> {
     fn mul_assign(&mut self, other: T) {
-        // BAD
-        *self *= BigUint::<T>::new(other);
+        self.mul_assign_digit(other);
     }
 }
 impl<T: Digit> MulAssign<&T> for BigUint<T> {
