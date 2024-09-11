@@ -120,6 +120,35 @@ fn mul_full_test<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn mul_full_test_with_buffer<T: Digit>() {
+    let mut buff = BigInt::<T>::default();
+
+    buff.set_to_mul(
+        &BigInt::<T>::from("4294967295"),
+        &BigInt::<T>::from("4294967295"),
+    );
+    assert_eq!(buff, BigInt::<T>::from("18446744065119617025"));
+
+    buff.set_to_mul(
+        &BigInt::<T>::from("-4294967295"),
+        &BigInt::<T>::from("-4294967295"),
+    );
+    assert_eq!(buff, BigInt::<T>::from("18446744065119617025"));
+
+    buff.set_to_mul(
+        &BigInt::<T>::from("-4294967295"),
+        &BigInt::<T>::from("4294967295"),
+    );
+    assert_eq!(buff, BigInt::<T>::from("-18446744065119617025"));
+
+    buff.set_to_mul(
+        &BigInt::<T>::from("4294967295"),
+        &BigInt::<T>::from("-4294967295"),
+    );
+    assert_eq!(buff, BigInt::<T>::from("-18446744065119617025"));
+}
+
+#[test_with(u32, u64)]
 fn div_rem_1<T: Digit>() {
     let two = T::ONE + T::ONE;
     let three = two + T::ONE;

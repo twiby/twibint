@@ -33,6 +33,12 @@ impl<T: Digit> BigInt<T> {
             sign: val.is_positive(),
         }
     }
+
+    pub(crate) fn with_capacity(mut self, capacity: usize) -> Self {
+        self.uint.set_capacity(capacity);
+        self
+    }
+
     pub fn from_unsigned(val: T) -> BigInt<T> {
         BigInt::<T> {
             uint: BigUint::<T>::new(val),

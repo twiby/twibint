@@ -81,9 +81,10 @@ impl<T: Digit> Mul<&T> for BigUint<T> {
 impl<T: Digit> Mul<&BigUint<T>> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: &BigUint<T>) -> BigUint<T> {
-        let mut ret = vec![T::ZERO; self.val.len() + other.val.len()];
-        super::implem_choices::mul(&mut ret, &self.val, &other.val);
-        ret.into()
+        let mut ret =
+            BigUint::<T>::default().with_capacity((self.val.len() + other.val.len()) * T::NB_BITS);
+        ret._set_to_mul(&self.val, &other.val);
+        ret
     }
 }
 impl<T: Digit> Mul<BigUint<T>> for BigUint<T> {
