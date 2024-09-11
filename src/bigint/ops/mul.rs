@@ -70,14 +70,16 @@ impl<T: Digit> Mul<&T> for &BigInt<T> {
 }
 impl<T: Digit> Mul<T> for BigInt<T> {
     type Output = BigInt<T>;
-    fn mul(self, other: T) -> BigInt<T> {
-        &self * other
+    fn mul(mut self, other: T) -> BigInt<T> {
+        self *= other;
+        self
     }
 }
 impl<T: Digit> Mul<&T> for BigInt<T> {
     type Output = BigInt<T>;
-    fn mul(self, other: &T) -> BigInt<T> {
-        &self * *other
+    fn mul(mut self, other: &T) -> BigInt<T> {
+        self *= other;
+        self
     }
 }
 impl<T: Digit> Mul<&BigInt<T>> for &BigInt<T> {

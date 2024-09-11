@@ -35,6 +35,7 @@ impl<T: Digit> BigUint<T> {
 
 impl<T: Digit> MulAssign<T> for BigUint<T> {
     fn mul_assign(&mut self, other: T) {
+        // BAD
         *self *= BigUint::<T>::new(other);
     }
 }
@@ -56,7 +57,9 @@ impl<T: Digit> MulAssign<BigUint<T>> for BigUint<T> {
 impl<T: Digit> Mul<T> for &BigUint<T> {
     type Output = BigUint<T>;
     fn mul(self, other: T) -> BigUint<T> {
-        self * BigUint::<T>::new(other)
+        let mut ret = self.clone();
+        ret *= other;
+        ret
     }
 }
 impl<T: Digit> Mul<&T> for &BigUint<T> {
@@ -67,14 +70,16 @@ impl<T: Digit> Mul<&T> for &BigUint<T> {
 }
 impl<T: Digit> Mul<T> for BigUint<T> {
     type Output = BigUint<T>;
-    fn mul(self, other: T) -> BigUint<T> {
-        &self * other
+    fn mul(mut self, other: T) -> BigUint<T> {
+        self *= other;
+        self
     }
 }
 impl<T: Digit> Mul<&T> for BigUint<T> {
     type Output = BigUint<T>;
-    fn mul(self, other: &T) -> BigUint<T> {
-        &self * other
+    fn mul(mut self, other: &T) -> BigUint<T> {
+        self *= other;
+        self
     }
 }
 

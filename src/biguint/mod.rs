@@ -41,6 +41,7 @@ impl<T: Digit> BigUint<T> {
     /// let n = BigUint::<u64>::default().with_capacity(100);
     /// assert!(n.capacity() >= 100);
     /// ```
+    #[inline]
     pub fn with_capacity(mut self, capacity: usize) -> BigUint<T> {
         self.set_capacity(capacity);
         self
@@ -54,6 +55,7 @@ impl<T: Digit> BigUint<T> {
     /// n.set_capacity(100);
     /// assert!(n.capacity() >= 100);
     /// ```
+    #[inline]
     pub fn set_capacity(&mut self, capacity: usize) {
         if capacity > 0 {
             let target_length = (capacity - 1) / T::NB_BITS + 1;
@@ -69,6 +71,7 @@ impl<T: Digit> BigUint<T> {
     /// let n = BigUint::<u64>::default().with_capacity(100);
     /// assert!(n.capacity() >= 100);
     /// ```
+    #[inline]
     pub fn capacity(&self) -> usize {
         self.val.capacity() * T::NB_BITS
     }

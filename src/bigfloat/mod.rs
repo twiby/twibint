@@ -29,6 +29,12 @@ impl<T: Digit> BigFloat<T> {
         Self::from(BigUint::<T>::new(val))
     }
 
+    #[inline]
+    pub(crate) fn with_capacity(mut self, capcity: usize) -> Self {
+        self.int.uint.set_capacity(capcity);
+        self
+    }
+
     /// Remove zero-digits at the beginning
     fn simplify(&mut self) {
         let nb_zeros: usize = self

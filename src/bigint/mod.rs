@@ -34,6 +34,7 @@ impl<T: Digit> BigInt<T> {
         }
     }
 
+    #[inline]
     pub(crate) fn with_capacity(mut self, capacity: usize) -> Self {
         self.uint.set_capacity(capacity);
         self
