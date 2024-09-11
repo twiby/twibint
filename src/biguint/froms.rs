@@ -109,11 +109,10 @@ impl<T: Digit> From<BigUint<T>> for String {
 }
 
 impl<T: Digit> From<Vec<T>> for BigUint<T> {
-    fn from(v: Vec<T>) -> BigUint<T> {
-        let v = match v.len() > 0 {
-            true => v,
-            false => vec![T::ZERO],
-        };
+    fn from(mut v: Vec<T>) -> BigUint<T> {
+        if v.len() == 0 {
+            v.push(T::ZERO);
+        }
         let mut ret = BigUint::<T> { val: v };
         ret.remove_leading_zeros();
         ret

@@ -155,6 +155,15 @@ fn shift_coherence<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn digit_mul<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE << 1, T::ONE << 1]);
+
+    let c = a * T::MAX;
+    assert_eq!(c.scale, 0);
+    assert_eq!(c.int.uint.val, vec![T::MAX - T::ONE, T::MAX, T::ONE]);
+}
+
+#[test_with(u32, u64)]
 fn mul<T: Digit>() {
     let a = BigFloat::from(vec![T::ONE, T::ONE]);
     let b = BigFloat::from(vec![T::ONE, T::ONE]);

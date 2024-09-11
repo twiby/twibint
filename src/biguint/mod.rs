@@ -34,6 +34,48 @@ impl<T: Digit> BigUint<T> {
         BigUint { val: vec![val] }
     }
 
+    /// Allocates for at least `capacity` bits, total.
+    ///
+    /// ```
+    /// use twibint::BigUint;
+    /// let n = BigUint::<u64>::default().with_capacity(100);
+    /// assert!(n.capacity() >= 100);
+    /// ```
+    #[inline]
+    pub fn with_capacity(mut self, capacity: usize) -> BigUint<T> {
+        self.set_capacity(capacity);
+        self
+    }
+
+    /// Allocates for at least `capacity` bits, total.
+    ///
+    /// ```
+    /// use twibint::BigUint;
+    /// let mut n = BigUint::<u64>::default();
+    /// n.set_capacity(100);
+    /// assert!(n.capacity() >= 100);
+    /// ```
+    #[inline]
+    pub fn set_capacity(&mut self, capacity: usize) {
+        if capacity > 0 {
+            let target_length = (capacity - 1) / T::NB_BITS + 1;
+            let reserve = target_length.max(self.val.len()) - self.val.len();
+            self.val.reserve(reserve);
+        }
+    }
+
+    /// Returns the number of bits this integer can store without reallocating
+    ///
+    /// ```
+    /// use twibint::BigUint;
+    /// let n = BigUint::<u64>::default().with_capacity(100);
+    /// assert!(n.capacity() >= 100);
+    /// ```
+    #[inline]
+    pub fn capacity(&self) -> usize {
+        self.val.capacity() * T::NB_BITS
+    }
+
     /// Returns the minimal number of bits necessary for a binary representation.
     #[inline]
     pub fn nb_bits(&self) -> usize {

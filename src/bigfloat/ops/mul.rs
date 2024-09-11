@@ -5,9 +5,25 @@ use std::ops::MulAssign;
 
 use crate::traits::Digit;
 
+impl<T: Digit> BigFloat<T> {
+    #[inline]
+    pub(crate) fn _set_to_mul(
+        &mut self,
+        a_sign: bool,
+        a_scale: isize,
+        a: &[T],
+        b_sign: bool,
+        b_scale: isize,
+        b: &[T],
+    ) {
+        self.int._set_to_mul(a_sign, a, b_sign, b);
+        self.scale = a_scale + b_scale;
+    }
+}
+
 impl<T: Digit> MulAssign<T> for BigFloat<T> {
     fn mul_assign(&mut self, other: T) {
-        *self *= BigFloat::<T>::new(other);
+        self.int *= other;
     }
 }
 impl<T: Digit> MulAssign<&T> for BigFloat<T> {
@@ -28,36 +44,47 @@ impl<T: Digit> MulAssign<BigFloat<T>> for BigFloat<T> {
 impl<T: Digit> Mul<T> for &BigFloat<T> {
     type Output = BigFloat<T>;
     fn mul(self, other: T) -> BigFloat<T> {
-        self * BigFloat::<T>::new(other)
+        let mut ret = self.clone();
+        ret *= other;
+        ret
     }
 }
 impl<T: Digit> Mul<&T> for &BigFloat<T> {
     type Output = BigFloat<T>;
     fn mul(self, other: &T) -> BigFloat<T> {
-        self * *other
+        let mut ret = self.clone();
+        ret *= other;
+        ret
     }
 }
 impl<T: Digit> Mul<T> for BigFloat<T> {
     type Output = BigFloat<T>;
-    fn mul(self, other: T) -> BigFloat<T> {
-        &self * other
+    fn mul(mut self, other: T) -> BigFloat<T> {
+        self *= other;
+        self
     }
 }
 impl<T: Digit> Mul<&T> for BigFloat<T> {
     type Output = BigFloat<T>;
-    fn mul(self, other: &T) -> BigFloat<T> {
-        &self * other
+    fn mul(mut self, other: &T) -> BigFloat<T> {
+        self *= other;
+        self
     }
 }
 
 impl<T: Digit> Mul<&BigFloat<T>> for &BigFloat<T> {
     type Output = BigFloat<T>;
     fn mul(self, other: &BigFloat<T>) -> BigFloat<T> {
-        let int = (&self.int * &other.int).into();
-        let mut ret = BigFloat {
-            int,
-            scale: self.scale + other.scale,
-        };
+        let mut ret = BigFloat::default()
+            .with_capacity((self.int.uint.val.len() + other.int.uint.val.len()) * T::NB_BITS);
+        ret._set_to_mul(
+            self.int.sign,
+            self.scale,
+            &self.int.uint.val,
+            other.int.sign,
+            other.scale,
+            &other.int.uint.val,
+        );
         ret.simplify();
         ret
     }

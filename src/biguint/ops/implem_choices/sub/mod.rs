@@ -3,7 +3,7 @@
 use crate::traits::Digit;
 
 #[cfg(feature = "unsafe")]
-use super::u32_ptrs_aligned;
+use super::u32_ptrs_aligned_2;
 #[cfg(feature = "unsafe")]
 use crate::traits::ToPtr;
 
@@ -16,7 +16,7 @@ pub(crate) fn sub_assign<T: Digit>(rhs: &mut [T], lhs: &[T]) -> bool {
     // Specifically for u32 digits, we accelerate by reinterpreting arrays as u64
     #[cfg(feature = "unsafe")]
     if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u32>(), lhs.to_ptr::<u32>()) {
-        if u32_ptrs_aligned(rhs_cast, lhs_cast) {
+        if u32_ptrs_aligned_2(rhs_cast, lhs_cast) {
             // Case pointers correctly aligned: pretend they are u64
             let size = lhs.len() / 2;
             let carry: bool =
