@@ -2,6 +2,7 @@ use crate::BigFloat;
 use crate::BigInt;
 use crate::BigUint;
 
+// TODO: difference between the two is greater than size of d ?
 fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> BigUint<u32> {
     let t2 = -BigFloat::from(241u32) >> 7;
     let t1 = BigFloat::from(361u32) >> 7;
@@ -94,4 +95,71 @@ fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> BigUint<u32> {
         &n.val,
     );
     BigInt::from(temp_1).uint
+}
+
+#[cfg(test)]
+mod tests {
+    /// Randomize some tests to compare the result with num-bigint
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint(n: usize) {
+        use num_bigint::BigUint;
+        use rand::distributions::Standard;
+        use rand::prelude::Distribution;
+        use rand::{thread_rng, Rng};
+
+        fn gen_n_random_values<T>(n: usize) -> Vec<T>
+        where
+            Standard: Distribution<T>,
+        {
+            let mut ret = Vec::<T>::with_capacity(n);
+            for _ in 0..n {
+                ret.push(thread_rng().gen::<T>());
+            }
+            ret
+        }
+
+        println!("STEP {n}");
+
+        const SIZE1: usize = 800;
+        const SIZE2: usize = 1000;
+        let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+        let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
+
+        let vec_a = gen_n_random_values::<u32>(size_1);
+        let vec_b = gen_n_random_values::<u32>(size_2);
+
+        let a = BigUint::new(vec_a.clone());
+        let b = BigUint::new(vec_b.clone());
+        let c = b / a;
+        let should_get = c.to_u32_digits();
+
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        let got_biguint = &biguintb / &biguinta;
+        let got_main = got_biguint.val;
+        let got_schoolbook = super::div(&biguintb, &biguinta).val;
+
+        if should_get != got_main {
+            assert_eq!(got_schoolbook, should_get);
+            assert_eq!(should_get.len(), got_main.len());
+            for (i, (a, b)) in should_get.iter().zip(got_main.iter()).enumerate() {
+                if a > b {
+                    println!("digit {i}, diff {}", a - b);
+                } else if b > a {
+                    println!("digit {i}, diff {}", b - a);
+                }
+            }
+        }
+
+        assert_eq!(should_get, got_main);
+    }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_many() {
+        for n in 0..5 {
+            coherence_with_num_bigint(n);
+        }
+    }
 }
