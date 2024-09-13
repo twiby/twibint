@@ -135,14 +135,14 @@ mod tests {
 
         let biguinta = crate::BigUint::from(vec_a.clone());
         let biguintb = crate::BigUint::from(vec_b.clone());
-        let got_biguint = &biguintb / &biguinta;
-        let got_main = got_biguint.val;
-        let got_schoolbook = super::div(&biguintb, &biguinta).val;
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).val;
 
-        if should_get != got_main {
-            assert_eq!(got_schoolbook, should_get);
-            assert_eq!(should_get.len(), got_main.len());
-            for (i, (a, b)) in should_get.iter().zip(got_main.iter()).enumerate() {
+        if should_get != got_newt_raph {
+            // assert_eq!(got_schoolbook, should_get);
+            assert_eq!(should_get.len(), got_newt_raph.len());
+            for (i, (a, b)) in should_get.iter().zip(got_newt_raph.iter()).enumerate() {
                 if a > b {
                     println!("digit {i}, diff {}", a - b);
                 } else if b > a {
@@ -151,7 +151,7 @@ mod tests {
             }
         }
 
-        assert_eq!(should_get, got_main);
+        assert_eq!(should_get, got_newt_raph);
     }
 
     /// Randomize some tests to compare the result with num-bigint
