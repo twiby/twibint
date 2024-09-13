@@ -20,8 +20,8 @@ mod tests;
 /// specifying by how many digits it is supposed to be shifted
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct BigFloat<T: Digit> {
-    int: BigInt<T>,
-    scale: isize,
+    pub(crate) int: BigInt<T>,
+    pub(crate) scale: isize,
 }
 
 impl<T: Digit> BigFloat<T> {

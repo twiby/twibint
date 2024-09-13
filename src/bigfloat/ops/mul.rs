@@ -7,6 +7,18 @@ use crate::traits::Digit;
 
 impl<T: Digit> BigFloat<T> {
     #[inline]
+    pub(crate) fn set_to_mul(&mut self, a: &BigFloat<T>, b: &BigFloat<T>) {
+        self._set_to_mul(
+            a.int.sign,
+            a.scale,
+            &a.int.uint.val,
+            b.int.sign,
+            b.scale,
+            &b.int.uint.val,
+        );
+    }
+
+    #[inline]
     pub(crate) fn _set_to_mul(
         &mut self,
         a_sign: bool,
