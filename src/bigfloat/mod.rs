@@ -35,6 +35,12 @@ impl<T: Digit> BigFloat<T> {
         self
     }
 
+    /// Copies data from other into self, keeping self's allocation if possible
+    pub fn copy_from(&mut self, other: &Self) {
+        self.int.copy_from(&other.int);
+        self.scale = other.scale;
+    }
+
     /// Remove zero-digits at the beginning
     fn simplify(&mut self) {
         let nb_zeros: usize = self

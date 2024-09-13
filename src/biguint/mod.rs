@@ -114,8 +114,14 @@ impl<T: Digit> BigUint<T> {
     /// Return an iterator on the bits, returning `bool` values. The iterator will
     /// stop as soon as all the infinitely remaining bits are 0
     #[inline]
-    pub fn bits<'a>(&'a self) -> impl DoubleEndedIterator<Item = bool> + 'a {
+    pub fn bits(&self) -> impl DoubleEndedIterator<Item = bool> + '_ {
         (0..self.nb_bits()).map(|b| self.bit(b))
+    }
+
+    /// Copies data from other into self, keeping self's allocation if possible
+    pub fn copy_from(&mut self, other: &Self) {
+        self.val.resize(other.val.len(), T::ZERO);
+        self.val[..].copy_from_slice(&other.val[..]);
     }
 
     /// (private) clean trailing zeros of the representation, if any, after an

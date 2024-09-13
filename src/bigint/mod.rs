@@ -56,6 +56,12 @@ impl<T: Digit> BigInt<T> {
         self.uint != BigUint::default() && !self.sign
     }
 
+    /// Copies data from other into self, keeping self's allocation if possible
+    pub fn copy_from(&mut self, other: &Self) {
+        self.uint.copy_from(&other.uint);
+        self.sign = other.sign;
+    }
+
     pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {
         &self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
     }
