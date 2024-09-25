@@ -206,3 +206,60 @@ fn test_ord_4<T: Digit>() {
     n3.sign = false;
     assert!(n3 > n1);
 }
+
+#[test_with(u32, u64)]
+fn test_round_1<T: Digit>() {
+    let n1 = BigFloat::<T>::from(vec![T::MAX, T::ZERO, T::ONE]);
+
+    let should_get = BigInt::from(vec![T::MAX, T::ZERO, T::ONE]);
+    let a = n1.clone().round();
+    let b = (&n1 << T::NB_BITS).round();
+    let c = (&n1 << 2 * T::NB_BITS).round();
+
+    assert_eq!(should_get, a);
+    assert_eq!(&should_get << T::NB_BITS, b);
+    assert_eq!(&should_get << 2 * T::NB_BITS, c);
+}
+
+#[test_with(u32, u64)]
+fn test_round_2<T: Digit>() {
+    let n1 = BigFloat::<T>::from(vec![T::MAX, T::MAX, T::MAX]) >> 4 * T::NB_BITS;
+
+    let a = n1.round();
+    assert_eq!(BigInt::default(), a);
+}
+
+#[test_with(u32, u64)]
+fn test_round_3<T: Digit>() {
+    let adjust_1 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ONE << (T::NB_BITS - 1)]) >> 3 * T::NB_BITS;
+    let no_adjust_2 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ZERO, T::ONE << (T::NB_BITS - 1)]) >> 3 * T::NB_BITS;
+    let no_adjust_1 = BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ZERO]) >> 3 * T::NB_BITS;
+
+    let a = adjust_1.round();
+    let b = no_adjust_2.round();
+    let c = no_adjust_1.round();
+
+    assert_eq!(a, BigInt::from(vec![T::ONE]));
+    assert_eq!(b, BigInt::from(vec![T::ZERO]));
+    assert_eq!(c, BigInt::from(vec![T::ZERO]));
+}
+
+#[test_with(u32, u64)]
+fn test_round_4<T: Digit>() {
+    let adjust_1 = BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ONE << (T::NB_BITS - 1), T::ONE])
+        >> 3 * T::NB_BITS;
+    let no_adjust_2 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ZERO, T::ONE << (T::NB_BITS - 1), T::ONE])
+            >> 3 * T::NB_BITS;
+    let no_adjust_1 = BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ZERO, T::ONE]) >> 3 * T::NB_BITS;
+
+    let a = adjust_1.round();
+    let b = no_adjust_2.round();
+    let c = no_adjust_1.round();
+
+    assert_eq!(a, BigInt::from(vec![T::TWO]));
+    assert_eq!(b, BigInt::from(vec![T::ONE]));
+    assert_eq!(c, BigInt::from(vec![T::ONE]));
+}

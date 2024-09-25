@@ -106,6 +106,48 @@ impl<T: Digit> BigFloat<T> {
             (false, true) => Ordering::Less,
         }
     }
+
+    /// Consumes this `BigFloat` and returns the closest `BigInt` to it. In case of
+    /// 2 options, returns the lowest
+    pub(crate) fn round(self) -> BigInt<T> {
+        if self.scale >= 0 {
+            let scale = self.scale as usize;
+            let nb_digits = self.int.uint.val.len();
+            let mut int = self.int;
+            int.uint.val.resize(nb_digits + scale, T::ZERO);
+            int.uint.val.copy_within(0..nb_digits, scale);
+            int.uint.val[0..scale].fill(T::ZERO);
+            return int;
+        } else {
+            let scale = (-self.scale) as usize;
+            if scale > self.int.uint.val.len() {
+                let mut int = self.int;
+                int.uint.val.clear();
+                int.uint.val.push(T::ZERO);
+                int.sign = true;
+                return int;
+            } else {
+                let one_half = BigFloat::from(T::ONE) >> 1;
+                let adjust =
+                    match one_half.float_unsigned_ord(self.scale, &self.int.uint.val[0..scale]) {
+                        Ordering::Less => true,
+                        _ => false,
+                    };
+
+                let mut int = self.int;
+                int.uint.val.drain(0..scale);
+                if int.uint.val.is_empty() {
+                    int.uint.val.push(T::ZERO);
+                }
+
+                if adjust {
+                    int.uint += T::ONE;
+                }
+
+                return int;
+            }
+        }
+    }
 }
 
 impl<T: Digit> Default for BigFloat<T> {
