@@ -4,9 +4,9 @@ use crate::traits::{Digit, SignedDigit};
 use crate::BigUint;
 use core::cmp::Ordering;
 
-mod fmt;
-mod froms;
-mod ops;
+pub(crate) mod fmt;
+pub(crate) mod froms;
+pub(crate) mod ops;
 
 #[cfg(test)]
 mod test;

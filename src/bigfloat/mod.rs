@@ -9,6 +9,7 @@ use std::cmp::Ordering;
 
 use crate::traits::Digit;
 
+mod fmt;
 mod froms;
 mod ops;
 

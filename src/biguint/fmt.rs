@@ -58,19 +58,23 @@ impl<T: Digit> std::fmt::Display for BigUint<T> {
     }
 }
 
+pub(crate) fn bin<T: Digit>(val: &[T], f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let mut ret = "".to_string();
+    for c in val.iter().rev() {
+        let binary = &format!("{:b}", c);
+        let mut full_binary = "".to_string();
+        for _ in 0..T::NB_BITS - binary.len() {
+            full_binary.push('0');
+        }
+        full_binary.push_str(&binary);
+        ret.push_str(&full_binary);
+    }
+
+    write!(f, "{}", ret)
+}
+
 impl<T: Digit> std::fmt::Binary for BigUint<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut ret = "".to_string();
-        for c in self.val.iter().rev() {
-            let binary = &format!("{:b}", c);
-            let mut full_binary = "".to_string();
-            for _ in 0..T::NB_BITS - binary.len() {
-                full_binary.push('0');
-            }
-            full_binary.push_str(&binary);
-            ret.push_str(&full_binary);
-        }
-
-        write!(f, "{}", ret)
+        bin(&self.val, f)
     }
 }

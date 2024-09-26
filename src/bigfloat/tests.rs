@@ -263,3 +263,27 @@ fn test_round_4<T: Digit>() {
     assert_eq!(b, BigInt::from(vec![T::ONE]));
     assert_eq!(c, BigInt::from(vec![T::ONE]));
 }
+
+#[test_with(u32, u64)]
+fn test_binary<T: Digit>() {
+    let n1 = -BigFloat::from(vec![T::ONE]);
+    let n2 = &n1 << T::NB_BITS;
+    let n3 = (&n1 >> T::NB_BITS) - T::ONE;
+
+    let mut ret1 = "-".to_string();
+    for _ in 0..T::NB_BITS - 1 {
+        ret1.push('0');
+    }
+    ret1.push('1');
+    let mut ret2 = ret1.clone();
+    for _ in 0..T::NB_BITS {
+        ret2.push('0');
+    }
+    let mut ret3 = ret1.clone();
+    ret3.push('.');
+    ret3.push_str(&ret1[1..]);
+
+    assert_eq!(format!("{:b}", n1), ret1);
+    assert_eq!(format!("{:b}", n2), ret2);
+    assert_eq!(format!("{:b}", n3), ret3);
+}
