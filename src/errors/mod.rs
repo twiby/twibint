@@ -16,7 +16,10 @@ pub enum FromFloatError<T> {
 /// DivisionByZero: might be returned when calling the division
 /// or rem operations
 #[derive(Debug)]
-pub struct DivisionByZero();
+pub enum DivisionError {
+    DivisionByZero,
+    InfiniteNewtonRaphson,
+}
 
 impl<T: std::fmt::Display> std::fmt::Display for FromFloatError<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -41,8 +44,11 @@ impl std::fmt::Display for UnexpectedCharacterError {
     }
 }
 
-impl std::fmt::Display for DivisionByZero {
+impl std::fmt::Display for DivisionError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Attempt at division by zero !")
+        match self {
+            Self::DivisionByZero => write!(f, "Attempt at division by zero !"),
+            Self::InfiniteNewtonRaphson => write!(f, "Could not converge to the division result."),
+        }
     }
 }

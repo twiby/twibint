@@ -1,10 +1,10 @@
+use crate::errors::DivisionError;
 use crate::traits::Digit;
+use crate::traits::DivisionResult;
 use crate::BigFloat;
-use crate::BigInt;
 use crate::BigUint;
 
 mod multiplication_helper;
-use multiplication_helper::OpArgument;
 use multiplication_helper::SmartMul;
 
 struct NewtonRaphsonMachine<'a, T: Digit> {
@@ -15,8 +15,10 @@ struct NewtonRaphsonMachine<'a, T: Digit> {
     precision_bits: usize,
     precision_digits: usize,
 
-    d: BigFloat<T>, // actually the opposite of d
+    // the opposite of d shifted to be between 0.5 and 1
+    d_mod: BigFloat<T>,
     n: &'a BigUint<T>,
+    d: &'a BigUint<T>,
 }
 
 impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
@@ -25,17 +27,17 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
         let t1 = BigFloat::from(BigUint::<T>::from(361u32)) >> 7;
 
         let precision_bits = n.nb_bits() - d.nb_bits();
-        let precision_digits = (precision_bits - 1) / 32 + 3;
+        let precision_digits = (precision_bits - 1) / T::NB_BITS + 2;
 
         // All needed allocations
         let shift = d.nb_bits();
-        let d = BigFloat::from(d.clone()) >> shift;
-        let mut x = BigFloat::default().with_capacity((precision_digits * 2 + 2) * 32);
-        let temp_1 = BigFloat::default().with_capacity((precision_digits * 3 + 2) * 32);
-        let temp_2 = BigFloat::default().with_capacity((precision_digits * 2 + 2) * 32);
+        let d_mod = BigFloat::from(d.clone()) >> shift;
+        let mut x = BigFloat::default().with_capacity((precision_digits * 2 + 2) * T::NB_BITS);
+        let temp_1 = BigFloat::default().with_capacity((precision_digits * 3 + 2) * T::NB_BITS);
+        let temp_2 = BigFloat::default().with_capacity((precision_digits * 2 + 2) * T::NB_BITS);
 
         // Initial "guess"
-        x.set_to_mul(&d, &t2);
+        x.set_to_mul(&d_mod, &t2);
         x += t1;
 
         Self {
@@ -44,70 +46,103 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
             x,
             temp_1,
             temp_2,
-            d: -d,
+            d_mod: -d_mod,
             n,
+            d,
             shift,
         }
     }
 
-    /// This is based on the formula X(n+1) = X(n) + X(n) * (1 - D*X(n))
-    /// Technically a little more expensive, but allows computing the error term,
-    /// which in turn allows to compute the number of steps necessary.
-    fn first_step_and_compute_nb_steps(&mut self) -> usize {
-        // First step is done like this to access initial error
-        self.temp_1.smart_mul(&self.d, self.msd(&self.x));
-        self.temp_1 += T::ONE;
-        self.temp_2
-            .smart_mul(self.msd(&self.x), self.msd(&self.temp_1));
-        self.x.smart_add_assign(self.msd(&self.temp_2));
+    fn precision(&self) -> usize {
+        -(self.temp_1.scale * (T::NB_BITS as isize) + (self.temp_1.int.uint.nb_bits() as isize))
+            as usize
+    }
 
-        // compute number of steps
-        let mut init_depth =
-            -(self.temp_1.scale * 32 + (self.temp_1.int.uint.nb_bits() as isize)) as usize;
+    fn run_newton_raphson_steps(&mut self) -> DivisionResult<()> {
+        self.step_1();
+
+        // compute theoretical number of steps
+        let mut init_depth = self.precision();
         let mut nb_steps = 0;
         while init_depth < self.precision_bits {
             nb_steps += 1;
             init_depth <<= 1;
         }
 
-        nb_steps - 1 // First step is already done
+        // Actual newton-raphson remaining steps
+        let mut counter = 0;
+        while self.precision() <= self.precision_bits {
+            counter += 1;
+            if counter > nb_steps * 2 {
+                return Err(DivisionError::InfiniteNewtonRaphson);
+            }
+
+            self.step_1();
+        }
+
+        Ok(())
+    }
+
+    /// This is based on the formula X(n+1) = X(n) + X(n) * (1 - D*X(n))
+    ///
+    /// Using this version has an additional addition but reduces the size
+    /// of the first buffer significantly, while allowing to measure the
+    /// precision at each step.
+    fn step_1(&mut self) {
+        self.temp_1.smart_mul(&self.d_mod, &self.x);
+        self.temp_1 += T::ONE;
+        self.temp_1.round_nb_digits(self.precision_digits);
+        self.temp_2.smart_mul(&self.x, &self.temp_1);
+        self.temp_2.round_nb_digits(self.precision_digits);
+        self.x.smart_add_assign(&self.temp_2);
+        self.x.round_nb_digits(self.precision_digits);
     }
 
     /// This is based on the formula X(n+1) = X(n) * (2 - D * X(n))
-    fn run_newton_raphson_steps(&mut self, nb_steps: usize) {
-        // Actual newton-raphson remaining steps
-        for _ in 0..nb_steps {
-            self.temp_1.smart_mul(&self.d, self.msd(&self.x));
-            self.temp_1 += T::TWO;
-            self.temp_2
-                .smart_mul(self.msd(&self.x), self.msd(&self.temp_1));
-            // TODO: this copy could be avoided with a cyclic buffer
-            self.x.copy_from(&self.temp_2);
-        }
+    #[allow(unused)]
+    fn step_2(&mut self) {
+        self.temp_1.smart_mul(&self.d_mod, &self.x);
+        self.temp_1 += T::TWO;
+        self.temp_1.round_nb_digits(self.precision_digits);
+        self.temp_2.smart_mul(&self.x, &self.temp_1);
+        self.temp_2.round_nb_digits(self.precision_digits);
+        // TODO: this copy could be avoided with a cyclic buffer
+        self.x.copy_from(&self.temp_2);
     }
 
     /// Finish off by computing the actual division
     /// Final stage, after x has converge
     fn perform_division(mut self) -> BigUint<T> {
+        debug_assert!(self.x.int.sign);
         self.x >>= self.shift;
-        self.temp_1.smart_mul(self.msd(&self.x), self.msd(self.n));
-        BigInt::from(self.temp_1).uint
+        self.temp_1.smart_mul(&self.x, self.n);
+
+        self.temp_1.round();
+        let mut quot = self.temp_1.int.uint;
+
+        self.temp_2.smart_mul(&quot, self.d);
+        if &self.temp_2 > self.n {
+            quot -= T::ONE;
+        }
+
+        quot
     }
 
-    fn compute(mut self) -> BigUint<T> {
-        let nb_steps = self.first_step_and_compute_nb_steps();
-        self.run_newton_raphson_steps(nb_steps);
-        self.perform_division()
+    fn compute(mut self) -> DivisionResult<BigUint<T>> {
+        self.run_newton_raphson_steps()?;
+        let ret = self.perform_division();
+        Ok(ret)
     }
 
     /// Takes the relevent digits of an argument
     #[inline]
+    #[allow(unused)]
     fn msd<N: SmartMul<T>>(&self, float: &'a N) -> N::MSDRep<'a> {
         float.msd(self.precision_digits)
     }
 }
 
-fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> BigUint<u32> {
+fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> DivisionResult<BigUint<u32>> {
     NewtonRaphsonMachine::new(n, d).compute()
 }
 
@@ -138,6 +173,7 @@ mod tests {
     fn coherence_with_num_bigint_random(n: usize, size_1: usize, size_2: usize) {
         assert!(size_1 < size_2);
         println!("STEP {n}");
+        println!("coherence_with_num_bigint_random");
 
         let vec_a = gen_n_random_values::<u32>(size_1);
         let vec_b = gen_n_random_values::<u32>(size_2);
@@ -151,7 +187,7 @@ mod tests {
         let biguintb = crate::BigUint::from(vec_b.clone());
         // let got_biguint = &biguintb / &biguinta;
         // let got_main = got_biguint.val;
-        let got_newt_raph = super::div(&biguintb, &biguinta).val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
 
         assert_digits_equal(&should_get, &got_newt_raph);
     }
@@ -159,6 +195,7 @@ mod tests {
     fn coherence_with_num_bigint_exact(n: usize, size_1: usize, size_2: usize) {
         assert!(size_1 < size_2);
         println!("STEP {n}");
+        println!("coherence_with_num_bigint_exact");
         let vec_a = gen_n_random_values::<u32>(size_1);
         let vec_c = gen_n_random_values::<u32>(size_2 - size_1);
 
@@ -172,8 +209,88 @@ mod tests {
         let biguintb = crate::BigUint::from(vec_b.clone());
         // let got_biguint = &biguintb / &biguinta;
         // let got_main = got_biguint.val;
-        let got_newt_raph = super::div(&biguintb, &biguinta).val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
 
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
+    fn coherence_with_num_bigint_exact_p1(n: usize, size_1: usize, size_2: usize) {
+        assert!(size_1 < size_2);
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_exact");
+        let vec_a = gen_n_random_values::<u32>(size_1);
+        let vec_c = gen_n_random_values::<u32>(size_2 - size_1);
+
+        let a = BigUint::new(vec_a.clone()) + 1u32;
+        let c = BigUint::new(vec_c.clone());
+        let b = &a * &c;
+        let should_get = c.to_u32_digits();
+        let vec_b = b.to_u32_digits();
+
+        let biguinta = crate::BigUint::from(vec_a.clone()) + 1;
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
+    fn coherence_with_num_bigint_exact_m1(n: usize, size_1: usize, size_2: usize) {
+        assert!(size_1 < size_2);
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_exact");
+        let vec_a = gen_n_random_values::<u32>(size_1);
+        let vec_c = gen_n_random_values::<u32>(size_2 - size_1);
+
+        let a = BigUint::new(vec_a.clone()) - 1u32;
+        let c = BigUint::new(vec_c.clone());
+        let b = &a * &c;
+        let should_get = c.to_u32_digits();
+        let vec_b = b.to_u32_digits();
+
+        let biguinta = crate::BigUint::from(vec_a.clone()) - 1;
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
+    fn coherence_with_num_bigint_exact_scalar(n: usize, size: usize) {
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_exact_scalar");
+        let vec_a = gen_n_random_values::<u32>(size);
+        let vec_c = gen_n_random_values::<u32>(1);
+
+        let a = BigUint::new(vec_a.clone());
+        let c = BigUint::new(vec_c.clone());
+        let b = &a * &c;
+        let should_get = c.to_u32_digits();
+        let vec_b = b.to_u32_digits();
+
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
+    fn coherence_with_num_bigint_same(n: usize, size: usize) {
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_same");
+        let vec_a = gen_n_random_values::<u32>(size);
+
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_a.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        let should_get = vec![1];
         assert_digits_equal(&should_get, &got_newt_raph);
     }
 
@@ -184,7 +301,9 @@ mod tests {
 
             let should_get_int = crate::BigInt::from(lhs.clone());
             let newt_raph_int = crate::BigInt::from(rhs.clone());
-            println!("Error: {}", (should_get_int - newt_raph_int).to_string());
+            let error = (should_get_int - newt_raph_int).to_string();
+            println!("Error: {}", error.to_string());
+            // assert!(error == "0" || error == "-1");
 
             for (i, (a, b)) in lhs.iter().zip(rhs.iter()).enumerate() {
                 if a > b {
@@ -212,9 +331,25 @@ mod tests {
             coherence_with_num_bigint_random(n, size_0, size_1);
             coherence_with_num_bigint_random(n, size_1, size_2);
 
-            // coherence_with_num_bigint_exact(n, size_0, size_2);
-            // coherence_with_num_bigint_exact(n, size_0, size_1);
-            // coherence_with_num_bigint_exact(n, size_1, size_2);
+            coherence_with_num_bigint_exact(n, size_0, size_2);
+            coherence_with_num_bigint_exact(n, size_0, size_1);
+            coherence_with_num_bigint_exact(n, size_1, size_2);
+
+            coherence_with_num_bigint_exact_p1(n, size_0, size_2);
+            coherence_with_num_bigint_exact_p1(n, size_0, size_1);
+            coherence_with_num_bigint_exact_p1(n, size_1, size_2);
+
+            coherence_with_num_bigint_exact_m1(n, size_0, size_2);
+            coherence_with_num_bigint_exact_m1(n, size_0, size_1);
+            coherence_with_num_bigint_exact_m1(n, size_1, size_2);
+
+            coherence_with_num_bigint_exact_scalar(n, size_0);
+            coherence_with_num_bigint_exact_scalar(n, size_1);
+            coherence_with_num_bigint_exact_scalar(n, size_2);
+
+            coherence_with_num_bigint_same(n, size_0);
+            coherence_with_num_bigint_same(n, size_1);
+            coherence_with_num_bigint_same(n, size_2);
         }
     }
 }

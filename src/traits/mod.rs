@@ -3,9 +3,9 @@
 /// Defines the Digit trait: which defines types that can be used as a digit
 mod digit;
 pub use digit::Digit;
-pub(crate) use digit::{DoubleDigit, SignedDigit};
 #[cfg(feature = "unsafe")]
 pub(crate) use digit::ToPtr;
+pub(crate) use digit::{DoubleDigit, SignedDigit};
 
 /// Defines traits and tests to ensure coherence and completeness of
 /// binary op coverage
@@ -14,7 +14,7 @@ mod check_implementations;
 
 /// Shorthand for the result of a division or modulo operation.
 /// Is an error in case of a division by zero.
-pub type DivisionResult<T> = Result<T, crate::errors::DivisionByZero>;
+pub type DivisionResult<T> = Result<T, crate::errors::DivisionError>;
 
 /// Trait encapsulating the division and modulo operation as one, as
 /// they often go hand in hand.

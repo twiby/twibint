@@ -1,10 +1,10 @@
-use crate::errors::DivisionByZero;
+use crate::traits::DivisionResult;
 use crate::traits::{Digit, RemDiv, TrueDiv};
 use crate::BigUint;
 
 #[cfg(target_endian = "little")]
 impl<T: Digit> TrueDiv<BigUint<T>> for BigUint<T> {
-    fn truediv(&self, n2: &BigUint<T>) -> Result<f64, DivisionByZero> {
+    fn truediv(&self, n2: &BigUint<T>) -> DivisionResult<f64> {
         // Compute exponent, biased by 52
         let mut exponent: i64 = 53i64 - (self.nb_bits() as i64) + (n2.nb_bits() as i64);
 

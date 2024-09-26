@@ -1,7 +1,7 @@
 use core::cmp::Ordering;
 use core::ops::{Div, DivAssign, Rem, RemAssign};
 
-use crate::errors::DivisionByZero;
+use crate::errors::DivisionError;
 use crate::traits::{Digit, DivisionResult, DoubleDigit, RemDiv};
 use crate::BigUint;
 
@@ -12,7 +12,7 @@ impl<T: Digit> RemDiv<T> for BigUint<T> {
     type RemOutput = T;
     fn rem_div(&self, other: &T) -> DivisionResult<(BigUint<T>, T)> {
         if *other == T::ZERO {
-            return Err(DivisionByZero());
+            return Err(DivisionError::DivisionByZero);
         }
 
         let other_64 = other.to_double();
@@ -35,7 +35,7 @@ impl<T: Digit> RemDiv<T> for BigUint<T> {
 
     fn rem(&self, other: &T) -> DivisionResult<T> {
         if *other == T::ZERO {
-            return Err(DivisionByZero());
+            return Err(DivisionError::DivisionByZero);
         }
         let other_64 = other.to_double();
         let mut msb = T::Double::ZERO;
@@ -127,7 +127,7 @@ impl<T: Digit> RemDiv<BigUint<T>> for BigUint<T> {
     fn rem_div(&self, other: &BigUint<T>) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
         // Division by zero error
         if other == &BigUint::<T>::new(T::ZERO) {
-            return Err(DivisionByZero());
+            return Err(DivisionError::DivisionByZero);
         }
 
         // Early exit

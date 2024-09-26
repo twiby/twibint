@@ -55,6 +55,11 @@ impl<T: Digit> BigFloat<T> {
             .unwrap();
         self.scale += nb_zeros as isize;
         self.int.uint.val.drain(..nb_zeros);
+
+        if self.int.uint.val.is_empty() {
+            self.int.uint.val.push(T::ZERO);
+            self.scale = 0;
+        }
     }
 
     #[inline]
@@ -108,46 +113,50 @@ impl<T: Digit> BigFloat<T> {
         }
     }
 
-    /// Consumes this `BigFloat` and returns the closest `BigInt` to it. In case of
-    /// 2 options, returns the lowest
-    pub(crate) fn round(self) -> BigInt<T> {
+    /// rount to the closest integer
+    pub(crate) fn round(&mut self) {
         if self.scale >= 0 {
-            let scale = self.scale as usize;
-            let nb_digits = self.int.uint.val.len();
-            let mut int = self.int;
-            int.uint.val.resize(nb_digits + scale, T::ZERO);
-            int.uint.val.copy_within(0..nb_digits, scale);
-            int.uint.val[0..scale].fill(T::ZERO);
-            return int;
-        } else {
-            let scale = (-self.scale) as usize;
-            if scale > self.int.uint.val.len() {
-                let mut int = self.int;
-                int.uint.val.clear();
-                int.uint.val.push(T::ZERO);
-                int.sign = true;
-                return int;
-            } else {
-                let one_half = BigFloat::from(T::ONE) >> 1;
-                let adjust =
-                    match one_half.float_unsigned_ord(self.scale, &self.int.uint.val[0..scale]) {
-                        Ordering::Less => true,
-                        _ => false,
-                    };
-
-                let mut int = self.int;
-                int.uint.val.drain(0..scale);
-                if int.uint.val.is_empty() {
-                    int.uint.val.push(T::ZERO);
-                }
-
-                if adjust {
-                    int.uint += T::ONE;
-                }
-
-                return int;
-            }
+            return;
         }
+
+        let scale = (-self.scale) as usize;
+        if scale > self.int.uint.val.len() {
+            self.int.uint.val.clear();
+            self.int.uint.val.push(T::ZERO);
+            self.int.sign = true;
+            self.scale = 0;
+            return;
+        }
+
+        let one_half = BigFloat::from(T::ONE) >> 1;
+        let adjust = match one_half.float_unsigned_ord(self.scale, &self.int.uint.val[0..scale]) {
+            Ordering::Less => true,
+            _ => false,
+        };
+
+        self.int.uint.val.drain(0..scale);
+        if self.int.uint.val.is_empty() {
+            self.int.uint.val.push(T::ZERO);
+        }
+
+        if adjust {
+            self.int.uint += T::ONE;
+        }
+
+        self.scale = 0;
+        self.simplify();
+    }
+
+    pub(crate) fn round_nb_digits(&mut self, nb_digits: usize) {
+        if nb_digits >= self.int.uint.val.len() {
+            return;
+        }
+        let scale = self.scale + (self.int.uint.val.len() as isize) - (nb_digits as isize);
+        debug_assert!(scale < 0);
+        let scale = (-scale) as usize;
+        *self <<= scale * T::NB_BITS;
+        self.round();
+        *self >>= scale * T::NB_BITS;
     }
 }
 

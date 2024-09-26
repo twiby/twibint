@@ -1,7 +1,7 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use crate::errors::{DivisionByZero, FromFloatError, UnexpectedCharacterError};
+use crate::errors::{DivisionError, FromFloatError, UnexpectedCharacterError};
 
 /// Trait to get the name of an error type as a string, as a static method. \
 /// Must be implemented for any error type that will flow into Python.
@@ -26,9 +26,9 @@ impl ErrorTypeToString for UnexpectedCharacterError {
     }
 }
 /// Get the `DivisionByZero` name as a string
-impl ErrorTypeToString for DivisionByZero {
+impl ErrorTypeToString for DivisionError {
     fn str() -> String {
-        "DivisionByZero: ".to_string()
+        "DivisionError: ".to_string()
     }
 }
 /// Get the `FromFloatError` name as a string
@@ -41,13 +41,13 @@ impl<T> ErrorTypeToString for FromFloatError<T> {
 /// Converts a `UnexpectedCharacterError` to a `ValueError`
 impl From<UnexpectedCharacterError> for pyo3::PyErr {
     fn from(e: UnexpectedCharacterError) -> Self {
-        py_value_error::<DivisionByZero>(&e.to_string())
+        py_value_error::<DivisionError>(&e.to_string())
     }
 }
 /// Converts a `DivisionByZero` to a `ValueError`
-impl From<DivisionByZero> for pyo3::PyErr {
-    fn from(e: DivisionByZero) -> Self {
-        py_value_error::<DivisionByZero>(&e.to_string())
+impl From<DivisionError> for pyo3::PyErr {
+    fn from(e: DivisionError) -> Self {
+        py_value_error::<DivisionError>(&e.to_string())
     }
 }
 /// Converts a `FromFloatError` to a `ValueError`
