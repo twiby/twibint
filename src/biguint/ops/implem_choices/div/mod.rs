@@ -23,11 +23,13 @@ struct NewtonRaphsonMachine<'a, T: Digit> {
 
 impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
     fn new(n: &'a BigUint<T>, d: &'a BigUint<T>) -> Self {
+        assert!(n >= d);
+
         let t2 = -BigFloat::from(BigUint::<T>::from(241u32)) >> 7;
         let t1 = BigFloat::from(BigUint::<T>::from(361u32)) >> 7;
 
         let precision_bits = n.nb_bits() - d.nb_bits();
-        let precision_digits = (precision_bits - 1) / T::NB_BITS + 2;
+        let precision_digits = precision_bits / T::NB_BITS + 2;
 
         // All needed allocations
         let shift = d.nb_bits();
@@ -54,6 +56,10 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
     }
 
     fn precision(&self) -> usize {
+        if self.temp_1 == BigFloat::default() {
+            return usize::MAX;
+        }
+
         -(self.temp_1.scale * (T::NB_BITS as isize) + (self.temp_1.int.uint.nb_bits() as isize))
             as usize
     }
@@ -118,7 +124,8 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
         self.temp_1.smart_mul(&self.x, self.n);
 
         self.temp_1.round();
-        let mut quot = self.temp_1.int.uint;
+        let scale = self.temp_1.scale.max(0) as usize;
+        let mut quot = self.temp_1.int.uint << scale * T::NB_BITS;
 
         self.temp_2.smart_mul(&quot, self.d);
         if &self.temp_2 > self.n {
@@ -142,17 +149,19 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
     }
 }
 
-fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> DivisionResult<BigUint<u32>> {
+fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
     NewtonRaphsonMachine::new(n, d).compute()
 }
 
 #[cfg(test)]
 #[cfg(feature = "rand")]
 mod tests {
+    use crate::traits::Digit;
     use num_bigint::BigUint;
     use rand::distributions::Standard;
     use rand::prelude::Distribution;
     use rand::{thread_rng, Rng};
+    use typed_test_gen::test_with;
 
     const SIZE0: usize = 100;
     const SIZE1: usize = 800;
@@ -295,14 +304,14 @@ mod tests {
         assert_digits_equal(&should_get, &got_newt_raph);
     }
 
-    fn coherence_with_num_bigint_based(n: usize, size_1: usize, size_2: usize) {
+    fn coherence_with_num_bigint_based<T: Digit>(n: usize, size_1: usize, size_2: usize) {
         println!("STEP {n}");
         println!("coherence_with_num_bigint_based");
         assert!(size_1 < size_2);
-        let mut vec_a = vec![0u32; size_1];
-        let mut vec_b = vec![0u32; size_2];
-        *vec_a.last_mut().unwrap() = 1;
-        *vec_b.last_mut().unwrap() = 1;
+        let mut vec_a = vec![T::ZERO; size_1];
+        let mut vec_b = vec![T::ZERO; size_2];
+        *vec_a.last_mut().unwrap() = T::ONE;
+        *vec_b.last_mut().unwrap() = T::ONE;
 
         let biguinta = crate::BigUint::from(vec_a.clone());
         let biguintb = crate::BigUint::from(vec_b.clone());
@@ -310,28 +319,32 @@ mod tests {
         // let got_main = got_biguint.val;
         let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
 
-        let mut should_get = vec![0; size_2 - size_1];
-        *should_get.last_mut().unwrap() = 1;
+        let mut should_get = vec![T::ZERO; size_2 - size_1 + 1];
+        *should_get.last_mut().unwrap() = T::ONE;
         assert_digits_equal(&should_get, &got_newt_raph);
     }
 
-    fn coherence_with_num_bigint_9(n: usize, size: usize) {
+    fn coherence_with_num_bigint_9<T: Digit>(n: usize, size: usize) {
         println!("STEP {n}");
         println!("coherence_with_num_bigint_9");
-        let vec_a = vec![u32::MAX; size];
-        let vec_b = vec![u32::MAX];
+        let vec_a = vec![T::MAX];
+        let vec_b = vec![T::MAX; size];
 
         let biguinta = crate::BigUint::from(vec_a.clone());
-        let biguintb = crate::BigUint::from(vec_b.clone());
+        let mut biguintb = crate::BigUint::from(vec_b.clone());
         // let got_biguint = &biguintb / &biguinta;
         // let got_main = got_biguint.val;
         let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
 
-        let should_get = vec![1; size];
+        let should_get = vec![T::ONE; size];
+        assert_digits_equal(&should_get, &got_newt_raph);
+
+        biguintb += T::ONE;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
         assert_digits_equal(&should_get, &got_newt_raph);
     }
 
-    fn assert_digits_equal(lhs: &Vec<u32>, rhs: &Vec<u32>) {
+    fn assert_digits_equal<T: Digit>(lhs: &Vec<T>, rhs: &Vec<T>) {
         if lhs != rhs {
             // assert_eq!(got_schoolbook, lhs);
             assert_eq!(lhs.len(), rhs.len());
@@ -344,9 +357,9 @@ mod tests {
 
             for (i, (a, b)) in lhs.iter().zip(rhs.iter()).enumerate() {
                 if a > b {
-                    println!("digit {i}, diff {}", a - b);
+                    println!("digit {i}, diff {}", *a - *b);
                 } else if b > a {
-                    println!("digit {i}, diff {}", b - a);
+                    println!("digit {i}, diff {}", *b - *a);
                 }
             }
         }
@@ -445,32 +458,30 @@ mod tests {
     }
 
     /// Randomize some tests to compare the result with num-bigint
-    #[test]
-    #[ignore]
+    #[test_with(u32, u64)]
     #[cfg(feature = "rand")]
-    fn coherence_with_num_bigint_5() {
+    fn coherence_with_num_bigint_5<T: Digit>() {
         for n in 0..100 {
             let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
             let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
             let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
-            coherence_with_num_bigint_based(n, size_0, size_2);
-            coherence_with_num_bigint_based(n, size_0, size_1);
-            coherence_with_num_bigint_based(n, size_1, size_2);
+            coherence_with_num_bigint_based::<T>(n, size_0, size_2);
+            coherence_with_num_bigint_based::<T>(n, size_0, size_1);
+            coherence_with_num_bigint_based::<T>(n, size_1, size_2);
         }
     }
 
-    // /// Randomize some tests to compare the result with num-bigint
-    // #[test]
-    // #[ignore]
-    // #[cfg(feature = "rand")]
-    // fn coherence_with_num_bigint_6() {
-    //     for n in 0..100 {
-    //         let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
-    //         let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
-    //         let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
-    //         coherence_with_num_bigint_9(n, size_0);
-    //         coherence_with_num_bigint_9(n, size_1);
-    //         coherence_with_num_bigint_9(n, size_2);
-    //     }
-    // }
+    /// Randomize some tests to compare the result with num-bigint
+    #[test_with(u32, u64)]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_6<T: Digit>() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
+            coherence_with_num_bigint_9::<T>(n, size_0);
+            coherence_with_num_bigint_9::<T>(n, size_1);
+            coherence_with_num_bigint_9::<T>(n, size_2);
+        }
+    }
 }
