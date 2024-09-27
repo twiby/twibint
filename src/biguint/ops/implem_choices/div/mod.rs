@@ -147,6 +147,7 @@ fn div(n: &BigUint<u32>, d: &BigUint<u32>) -> DivisionResult<BigUint<u32>> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "rand")]
 mod tests {
     use num_bigint::BigUint;
     use rand::distributions::Standard;
@@ -294,6 +295,42 @@ mod tests {
         assert_digits_equal(&should_get, &got_newt_raph);
     }
 
+    fn coherence_with_num_bigint_based(n: usize, size_1: usize, size_2: usize) {
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_based");
+        assert!(size_1 < size_2);
+        let mut vec_a = vec![0u32; size_1];
+        let mut vec_b = vec![0u32; size_2];
+        *vec_a.last_mut().unwrap() = 1;
+        *vec_b.last_mut().unwrap() = 1;
+
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        let mut should_get = vec![0; size_2 - size_1];
+        *should_get.last_mut().unwrap() = 1;
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
+    fn coherence_with_num_bigint_9(n: usize, size: usize) {
+        println!("STEP {n}");
+        println!("coherence_with_num_bigint_9");
+        let vec_a = vec![u32::MAX; size];
+        let vec_b = vec![u32::MAX];
+
+        let biguinta = crate::BigUint::from(vec_a.clone());
+        let biguintb = crate::BigUint::from(vec_b.clone());
+        // let got_biguint = &biguintb / &biguinta;
+        // let got_main = got_biguint.val;
+        let got_newt_raph = super::div(&biguintb, &biguinta).unwrap().val;
+
+        let should_get = vec![1; size];
+        assert_digits_equal(&should_get, &got_newt_raph);
+    }
+
     fn assert_digits_equal(lhs: &Vec<u32>, rhs: &Vec<u32>) {
         if lhs != rhs {
             // assert_eq!(got_schoolbook, lhs);
@@ -330,26 +367,110 @@ mod tests {
             coherence_with_num_bigint_random(n, size_0, size_2);
             coherence_with_num_bigint_random(n, size_0, size_1);
             coherence_with_num_bigint_random(n, size_1, size_2);
+        }
+    }
 
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_0() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
             coherence_with_num_bigint_exact(n, size_0, size_2);
             coherence_with_num_bigint_exact(n, size_0, size_1);
             coherence_with_num_bigint_exact(n, size_1, size_2);
+        }
+    }
 
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_1() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
             coherence_with_num_bigint_exact_p1(n, size_0, size_2);
             coherence_with_num_bigint_exact_p1(n, size_0, size_1);
             coherence_with_num_bigint_exact_p1(n, size_1, size_2);
+        }
+    }
 
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_2() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
             coherence_with_num_bigint_exact_m1(n, size_0, size_2);
             coherence_with_num_bigint_exact_m1(n, size_0, size_1);
             coherence_with_num_bigint_exact_m1(n, size_1, size_2);
+        }
+    }
 
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_3() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
             coherence_with_num_bigint_exact_scalar(n, size_0);
             coherence_with_num_bigint_exact_scalar(n, size_1);
             coherence_with_num_bigint_exact_scalar(n, size_2);
+        }
+    }
 
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    fn coherence_with_num_bigint_4() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
             coherence_with_num_bigint_same(n, size_0);
             coherence_with_num_bigint_same(n, size_1);
             coherence_with_num_bigint_same(n, size_2);
         }
     }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[test]
+    #[ignore]
+    #[cfg(feature = "rand")]
+    fn coherence_with_num_bigint_5() {
+        for n in 0..100 {
+            let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+            let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+            let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
+            coherence_with_num_bigint_based(n, size_0, size_2);
+            coherence_with_num_bigint_based(n, size_0, size_1);
+            coherence_with_num_bigint_based(n, size_1, size_2);
+        }
+    }
+
+    // /// Randomize some tests to compare the result with num-bigint
+    // #[test]
+    // #[ignore]
+    // #[cfg(feature = "rand")]
+    // fn coherence_with_num_bigint_6() {
+    //     for n in 0..100 {
+    //         let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
+    //         let size_1 = SIZE1 + rand::thread_rng().gen_range(0..100);
+    //         let size_2 = SIZE2 + rand::thread_rng().gen_range(0..100);
+    //         coherence_with_num_bigint_9(n, size_0);
+    //         coherence_with_num_bigint_9(n, size_1);
+    //         coherence_with_num_bigint_9(n, size_2);
+    //     }
+    // }
 }
