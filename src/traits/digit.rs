@@ -100,6 +100,8 @@ where
     fn trailing_zeros(self) -> u32;
     fn decomposition_from_u32(n: u32) -> Vec<Self>;
     fn decomposition_from_u64(n: u64) -> Vec<Self>;
+    fn write_bytes(self, buff: &mut [u8]);
+    fn read_bytes(buff: &[u8]) -> Self;
 }
 pub trait DoubleDigit:
     Copy
@@ -156,6 +158,14 @@ impl Digit for u32 {
     fn decomposition_from_u64(n: u64) -> Vec<Self> {
         vec![n as u32, (n >> 32) as u32]
     }
+    fn write_bytes(self, buff: &mut [u8]) {
+        for (i, b) in self.to_le_bytes().into_iter().enumerate() {
+            buff[i] = b;
+        }
+    }
+    fn read_bytes(buff: &[u8]) -> Self {
+        Self::from_le_bytes(buff.try_into().unwrap())
+    }
 }
 impl DoubleDigit for u64 {
     const ZERO: u64 = 0u64;
@@ -207,6 +217,14 @@ impl Digit for u64 {
     }
     fn decomposition_from_u64(n: u64) -> Vec<Self> {
         vec![n]
+    }
+    fn write_bytes(self, buff: &mut [u8]) {
+        for (i, b) in self.to_le_bytes().into_iter().enumerate() {
+            buff[i] = b;
+        }
+    }
+    fn read_bytes(buff: &[u8]) -> Self {
+        Self::from_le_bytes(buff.try_into().unwrap())
     }
 }
 impl DoubleDigit for u128 {
