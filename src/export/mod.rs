@@ -18,8 +18,6 @@ mod v1;
 
 // To make a new version: increment TWIBINT_FILE_VERSION
 // add enum variant to Version, and implement VersionInfoData on it
-// Depending on the situation, you may need to create a new Header struct
-// (though in some cases you may be able to "pack" more stuff in a header)
 //
 // Ideally the Imported and Exported enum should only grow, but not change
 
@@ -36,6 +34,9 @@ fn get_version(file: &mut File) -> Result<Version> {
 }
 
 /// Empty struct meant to carry export/import implementations
+struct VersionInfo<const VERSION: VersionUint>;
+
+/// enum enabling choosing from a version at runtime
 enum Version {
     V1(VersionInfo<1>),
 }
@@ -50,10 +51,7 @@ impl TryFrom<VersionUint> for Version {
     }
 }
 
-struct VersionInfo<const VERSION: VersionUint>;
-
 trait VersionInfoData {
-    type Header;
     const LINE_SIZE_IN_BYTES: usize;
     const VERSION: u16;
     fn export_digits_to_binary_file<T: Digit>(file: &mut File, digits: &[T]) -> Result<usize> {
@@ -96,8 +94,6 @@ trait VersionInfoData {
         Ok(digits)
     }
 
-    fn read_header(file: &mut File) -> Result<Self::Header>;
-    fn write_header(file: &mut File, header: Self::Header) -> Result<()>;
     fn import<T: Digit>(self, file: &mut File) -> Result<Imported<T>>;
     fn export<T: Digit>(file: &mut File, exported: Exported<T>) -> Result<()>;
 }

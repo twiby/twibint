@@ -17,24 +17,17 @@ use crate::export::VersionInfoData;
 
 /// Carries the header data of a file. New versions of this struct
 /// might be created as versions change (keeping old ones)
-mod header {
-    use crate::export::VersionUint;
 
-    #[derive(Debug, Copy, Clone)]
-    pub struct Header1 {
-        // LINE 1
-        pub version: VersionUint,
-        // LINE 2
-        pub lines: u32,
-    }
+#[derive(Debug, Copy, Clone)]
+struct Header {
+    // LINE 1
+    version: VersionUint,
+    // LINE 2
+    lines: u32,
 }
 
-impl VersionInfoData for VersionInfo<1> {
-    type Header = header::Header1;
-    const LINE_SIZE_IN_BYTES: usize = 16;
-    const VERSION: VersionUint = 1;
-
-    fn read_header(file: &mut File) -> Result<header::Header1> {
+impl VersionInfo<1> {
+    fn read_header(file: &mut File) -> Result<Header> {
         let mut buff = [0u8; Self::LINE_SIZE_IN_BYTES];
 
         file.read_exact(&mut buff)?;
@@ -46,10 +39,10 @@ impl VersionInfoData for VersionInfo<1> {
         file.read_exact(&mut buff)?;
         let lines = u32::from_le_bytes(buff[..4].try_into().unwrap());
 
-        Ok(header::Header1 { version, lines })
+        Ok(Header { version, lines })
     }
 
-    fn write_header(file: &mut File, header: header::Header1) -> Result<()> {
+    fn write_header(file: &mut File, header: Header) -> Result<()> {
         let mut buff = [0u8; Self::LINE_SIZE_IN_BYTES];
 
         let version_bytes: [u8; 2] = header.version.to_le_bytes();
@@ -63,6 +56,11 @@ impl VersionInfoData for VersionInfo<1> {
 
         Ok(())
     }
+}
+
+impl VersionInfoData for VersionInfo<1> {
+    const LINE_SIZE_IN_BYTES: usize = 16;
+    const VERSION: VersionUint = 1;
 
     fn import<T: Digit>(self, file: &mut File) -> Result<Imported<T>> {
         let header = Self::read_header(file)?;
@@ -76,7 +74,7 @@ impl VersionInfoData for VersionInfo<1> {
                 file.seek(SeekFrom::Start(0))?;
 
                 // Write fake header
-                let mut header = header::Header1 {
+                let mut header = Header {
                     version: Self::VERSION,
                     lines: 0,
                 };
