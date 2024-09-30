@@ -14,6 +14,8 @@ use std::io::Write;
 use std::io::Result;
 use std::path::Path;
 
+mod v1;
+
 // To make a new version: increment TWIBINT_FILE_VERSION
 // add enum variant to Version, and implement VersionInfoData on it
 // Depending on the situation, you may need to create a new Header struct
@@ -49,16 +51,6 @@ impl TryFrom<VersionUint> for Version {
 }
 
 struct VersionInfo<const VERSION: VersionUint>;
-
-/// Carries the header data of a file. New versions of this struct
-/// might be created as versions change (keeping old ones)
-#[derive(Debug, Copy, Clone)]
-struct Header1 {
-    // LINE 1
-    version: VersionUint,
-    // LINE 2
-    lines: u32,
-}
 
 trait VersionInfoData {
     type Header;
@@ -108,75 +100,6 @@ trait VersionInfoData {
     fn write_header(file: &mut File, header: Self::Header) -> Result<()>;
     fn import<T: Digit>(self, file: &mut File) -> Result<Imported<T>>;
     fn export<T: Digit>(file: &mut File, exported: Exported<T>) -> Result<()>;
-}
-
-impl VersionInfoData for VersionInfo<1> {
-    type Header = Header1;
-    const LINE_SIZE_IN_BYTES: usize = 16;
-    const VERSION: VersionUint = 1;
-
-    fn read_header(file: &mut File) -> Result<Header1> {
-        let mut buff = [0u8; Self::LINE_SIZE_IN_BYTES];
-
-        file.read_exact(&mut buff)?;
-        let version = VersionUint::from_le_bytes(buff[..2].try_into().unwrap());
-        if version != Self::VERSION {
-            return Err(Error::new(ErrorKind::InvalidData, "Version not recognized"));
-        }
-
-        file.read_exact(&mut buff)?;
-        let lines = u32::from_le_bytes(buff[..4].try_into().unwrap());
-
-        Ok(Header1 { version, lines })
-    }
-
-    fn write_header(file: &mut File, header: Header1) -> Result<()> {
-        let mut buff = [0u8; Self::LINE_SIZE_IN_BYTES];
-
-        let version_bytes: [u8; 2] = header.version.to_le_bytes();
-        file.write(&version_bytes)?;
-        file.write(&buff[2..])?;
-
-        buff.fill(0);
-        let lines_bytes: [u8; 4] = header.lines.to_le_bytes();
-        file.write(&lines_bytes)?;
-        file.write(&buff[4..])?;
-
-        Ok(())
-    }
-
-    fn import<T: Digit>(self, file: &mut File) -> Result<Imported<T>> {
-        let header = Self::read_header(file)?;
-        let digits = Self::import_binary_file_to_digits(file, header.lines.try_into().unwrap())?;
-        Ok(Imported::Uint(BigUint::from(digits)))
-    }
-
-    fn export<T: Digit>(file: &mut File, exported: Exported<T>) -> Result<()> {
-        match exported {
-            Exported::Uint(uint) => {
-                file.seek(SeekFrom::Start(0))?;
-
-                // Write fake header
-                let mut header = Header1 {
-                    version: Self::VERSION,
-                    lines: 0,
-                };
-                Self::write_header(file, header)?;
-
-                // Write digits
-                let lines = Self::export_digits_to_binary_file(file, &uint.val)?;
-
-                // Write actual header
-                file.seek(SeekFrom::Start(0))?;
-                header.lines = lines
-                    .try_into()
-                    .expect("number of lines should not exceed a u32 in size !");
-                Self::write_header(file, header)?;
-
-                Ok(())
-            }
-        }
-    }
 }
 
 enum Exported<'a, T: Digit> {
@@ -230,7 +153,7 @@ mod tests {
     use typed_test_gen::test_with;
 
     fn file_name<T: Digit>(n: &str) -> String {
-        let mut name = "src/export/test_files/".to_string();
+        let mut name = "test_file_".to_string();
         name.push_str(n);
         name.push_str(&T::NB_BITS.to_string());
         name.push_str(".txt");
@@ -250,12 +173,12 @@ mod tests {
     #[test]
     fn write_file() {
         {
-            let mut file = File::create("src/export/test_files/write_file.txt").unwrap();
+            let mut file = File::create("test_file_write_file.txt").unwrap();
             file.write(b"Hello, world!").unwrap();
         }
 
         {
-            let mut file = File::open("src/export/test_files/write_file.txt").unwrap();
+            let mut file = File::open("test_file_write_file.txt").unwrap();
             let mut contents = String::new();
             file.read_to_string(&mut contents).unwrap();
             assert_eq!(contents, "Hello, world!");

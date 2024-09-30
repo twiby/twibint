@@ -22,3 +22,6 @@ __pycache__
 .*
 tests/__pycache__
 /dist
+
+# Test files generated
+test_file_*
