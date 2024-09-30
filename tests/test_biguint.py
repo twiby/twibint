@@ -1,5 +1,5 @@
 from math import log
-from twibint import BigInt, BigUint, gen_random_biguint
+from twibint import BigInt, BigUint, gen_random_biguint, read_from_file
 
 A = 123456789101112131415161718
 B = 987654321919293949596979899
@@ -112,3 +112,9 @@ def test_bool():
 def test_rand():
 	C = gen_random_biguint(100)
 	assert True
+
+def test_read_write():
+	C = gen_random_biguint(100)
+	C.write_to_file("test_file_py_biguint")
+	D = read_from_file("test_file_py_biguint")
+	assert C == D

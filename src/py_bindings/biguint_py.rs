@@ -292,4 +292,9 @@ impl BigUint {
     pub fn __len__(&self) -> usize {
         self.0.val.len()
     }
+
+    /// Python bindings for exporting integer to file
+    pub fn write_to_file(&self, path: String) -> PyResult<()> {
+        Ok(self.0.write_to_file(&path)?)
+    }
 }

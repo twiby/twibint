@@ -234,7 +234,6 @@ mod tests {
         for v in 1..TWIBINT_FILE_VERSION + 1 {
             let mut name = "src/export/test_files/fact_500_v".to_string();
             name.push_str(&v.to_string());
-            name.push_str(".txt");
             match Imported::<T>::read_from_file(name).unwrap() {
                 Imported::Uint(n2) => assert_eq!(n, n2),
             }
