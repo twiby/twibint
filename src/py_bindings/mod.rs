@@ -9,6 +9,7 @@
 //! For the low-level binding, this module is using the pyo3 framework,
 //! which does much of the heavy lifting.
 
+use crate::Imported;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyInt, PyString};
@@ -102,6 +103,13 @@ fn gen_random_biguint(n: usize) -> BigUint {
     BigUint(crate::gen_random_biguint(n * 64))
 }
 
+#[pyfunction]
+fn read_from_file(path: String, py: Python<'_>) -> PyResult<PyObject> {
+    Ok(match Imported::<u64>::read_from_file(&path)? {
+        Imported::Uint(uint) => BigUint(uint).into_py(py),
+    })
+}
+
 /// Declaring our Python module.
 ///
 /// This module will contain 2 classes: \
@@ -116,5 +124,6 @@ fn twibint(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<BigInt>()?;
     #[cfg(feature = "rand")]
     m.add_function(wrap_pyfunction!(gen_random_biguint, m)?)?;
+    m.add_function(wrap_pyfunction!(read_from_file, m)?)?;
     return Ok(());
 }
