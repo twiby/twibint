@@ -43,6 +43,8 @@ fn main() {
     assert!(ret < next_pow2);
     assert!(ret_p1 > next_pow2);
 
-    println!("nb bits {:?}", sqrt_2_approx.nb_bits() - 1);
-    println!("sqrt 2 bits {:b}", sqrt_2_approx);
+    println!("nb bits computed {:?}", sqrt_2_approx.nb_bits() - 1);
+    sqrt_2_approx
+        .write_to_file("examples_sqrt_2.tw")
+        .expect("Exporting failed");
 }

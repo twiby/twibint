@@ -234,9 +234,26 @@ mod tests {
         for v in 1..TWIBINT_FILE_VERSION + 1 {
             let mut name = "src/export/test_files/fact_500_v".to_string();
             name.push_str(&v.to_string());
+            name.push_str(".tw");
             match Imported::<T>::read_from_file(name).unwrap() {
                 Imported::Uint(n2) => assert_eq!(n, n2),
             }
+        }
+    }
+
+    #[test_with(u32, u64)]
+    fn read_sqrt_2<T: Digit>() {
+        for v in 1..TWIBINT_FILE_VERSION + 1 {
+            let mut name = "src/export/test_files/sqrt_2_v".to_string();
+            name.push_str(&v.to_string());
+            name.push_str(".tw");
+            let n = match Imported::<T>::read_from_file(name).unwrap() {
+                Imported::Uint(n) => n,
+            };
+
+            let next_pow_2 = BigUint::<T>::from(1u32) << n.nb_bits();
+            assert!(n < next_pow_2);
+            assert!((&n + T::ONE) * (&n + T::ONE) > next_pow_2);
         }
     }
 }
