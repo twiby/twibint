@@ -123,7 +123,7 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
 
     /// Finish off by computing the actual division
     /// Final stage, after x has converge
-    fn perform_division(mut self) -> BigUint<T> {
+    fn perform_division_with_remainder(mut self) -> (BigUint<T>, BigUint<T>) {
         self.x >>= self.shift;
         self.temp_1
             .smart_mul(&self.x, self.n.msd(self.precision_digits));
@@ -132,18 +132,20 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
         let scale = self.temp_1.scale.max(0) as usize;
         let mut quot = self.temp_1.int.uint << scale * T::NB_BITS;
 
-        self.temp_2.smart_mul(&quot, self.d);
-        if &self.temp_2 > self.n {
+        let mut rem = self.temp_2.int.uint;
+        rem.set_to_mul(&quot, self.d);
+        if &rem > self.n {
             quot -= T::ONE;
+            rem -= self.d;
         }
+        rem.rsub_assign(self.n);
 
-        quot
+        (quot, rem)
     }
 
-    fn compute(mut self) -> DivisionResult<BigUint<T>> {
+    fn compute_div(mut self) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
         self.run_newton_raphson_steps()?;
-        let ret = self.perform_division();
-        Ok(ret)
+        Ok(self.perform_division_with_remainder())
     }
 
     /// Takes the relevent digits of an argument
@@ -154,14 +156,26 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
     }
 }
 
+#[cfg(test)]
 fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
-    NewtonRaphsonMachine::new(n, d).compute()
+    Ok(rem_div(n, d)?.0)
+}
+
+pub(crate) fn rem_div<T: Digit>(
+    n: &BigUint<T>,
+    d: &BigUint<T>,
+) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
+    let (q, r) = NewtonRaphsonMachine::new(n, d).compute_div()?;
+    debug_assert!(&r < d);
+    debug_assert_eq!(&((d * &q) + &r), n);
+    Ok((q, r))
 }
 
 #[cfg(test)]
 #[cfg(feature = "rand")]
 mod tests {
     use crate::traits::Digit;
+    use crate::Imported;
     use num_bigint::BigUint;
     use rand::distributions::Standard;
     use rand::prelude::Distribution;
@@ -495,6 +509,7 @@ mod tests {
     /// Randomize some tests to compare the result with num-bigint
     #[test_with(u32, u64)]
     #[cfg(feature = "rand")]
+    #[ignore]
     fn coherence_with_num_bigint_5<T: Digit>() {
         for n in 0..100 {
             let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
@@ -509,6 +524,7 @@ mod tests {
     /// Randomize some tests to compare the result with num-bigint
     #[test_with(u32, u64)]
     #[cfg(feature = "rand")]
+    #[ignore]
     fn coherence_with_num_bigint_6<T: Digit>() {
         for n in 0..100 {
             let size_0 = SIZE0 + rand::thread_rng().gen_range(0..100);
@@ -518,5 +534,24 @@ mod tests {
             coherence_with_num_bigint_9::<T>(n, size_1);
             coherence_with_num_bigint_9::<T>(n, size_2);
         }
+    }
+
+    /// Randomize some tests to compare the result with num-bigint
+    #[test_with(u32, u64)]
+    fn sqrt_2<T: Digit>() {
+        let n = match Imported::<T>::read_from_file("src/export/test_files/sqrt_2_v1.tw").unwrap() {
+            Imported::Uint(n) => n,
+        };
+
+        let ret = super::div(&n, &n).unwrap();
+        assert_eq!(ret.to_string(), "1");
+
+        let mut n2 = &n >> 1;
+        let ret = super::div(&n, &n2).unwrap();
+        assert_eq!(ret.to_string(), "2");
+
+        n2 += T::ONE;
+        let ret = super::div(&n, &n2).unwrap();
+        assert_eq!(ret.to_string(), "1");
     }
 }

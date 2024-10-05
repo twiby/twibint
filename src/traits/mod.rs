@@ -29,12 +29,12 @@ pub trait RemDiv<T> {
     /// Performs the divison operation. Default implemention is to call rem_div
     /// and return the relevant item.
     fn div(&self, other: &T) -> DivisionResult<Self::DivOutput> {
-        self.rem_div(other).map(|ret| ret.0)
+        Ok(self.rem_div(other)?.0)
     }
     /// Performs the modulo operation. Default implemention is to call rem_div
     /// and return the relevant item.
     fn rem(&self, other: &T) -> DivisionResult<Self::RemOutput> {
-        self.rem_div(other).map(|ret| ret.1)
+        Ok(self.rem_div(other)?.1)
     }
 }
 
