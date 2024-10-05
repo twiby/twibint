@@ -27,4 +27,4 @@ optional = true
 
 [dev-dependencies]
 num-bigint = "0.4"
-typed_test_gen = "0.1"
+typed_test_gen = "0.1.2"

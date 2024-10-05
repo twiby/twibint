@@ -9,6 +9,7 @@ use std::cmp::Ordering;
 
 use crate::traits::Digit;
 
+mod fmt;
 mod froms;
 mod ops;
 
@@ -20,8 +21,8 @@ mod tests;
 /// specifying by how many digits it is supposed to be shifted
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct BigFloat<T: Digit> {
-    int: BigInt<T>,
-    scale: isize,
+    pub(crate) int: BigInt<T>,
+    pub(crate) scale: isize,
 }
 
 impl<T: Digit> BigFloat<T> {
@@ -33,6 +34,12 @@ impl<T: Digit> BigFloat<T> {
     pub(crate) fn with_capacity(mut self, capcity: usize) -> Self {
         self.int.uint.set_capacity(capcity);
         self
+    }
+
+    /// Copies data from other into self, keeping self's allocation if possible
+    pub fn copy_from(&mut self, other: &Self) {
+        self.int.copy_from(&other.int);
+        self.scale = other.scale;
     }
 
     /// Remove zero-digits at the beginning
@@ -48,6 +55,11 @@ impl<T: Digit> BigFloat<T> {
             .unwrap();
         self.scale += nb_zeros as isize;
         self.int.uint.val.drain(..nb_zeros);
+
+        if self.int.uint.val.is_empty() {
+            self.int.uint.val.push(T::ZERO);
+            self.scale = 0;
+        }
     }
 
     #[inline]
@@ -99,6 +111,52 @@ impl<T: Digit> BigFloat<T> {
             (true, false) => Ordering::Greater,
             (false, true) => Ordering::Less,
         }
+    }
+
+    /// rount to the closest integer
+    pub(crate) fn round(&mut self) {
+        if self.scale >= 0 {
+            return;
+        }
+
+        let scale = (-self.scale) as usize;
+        if scale > self.int.uint.val.len() {
+            self.int.uint.val.clear();
+            self.int.uint.val.push(T::ZERO);
+            self.int.sign = true;
+            self.scale = 0;
+            return;
+        }
+
+        let one_half = BigFloat::from(T::ONE) >> 1;
+        let adjust = match one_half.float_unsigned_ord(self.scale, &self.int.uint.val[0..scale]) {
+            Ordering::Less => true,
+            _ => false,
+        };
+
+        self.int.uint.val.drain(0..scale);
+        if self.int.uint.val.is_empty() {
+            self.int.uint.val.push(T::ZERO);
+        }
+
+        if adjust {
+            self.int.uint += T::ONE;
+        }
+
+        self.scale = 0;
+        self.simplify();
+    }
+
+    pub(crate) fn round_nb_digits(&mut self, nb_digits: usize) {
+        if nb_digits >= self.int.uint.val.len() {
+            return;
+        }
+        let scale = self.scale + (self.int.uint.val.len() as isize) - (nb_digits as isize);
+        debug_assert!(scale < 0);
+        let scale = (-scale) as usize;
+        *self <<= scale * T::NB_BITS;
+        self.round();
+        *self >>= scale * T::NB_BITS;
     }
 }
 

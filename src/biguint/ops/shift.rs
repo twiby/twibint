@@ -26,9 +26,11 @@ impl<T: Digit> ShlAssign<usize> for BigUint<T> {
 
         // First apply whole word shifts (by decreasing b by steps of T::NB_BITS)
         let u32_shifts = b / T::NB_BITS;
-        let mut temp = vec![T::ZERO; u32_shifts];
-        temp.append(&mut self.val);
-        self.val = temp;
+
+        let prev_len = self.val.len();
+        self.val.resize(self.val.len() + u32_shifts, T::ZERO);
+        self.val.copy_within(..prev_len, u32_shifts);
+        self.val[..u32_shifts].fill(T::ZERO);
         b %= T::NB_BITS;
 
         // Early exit
@@ -103,5 +105,24 @@ impl<T: Digit> ShrAssign<usize> for BigUint<T> {
 
         // shift by less than 32
         small_shr_assign(self, b % T::NB_BITS)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::traits::Digit;
+    use crate::BigUint;
+
+    use typed_test_gen::test_with;
+
+    #[test_with(u32, u64)]
+    fn capacity_conservation<T: Digit>() {
+        let mut a = BigUint::from(vec![T::MAX, T::MAX]).with_capacity(T::NB_BITS * 10);
+
+        a >>= 5;
+        assert_eq!(a.capacity(), T::NB_BITS * 10);
+
+        a <<= 12;
+        assert_eq!(a.capacity(), T::NB_BITS * 10);
     }
 }

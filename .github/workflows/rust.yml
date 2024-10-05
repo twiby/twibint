@@ -41,8 +41,10 @@ jobs:
         cargo build --target x86_64-apple-darwin
     - name: Run tests
       run: cargo test --verbose
-    - name: Run tests with rand feature
-      run: cargo test --verbose --features=rand
+    - name: Run all tests with all features + ignored
+      run: |
+        cargo test --release --verbose --all-features
+        cargo test --release --verbose --all-features -- --ignored
     - name: Run tests with no features (safe Rust)
       run: cargo test --verbose --no-default-features
     - name: Set up Python

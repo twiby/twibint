@@ -4,9 +4,9 @@ use crate::traits::{Digit, SignedDigit};
 use crate::BigUint;
 use core::cmp::Ordering;
 
-mod fmt;
-mod froms;
-mod ops;
+pub(crate) mod fmt;
+pub(crate) mod froms;
+pub(crate) mod ops;
 
 #[cfg(test)]
 mod test;
@@ -54,6 +54,12 @@ impl<T: Digit> BigInt<T> {
     /// Returns true if the integer is strictly lower than 0, false otherwise
     pub fn is_sign_negative(&self) -> bool {
         self.uint != BigUint::default() && !self.sign
+    }
+
+    /// Copies data from other into self, keeping self's allocation if possible
+    pub fn copy_from(&mut self, other: &Self) {
+        self.uint.copy_from(&other.uint);
+        self.sign = other.sign;
     }
 
     pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {

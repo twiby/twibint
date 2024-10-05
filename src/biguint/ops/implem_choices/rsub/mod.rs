@@ -13,6 +13,8 @@ mod x86_64;
 
 /// Assumes len(rhs) == len(lhs)
 pub(crate) fn rsub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], rhs_len: usize) -> bool {
+    debug_assert_eq!(rhs.len(), lhs.len());
+
     // Specifically for u32 digits, we accelerate by reinterpreting arrays as u64
     #[cfg(feature = "unsafe")]
     if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u32>(), lhs.to_ptr::<u32>()) {
@@ -35,7 +37,6 @@ pub(crate) fn rsub_assign<T: Digit>(rhs: &mut [T], lhs: &[T], rhs_len: usize) ->
 
     #[cfg(feature = "unsafe")]
     if let (Some(rhs_cast), Some(lhs_cast)) = (rhs.to_mut_ptr::<u64>(), lhs.to_ptr::<u64>()) {
-        debug_assert_eq!(rhs.len(), lhs.len());
         return unsafe { rsub_assign_u64(rhs_cast, rhs_len, lhs_cast, lhs.len()) };
     }
 
@@ -53,7 +54,7 @@ unsafe fn rsub_assign_u64(
     debug_assert!(rhs_size <= lhs_size);
 
     #[cfg(target_arch = "x86_64")]
-    let (carry, done) = x86_64::schoolbook_rsub_assign_x86_64(rhs, lhs, lhs_size);
+    let (carry, done) = x86_64::schoolbook_rsub_assign_x86_64(rhs, lhs, rhs_size);
     #[cfg(not(target_arch = "x86_64"))]
     let (carry, done) = (false, 0);
 

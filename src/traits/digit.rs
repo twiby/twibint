@@ -88,6 +88,7 @@ where
 {
     const ZERO: Self;
     const ONE: Self;
+    const TWO: Self;
     const MAX: Self;
     const NB_BITS: usize;
     type Double: DoubleDigit<Single = Self>;
@@ -130,6 +131,7 @@ pub trait SignedDigit: Copy {
 impl Digit for u32 {
     const ZERO: u32 = 0u32;
     const ONE: u32 = 1u32;
+    const TWO: u32 = 2u32;
     const MAX: u32 = u32::MAX;
     const NB_BITS: usize = 32;
     type Double = u64;
@@ -190,6 +192,7 @@ impl SignedDigit for i32 {
 impl Digit for u64 {
     const ZERO: u64 = 0u64;
     const ONE: u64 = 1u64;
+    const TWO: u64 = 2u64;
     const MAX: u64 = u64::MAX;
     const NB_BITS: usize = 64;
     type Double = u128;

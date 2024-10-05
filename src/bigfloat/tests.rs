@@ -206,3 +206,89 @@ fn test_ord_4<T: Digit>() {
     n3.sign = false;
     assert!(n3 > n1);
 }
+
+#[test_with(u32, u64)]
+fn test_round_1<T: Digit>() {
+    let n1 = BigFloat::<T>::from(vec![T::MAX, T::ZERO, T::ONE]);
+
+    let should_get = BigFloat::from(BigInt::from(vec![T::MAX, T::ZERO, T::ONE]));
+    let mut a = n1.clone();
+    let mut b = &n1 << T::NB_BITS;
+    let mut c = &n1 << 2 * T::NB_BITS;
+    a.round();
+    b.round();
+    c.round();
+
+    assert_eq!(should_get, a);
+    assert_eq!(&should_get << T::NB_BITS, b);
+    assert_eq!(&should_get << 2 * T::NB_BITS, c);
+}
+
+#[test_with(u32, u64)]
+fn test_round_2<T: Digit>() {
+    let mut n1 = BigFloat::<T>::from(vec![T::MAX, T::MAX, T::MAX]) >> 4 * T::NB_BITS;
+    n1.round();
+
+    assert_eq!(BigInt::default(), n1);
+}
+
+#[test_with(u32, u64)]
+fn test_round_3<T: Digit>() {
+    let mut adjust_1 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ONE << (T::NB_BITS - 1)]) >> 3 * T::NB_BITS;
+    let mut no_adjust_2 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ZERO, T::ONE << (T::NB_BITS - 1)]) >> 3 * T::NB_BITS;
+    let mut no_adjust_1 = BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ZERO]) >> 3 * T::NB_BITS;
+
+    adjust_1.round();
+    no_adjust_2.round();
+    no_adjust_1.round();
+
+    assert_eq!(adjust_1, BigFloat::from(BigInt::from(vec![T::ONE])));
+    assert_eq!(no_adjust_2, BigFloat::from(BigInt::from(vec![T::ZERO])));
+    assert_eq!(no_adjust_1, BigFloat::from(BigInt::from(vec![T::ZERO])));
+}
+
+#[test_with(u32, u64)]
+fn test_round_4<T: Digit>() {
+    let mut adjust_1 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ONE << (T::NB_BITS - 1), T::ONE])
+            >> 3 * T::NB_BITS;
+    let mut no_adjust_2 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ZERO, T::ONE << (T::NB_BITS - 1), T::ONE])
+            >> 3 * T::NB_BITS;
+    let mut no_adjust_1 =
+        BigFloat::<T>::from(vec![T::ZERO, T::ONE, T::ZERO, T::ONE]) >> 3 * T::NB_BITS;
+
+    adjust_1.round();
+    no_adjust_2.round();
+    no_adjust_1.round();
+
+    assert_eq!(adjust_1, BigFloat::from(BigInt::from(vec![T::TWO])));
+    assert_eq!(no_adjust_2, BigFloat::from(BigInt::from(vec![T::ONE])));
+    assert_eq!(no_adjust_1, BigFloat::from(BigInt::from(vec![T::ONE])));
+}
+
+#[test_with(u32, u64)]
+fn test_binary<T: Digit>() {
+    let n1 = -BigFloat::from(vec![T::ONE]);
+    let n2 = &n1 << T::NB_BITS;
+    let n3 = (&n1 >> T::NB_BITS) - T::ONE;
+
+    let mut ret1 = "-".to_string();
+    for _ in 0..T::NB_BITS - 1 {
+        ret1.push('0');
+    }
+    ret1.push('1');
+    let mut ret2 = ret1.clone();
+    for _ in 0..T::NB_BITS {
+        ret2.push('0');
+    }
+    let mut ret3 = ret1.clone();
+    ret3.push('.');
+    ret3.push_str(&ret1[1..]);
+
+    assert_eq!(format!("{:b}", n1), ret1);
+    assert_eq!(format!("{:b}", n2), ret2);
+    assert_eq!(format!("{:b}", n3), ret3);
+}

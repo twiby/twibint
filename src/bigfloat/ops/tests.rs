@@ -378,6 +378,26 @@ fn add_3<T: Digit>() {
 }
 
 #[test_with(u32, u64)]
+fn add_4<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE; 48]) << 2016 * T::NB_BITS;
+    let b = BigFloat::from(vec![T::ONE]);
+
+    let c = a + b;
+
+    let mut ret = vec![];
+    ret.push(T::ONE);
+    for _ in 0..2015 {
+        ret.push(T::ZERO);
+    }
+    for _ in 0..48 {
+        ret.push(T::ONE);
+    }
+    let ret = BigFloat::from(ret);
+
+    assert_eq!(ret, c);
+}
+
+#[test_with(u32, u64)]
 fn sub<T: Digit>() {
     let a = BigFloat::from(vec![T::MAX, T::MAX]);
     let b = BigFloat::from(vec![T::ONE]);
@@ -426,4 +446,24 @@ fn sub3<T: Digit>() {
         vec![T::MAX, T::ZERO, T::MAX - T::ONE, T::MAX - T::ONE, T::MAX]
     );
     assert_eq!(c1.scale, -3);
+}
+
+#[test_with(u32, u64)]
+fn sub4<T: Digit>() {
+    let a = BigFloat::from(vec![T::ONE; 986]) << 46 * T::NB_BITS;
+    let b = BigFloat::from(vec![T::ONE]);
+
+    let c = a - b;
+
+    let mut ret = vec![];
+    for _ in 0..46 {
+        ret.push(T::MAX);
+    }
+    ret.push(T::ZERO);
+    for _ in 0..985 {
+        ret.push(T::ONE);
+    }
+
+    let ret = BigFloat::from(ret);
+    assert_eq!(ret, c);
 }

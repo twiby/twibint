@@ -44,8 +44,7 @@ impl<T: Digit> BigFloat<T> {
         assert!(scale_diff > 0);
         let scale_diff = scale_diff as usize;
 
-        let target_length = self.int.uint.val.len().max(scale_diff + other.len()) + 1;
-        let shift = target_length - self.int.uint.val.len();
+        let shift = scale_diff;
         self.int <<= shift * T::NB_BITS;
         self.scale -= shift as isize;
         self.unsigned_add_bigger_scale(other_scale, other);
@@ -76,8 +75,7 @@ impl<T: Digit> BigFloat<T> {
         assert!(scale_diff > 0);
         let scale_diff = scale_diff as usize;
 
-        let target_length = self.int.uint.val.len().max(scale_diff + other.len()) + 1;
-        let shift = target_length - self.int.uint.val.len();
+        let shift = scale_diff;
         self.int <<= shift * T::NB_BITS;
         self.scale -= shift as isize;
         self.unsigned_sub_bigger_scale(other_scale, other);
@@ -126,8 +124,7 @@ impl<T: Digit> BigFloat<T> {
         assert!(scale_diff > 0);
         let scale_diff = scale_diff as usize;
 
-        let target_length = self.int.uint.val.len().max(scale_diff + other.len()) + 1;
-        let shift = target_length - self.int.uint.val.len();
+        let shift = scale_diff;
         self.int <<= shift * T::NB_BITS;
         self.scale -= shift as isize;
         self.unsigned_rsub_bigger_scale(other_scale, other);
@@ -252,11 +249,7 @@ impl<T: Digit> AddAssign<BigFloat<T>> for BigFloat<T> {
 }
 impl<T: Digit> AddAssign<&BigFloat<T>> for BigFloat<T> {
     fn add_assign(&mut self, other: &BigFloat<T>) {
-        println!("ADD ASSIGN");
-        println!("{:?}", self);
-        println!("{:?}", other);
         self.add_assign(other.int.sign, other.scale, &other.int.uint.val);
-        println!("{:?}", self);
     }
 }
 

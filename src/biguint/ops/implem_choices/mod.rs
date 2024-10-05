@@ -1,9 +1,11 @@
 mod add;
+mod div;
 mod mul;
 mod rsub;
 mod sub;
 
 pub(crate) use add::add_assign;
+pub(crate) use div::div;
 pub(crate) use mul::mul;
 pub(crate) use mul::mul_assign_digit;
 pub(crate) use rsub::rsub_assign;

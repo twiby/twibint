@@ -44,13 +44,21 @@ impl<T: Digit> std::fmt::Display for BigInt<T> {
     }
 }
 
+pub(crate) fn bin<T: Digit>(
+    sign: bool,
+    val: &[T],
+    f: &mut std::fmt::Formatter<'_>,
+) -> std::fmt::Result {
+    let ret = match sign {
+        true => "".to_string(),
+        false => "-".to_string(),
+    };
+    write!(f, "{}", ret)?;
+    crate::biguint::fmt::bin(val, f)
+}
+
 impl<T: Digit> std::fmt::Binary for BigInt<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut ret = match self.sign {
-            true => "".to_string(),
-            false => "-".to_string(),
-        };
-        ret.push_str(&format!("{:b}", self.uint));
-        write!(f, "{}", ret)
+        bin(self.sign, &self.uint.val, f)
     }
 }

@@ -11,6 +11,7 @@ pub(crate) mod truediv;
 
 mod implem_choices;
 pub(crate) use implem_choices::add_assign;
+pub(crate) use implem_choices::div;
 pub(crate) use implem_choices::rsub_assign;
 pub(crate) use implem_choices::sub_assign;
 
