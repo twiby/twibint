@@ -1,5 +1,5 @@
 from math import log
-from twibint import BigInt, BigUint
+from twibint import BigInt, BigUint, read_from_file
 
 A = 123456789101112131415161718
 B = -987654321919293949596979899
@@ -106,3 +106,14 @@ def test_gt():
 def test_bool():
 	assert bool(BigInt(1)) == bool(1)
 	assert bool(BigInt(0)) == bool(0)
+
+def test_read_write():
+	C = BigInt(B)
+	C.write_to_file("test_file_py_bigint")
+	D = read_from_file("test_file_py_bigint")
+	assert C == D
+
+	C = BigInt(A)
+	C.write_to_file("test_file_py_bigint")
+	D = read_from_file("test_file_py_bigint")
+	assert C == D

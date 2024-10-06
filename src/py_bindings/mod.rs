@@ -107,6 +107,7 @@ fn gen_random_biguint(n: usize) -> BigUint {
 fn read_from_file(path: String, py: Python<'_>) -> PyResult<PyObject> {
     Ok(match Imported::<u64>::read_from_file(&path)? {
         Imported::Uint(uint) => BigUint(uint).into_py(py),
+        Imported::Int(int) => BigInt(int).into_py(py),
     })
 }
 
