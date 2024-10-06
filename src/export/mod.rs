@@ -2,6 +2,7 @@
 //! integers to files.
 
 use crate::traits::Digit;
+use crate::BigInt;
 use crate::BigUint;
 use std::fs::File;
 use std::io::Error;
@@ -100,10 +101,12 @@ trait VersionInfoData {
 
 enum Exported<'a, T: Digit> {
     Uint(&'a BigUint<T>),
+    Int(&'a BigInt<T>),
 }
 
 pub enum Imported<T: Digit> {
     Uint(BigUint<T>),
+    Int(BigInt<T>),
 }
 
 impl<T: Digit> Imported<T> {
@@ -120,6 +123,13 @@ impl<T: Digit> BigUint<T> {
     pub fn write_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let mut file = File::create(path)?;
         VersionInfo::<TWIBINT_FILE_VERSION>::export(&mut file, Exported::Uint(self))
+    }
+}
+
+impl<T: Digit> BigInt<T> {
+    pub fn write_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let mut file = File::create(path)?;
+        VersionInfo::<TWIBINT_FILE_VERSION>::export(&mut file, Exported::Int(self))
     }
 }
 
@@ -142,6 +152,7 @@ mod tests {
     use super::VersionInfoData;
     use super::TWIBINT_FILE_VERSION;
     use crate::traits::Digit;
+    use crate::BigInt;
     use crate::BigUint;
     use std::fs::File;
     use std::io::Read;
@@ -221,6 +232,35 @@ mod tests {
 
         match Imported::<T>::read_from_file(name).unwrap() {
             Imported::Uint(n2) => assert_eq!(n, n2),
+            _ => panic!(),
+        }
+    }
+
+    #[test_with(u32, u64)]
+    fn write_ones_bigint_full<T: Digit>() {
+        const BYTES_TO_WRITE: usize = 30;
+        let n = (BigInt::<T>::from(1u32) << (BYTES_TO_WRITE * 8)) - T::ONE;
+
+        let name = file_name::<T>("write_ones_bigint_full");
+        n.write_to_file(&name).unwrap();
+
+        match Imported::<T>::read_from_file(name).unwrap() {
+            Imported::Int(n2) => assert_eq!(n, n2),
+            _ => panic!(),
+        }
+    }
+
+    #[test_with(u32, u64)]
+    fn write_ones_minus_bigint_full<T: Digit>() {
+        const BYTES_TO_WRITE: usize = 30;
+        let n = -((BigInt::<T>::from(1u32) << (BYTES_TO_WRITE * 8)) - T::ONE);
+
+        let name = file_name::<T>("write_ones_minus_bigint_full");
+        n.write_to_file(&name).unwrap();
+
+        match Imported::<T>::read_from_file(name).unwrap() {
+            Imported::Int(n2) => assert_eq!(n, n2),
+            _ => panic!(),
         }
     }
 
@@ -237,6 +277,7 @@ mod tests {
             name.push_str(".tw");
             match Imported::<T>::read_from_file(name).unwrap() {
                 Imported::Uint(n2) => assert_eq!(n, n2),
+                _ => panic!(),
             }
         }
     }
@@ -249,6 +290,7 @@ mod tests {
             name.push_str(".tw");
             let n = match Imported::<T>::read_from_file(name).unwrap() {
                 Imported::Uint(n) => n,
+                _ => panic!(),
             };
 
             let next_pow_2 = BigUint::<T>::from(1u32) << n.nb_bits();

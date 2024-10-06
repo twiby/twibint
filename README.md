@@ -10,9 +10,10 @@ absolute value. They are meant to be used in almost any way a regular
 integer can be used, though they don't implement the `Copy` trait.
 
 These types let you choose the underlying digit representation (`u32` 
-or `u64`, maybe more in the future) via a generic type parameter. 
-All features are identical. You're welcome to try both to see what's 
-most efficient for your use case on your particular machine. 
+or `u64`) via a generic type parameter. All features are identical. 
+You're welcome to try both to see what's most efficient for your use 
+case on your particular machine. Typical usage include defining `type 
+BigUint = BigUint<u64>;` at the beginning of your project.
 
 Each integer can also be saved to, or imported from, a file, using 
 `BigUint::write_to_file`, or `Imported::read_from_file`. The import 

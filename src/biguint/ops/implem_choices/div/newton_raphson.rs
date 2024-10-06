@@ -541,6 +541,7 @@ mod tests {
     fn sqrt_2<T: Digit>() {
         let n = match Imported::<T>::read_from_file("src/export/test_files/sqrt_2_v1.tw").unwrap() {
             Imported::Uint(n) => n,
+            _ => panic!(),
         };
 
         let ret = super::div(&n, &n).unwrap();
