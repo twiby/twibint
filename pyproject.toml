@@ -1,10 +1,10 @@
 [project]
 name = "twibint"
-version = "0.2.7"
+version = "0.3.0"
 dependencies = ["maturin==1.1.0"]
 
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin==1.1.0"]
 build-backend = "maturin"
 
 [tool.maturin]
