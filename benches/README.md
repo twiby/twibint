@@ -5,8 +5,8 @@ A very simple and naive scripts helps evaluate how the performance compares to
 Python integers: `benches.py`.
 
 Simply put, `twibint`'s addition and multiplication are faster, but division 
-is slower. I've not produced a systematic study comparing the 2 option at 
-different scales at this point.
+is slightly slower. I've not produced a systematic study comparing the 
+2 option at different scales at this point.
 
 ## comparing to `num-bigint`
 Running the Python script `run_benchmarks.py` will run a series of benchmarks 
