@@ -1,3 +1,5 @@
+use crate::biguint::ops::mul;
+use crate::biguint::ops::mul_assign_digit;
 use core::iter::Product;
 use core::ops::{Mul, MulAssign};
 
@@ -28,14 +30,14 @@ impl<T: Digit> BigUint<T> {
     #[inline]
     pub(crate) fn _set_to_mul(&mut self, a: &[T], b: &[T]) {
         self.val.resize(a.len() + b.len(), T::ZERO);
-        super::implem_choices::mul(&mut self.val, a, b);
+        mul(&mut self.val, a, b);
         self.remove_leading_zeros();
     }
 
     #[inline]
     pub(crate) fn mul_assign_digit(&mut self, b: T) {
         self.val.push(T::ZERO);
-        super::implem_choices::mul_assign_digit(&mut self.val, b);
+        mul_assign_digit(&mut self.val, b);
         self.remove_leading_zeros();
     }
 }
