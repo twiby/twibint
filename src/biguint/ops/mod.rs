@@ -9,11 +9,13 @@ pub(crate) mod pow;
 pub(crate) mod shift;
 pub(crate) mod truediv;
 
-mod implem_choices;
-pub(crate) use implem_choices::add_assign;
-pub(crate) use implem_choices::div;
-pub(crate) use implem_choices::rsub_assign;
-pub(crate) use implem_choices::sub_assign;
+mod algorithms;
+pub(crate) use algorithms::add_assign;
+pub(crate) use algorithms::div;
+pub(crate) use algorithms::mul;
+pub(crate) use algorithms::mul_assign_digit;
+pub(crate) use algorithms::rsub_assign;
+pub(crate) use algorithms::sub_assign;
 
 #[cfg(test)]
 mod test;
