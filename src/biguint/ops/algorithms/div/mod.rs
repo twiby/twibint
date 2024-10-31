@@ -6,6 +6,7 @@ use std::cmp::Ordering;
 
 use crate::BigUint;
 
+mod burnikel_ziegler;
 mod multiplication_helper;
 pub(crate) mod newton_raphson;
 
