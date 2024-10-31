@@ -128,8 +128,7 @@ mod tests {
     {
         for _ in 0..100 {
             let b = gen_random_biguint::<T>(2 * T::NB_BITS);
-            let a_size = rand::thread_rng().gen_range(2 * T::NB_BITS + 1..3 * T::NB_BITS);
-            let mut a = gen_random_biguint::<T>(a_size);
+            let mut a = gen_random_biguint::<T>(3 * T::NB_BITS);
             if a.val[2] > b.val[1] {
                 if b.val[1] == T::ZERO {
                     a.val[2] = T::ZERO
@@ -163,8 +162,7 @@ mod tests {
     {
         for _ in 0..100 {
             let b = gen_random_biguint::<T>(2 * T::NB_BITS);
-            let a_size = rand::thread_rng().gen_range(2 * T::NB_BITS + 1..3 * T::NB_BITS);
-            let mut a = gen_random_biguint::<T>(a_size);
+            let mut a = gen_random_biguint::<T>(3 * T::NB_BITS);
             a.val[2] = b.val[1];
 
             let mut r = [T::ZERO; 4];
