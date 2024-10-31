@@ -8,6 +8,7 @@ use std::cmp::Ordering;
 
 use crate::BigUint;
 
+mod burnikel_ziegler;
 mod multiplication_helper;
 pub(crate) mod newton_raphson;
 
@@ -30,7 +31,7 @@ pub(crate) fn div<T: Digit>(
             // let mut r = vec![T::ZERO; d.val.len()];
             // schoolbook_div(&n.val, &d.val, &mut q, &mut r)?;
             // Ok((q.into(), r.into()))
-            newton_raphson::rem_div(n, d)
+            burnikel_ziegler::rem_div(n, d)
         }
     }
 }
@@ -120,14 +121,19 @@ fn ord<T: Digit>(r: &[T], r_last_digit: T, d: &[T]) -> Ordering {
 
 fn schoolbook_div_single_digit<T: Digit>(n: &[T], d: T, q: &mut [T]) -> DivisionResult<T> {
     let mut r = T::Double::ZERO;
+    let d_d = d.to_double();
 
     // Loop on the digits of n
     for (idx, digit) in n.iter().enumerate().rev() {
         r <<= T::NB_BITS;
         r |= digit.to_double();
 
-        let quotient = (r / d.to_double()).truncate_upper();
-        r %= d.to_double();
+        if r < d_d {
+            continue;
+        }
+
+        let quotient = (r / d_d).truncate_upper();
+        r %= d_d;
         let _ = add_assign(&mut q[idx..], &[quotient]);
     }
 
