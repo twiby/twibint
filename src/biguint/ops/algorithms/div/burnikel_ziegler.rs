@@ -9,11 +9,17 @@ use std::cmp::Ordering;
 
 use crate::BigUint;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Quotient3By2<T: Digit> {
     Single(T),
     MaxPlusOne,
     MaxPlusTwo,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum Quotient4By2<T: Digit> {
+    Single([T; 2]),
+    MaxPlusOnePlus([T; 2]),
 }
 
 impl<T: Digit> Quotient3By2<T> {
@@ -30,6 +36,23 @@ impl<T: Digit> Quotient3By2<T> {
             Self::Single(n) => mul(&mut ret[..3], a, &[*n]),
             Self::MaxPlusOne => mul(ret, a, &[T::ZERO, T::ONE]),
             Self::MaxPlusTwo => mul(ret, a, &[T::ONE, T::ONE]),
+        }
+    }
+}
+
+impl<T: Digit> Quotient4By2<T> {
+    fn pack(lsb: Quotient3By2<T>, msb: Quotient3By2<T>) -> Self {
+        match (lsb, msb) {
+            (Quotient3By2::Single(lsb), Quotient3By2::Single(msb)) => Self::Single([lsb, msb]),
+            (Quotient3By2::Single(lsb), Quotient3By2::MaxPlusOne) => {
+                Self::MaxPlusOnePlus([lsb, T::ZERO])
+            }
+            (Quotient3By2::Single(lsb), Quotient3By2::MaxPlusTwo) => {
+                Self::MaxPlusOnePlus([lsb, T::ONE])
+            }
+            // (Self::MaxPlusOne, Self::Single(msb)) => [T::ZERO, msb + T::ONE],
+            // (Self::MaxPlusTwo, Self::Single(msb)) => [T::ONE, msb + T::ONE],
+            _ => unreachable!(),
         }
     }
 }
@@ -59,6 +82,15 @@ impl<T: Digit> Into<BigUint<T>> for Quotient3By2<T> {
             Self::Single(n) => BigUint::new(n),
             Self::MaxPlusOne => BigUint::new(T::MAX) + T::ONE,
             Self::MaxPlusTwo => BigUint::new(T::MAX) + T::ONE + T::ONE,
+        }
+    }
+}
+
+impl<T: Digit> Into<BigUint<T>> for Quotient4By2<T> {
+    fn into(self) -> BigUint<T> {
+        match self {
+            Self::Single(arr) => BigUint::from(arr.to_vec()),
+            Self::MaxPlusOnePlus(arr) => BigUint::from([arr[0], arr[1], T::ONE].to_vec()),
         }
     }
 }
@@ -93,16 +125,22 @@ fn div_3s_by_2s<T: Digit>(a: &[T; 3], b: &[T; 2], r: &mut [T; 4]) -> Quotient3By
     q
 }
 
-// fn div_4s_by_2s<T: Digit>(a: &[T; 4], b: &[T; 2], r: &mut [T; 3], buff: &mut [T; 2]) -> [T; 2] {
-//     if a[3] == b[1] {
-//         unimplemented!();
-//     }
-//     let q1 = div_3s_by_2s(&[a[1], a[2], a[3]], b, r);
-//     buff[0] = r[0];
-//     buff[1] = r[1];
-//     let q2 = div_3s_by_2s(&[a[0], buff[0], buff[1]], b, r);
-//     Quotient3By2::pack(q2, q1)
-// }
+fn div_4s_by_2s<T: Digit>(
+    a: &[T; 4],
+    b: &[T; 2],
+    r: &mut [T; 4],
+    buff: &mut [T; 2],
+) -> Quotient4By2<T> {
+    debug_assert!(b[1] > (T::MAX >> 1));
+    if a[3] > b[1] {
+        unreachable!();
+    }
+    let q1 = div_3s_by_2s(&[a[1], a[2], a[3]], b, r);
+    buff[0] = r[0];
+    buff[1] = r[1];
+    let q2 = div_3s_by_2s(&[a[0], buff[0], buff[1]], b, r);
+    Quotient4By2::pack(q2, q1)
+}
 
 #[cfg(test)]
 fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
@@ -171,6 +209,72 @@ mod tests {
                 a.val[..3].try_into().unwrap(),
                 b.val[..2].try_into().unwrap(),
                 &mut r,
+            );
+            assert_eq!(r[2], T::ZERO);
+            assert_eq!(r[3], T::ZERO);
+
+            let q: BigUint<T> = q.into();
+            let r = BigUint::from(r.to_vec());
+
+            assert!(&r < &b);
+            assert_eq!(a, q * b + r);
+        }
+    }
+
+    #[test_with(u32, u64)]
+    fn test_divider<T: Digit>()
+    where
+        Standard: Distribution<T>,
+    {
+        for _ in 0..100 {
+            let b = gen_random_biguint::<T>(2 * T::NB_BITS);
+            let mut a = gen_random_biguint::<T>(4 * T::NB_BITS);
+            if a.val[3] > b.val[1] {
+                if b.val[1] == T::ZERO {
+                    a.val[3] = T::ZERO
+                } else {
+                    a.val[3] = b.val[1] - T::ONE;
+                }
+            }
+
+            let mut r = [T::ZERO; 4];
+            let mut buff = [T::ZERO; 2];
+
+            let q = super::div_4s_by_2s(
+                a.val[..4].try_into().unwrap(),
+                b.val[..2].try_into().unwrap(),
+                &mut r,
+                &mut buff,
+            );
+            assert_eq!(r[2], T::ZERO);
+            assert_eq!(r[3], T::ZERO);
+
+            let q: BigUint<T> = q.into();
+            let r = BigUint::from(r.to_vec());
+
+            assert!(&r < &b);
+            assert_eq!(a, q * b + r);
+        }
+    }
+
+    #[test_with(u32, u64)]
+    fn test_divider_corner_case<T: Digit>()
+    where
+        Standard: Distribution<T>,
+    {
+        for _ in 0..100 {
+            let b = gen_random_biguint::<T>(2 * T::NB_BITS);
+            let mut a = gen_random_biguint::<T>(4 * T::NB_BITS);
+            a.val[3] = b.val[1];
+
+            let mut r = [T::ZERO; 4];
+            let mut buff = [T::ZERO; 2];
+
+            let q = super::div_4s_by_2s(
+                a.val[..4].try_into().unwrap(),
+                b.val[..2].try_into().unwrap(),
+                &mut r,
+                &mut buff,
             );
             assert_eq!(r[2], T::ZERO);
             assert_eq!(r[3], T::ZERO);
