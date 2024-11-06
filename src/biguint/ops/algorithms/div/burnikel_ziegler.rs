@@ -165,13 +165,12 @@ fn div_3n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usi
             BigInt::from(r.to_vec())
         }
         _ => {
-            panic!();
             q.fill(T::MAX);
             let mut big_r = BigFloat::from(n[size / 2..].to_vec());
             big_r.add_assign(true, 0, &d[size / 2..]);
             big_r.sub_assign(true, (size / 2) as isize, &d[size / 2..]);
             assert!(big_r.scale >= 0);
-            big_r.int << (big_r.scale as usize + size / 2)
+            big_r.int << (big_r.scale as usize + size / 2) * T::NB_BITS
         }
     };
 
@@ -196,7 +195,8 @@ fn div_3n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usi
     }
 }
 
-const RECURISION_THRESHOLD: usize = 2;
+const RECURSION_THRESHOLD: usize = 1;
+
 fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usize) {
     let size = d.len();
     assert_eq!(n.len(), size * 2);
@@ -204,7 +204,7 @@ fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usi
     assert_eq!(r.len(), size);
     assert!(d[size - 1] > (T::MAX >> 1));
 
-    if size <= RECURISION_THRESHOLD || size % 2 != 0 {
+    if size <= RECURSION_THRESHOLD || size % 2 != 0 {
         // Handle odd case ?
 
         // Normal division
@@ -531,11 +531,30 @@ mod tests {
             assert_eq!(a, q * b + r);
         }
     }
+
+    #[test_with(u32, u64)]
+    fn test_corner_case_3_by_2<T: Digit>() {
+        let n = BigUint::from(vec![
+            T::ZERO,
+            T::ONE,
+            T::MAX - T::ONE,
+            T::ONE << (T::NB_BITS - 1),
+        ]);
+        let d = BigUint::from(vec![T::MAX, T::ONE << (T::NB_BITS - 1)]);
+
+        println!("{:?}", n);
+        println!("{:?}", d);
+        let (q, r) = super::rem_div(&n, &d).unwrap();
+
+        assert!(&r < &d);
+        assert_eq!(((d * q) + r), n);
+    }
 }
 
 #[cfg(test)]
 #[cfg(feature = "rand")]
 mod tests_full {
+    use crate::gen_random_biguint;
     use crate::traits::Digit;
     use crate::Imported;
     use num_bigint::BigUint;
@@ -916,5 +935,22 @@ mod tests_full {
         n2 += T::ONE;
         let ret = super::div(&n, &n2).unwrap();
         assert_eq!(ret.to_string(), "1");
+    }
+
+    /// This triggers the special branch of the `div_3n_by_2n` function
+    #[test_with(u32, u64)]
+    #[ignore]
+    fn test_corner_case_3_by_2<T: Digit>()
+    where
+        Standard: Distribution<T>,
+    {
+        for _ in 0..100 {
+            let d = gen_random_biguint::<T>(512 * T::NB_BITS);
+            let n = (&d << (512 * T::NB_BITS)) - T::ONE;
+
+            let (q, r) = super::rem_div(&n, &d).unwrap();
+            assert!(&r < &d);
+            assert_eq!(((d * q) + r), n);
+        }
     }
 }
