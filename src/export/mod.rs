@@ -163,7 +163,7 @@ mod tests {
         let mut name = "test_file_".to_string();
         name.push_str(n);
         name.push_str(&T::NB_BITS.to_string());
-        name.push_str(".txt");
+        name.push_str(".tw");
         name
     }
 

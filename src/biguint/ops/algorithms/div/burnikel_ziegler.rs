@@ -5,6 +5,8 @@ use crate::biguint::ord;
 use crate::traits::Digit;
 use crate::traits::DivisionResult;
 use crate::traits::DoubleDigit;
+use crate::BigFloat;
+use crate::BigInt;
 use std::cmp::Ordering;
 
 use crate::BigUint;
@@ -142,27 +144,116 @@ fn div_4s_by_2s<T: Digit>(
     Quotient4By2::pack(q2, q1)
 }
 
-fn div_3n_by_2n<T: Digit>(n: &[T], d: &[T]) -> (BigUint<T>, BigUint<T>) {
-    unimplemented!()
+fn div_3n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usize) {
+    let size = d.len();
+    assert_eq!(size % 2, 0);
+    assert_eq!(n.len(), 3 * (size / 2));
+    assert_eq!(q.len(), size / 2);
+    assert_eq!(r.len(), size);
+    assert!(d[size - 1] > (T::MAX >> 1));
+
+    let mut big_r = match ord(&n[size..], &d[size / 2..]) {
+        Ordering::Less => {
+            div_4n_by_2n(
+                &n[size / 2..],
+                &d[size / 2..],
+                q,
+                &mut r[size / 2..],
+                count + 1,
+            );
+            r[..size / 2].fill(T::ZERO);
+            BigInt::from(r.to_vec())
+        }
+        _ => {
+            panic!();
+            q.fill(T::MAX);
+            let mut big_r = BigFloat::from(n[size / 2..].to_vec());
+            big_r.add_assign(true, 0, &d[size / 2..]);
+            big_r.sub_assign(true, (size / 2) as isize, &d[size / 2..]);
+            assert!(big_r.scale >= 0);
+            big_r.int << (big_r.scale as usize + size / 2)
+        }
+    };
+
+    let mut x = vec![T::ZERO; size];
+    mul(&mut x, q, &d[..size / 2]);
+    big_r.add_assign(true, &n[..size / 2]);
+    let x_len = x.len() - x.iter().rev().take_while(|&&n| n == T::ZERO).count();
+    big_r.sub_assign(true, &x[..x_len]);
+
+    while big_r.is_sign_negative() {
+        big_r.add_assign(true, d);
+        sub_assign(q, &[T::ONE]);
+    }
+
+    assert!(big_r.uint.val.len() <= r.len());
+    for i in 0..r.len() {
+        if i < big_r.uint.val.len() {
+            r[i] = big_r.uint.val[i];
+        } else {
+            r[i] = T::ZERO;
+        }
+    }
 }
 
 const RECURISION_THRESHOLD: usize = 2;
-fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T]) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
+fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usize) {
     let size = d.len();
-    assert_eq!(size % 2, 0);
     assert_eq!(n.len(), size * 2);
+    assert_eq!(q.len(), size);
+    assert_eq!(r.len(), size);
+    assert!(d[size - 1] > (T::MAX >> 1));
 
-    if size <= RECURISION_THRESHOLD {
-        return super::div(&n.to_vec().into(), &d.to_vec().into());
+    if size <= RECURISION_THRESHOLD || size % 2 != 0 {
+        // Handle odd case ?
+
+        // Normal division
+        super::div_buffed(n, d, q, r).unwrap();
+        return;
     }
+    assert_eq!(size % 2, 0);
 
-    unimplemented!()
+    div_3n_by_2n(&n[size / 2..], d, &mut q[size / 2..], r, count);
+
+    let mut new_n = r.to_vec();
+    new_n.resize(3 * (size / 2), T::ZERO);
+    new_n.copy_within(..size, size / 2);
+    new_n[..size / 2].copy_from_slice(&n[..size / 2]);
+
+    div_3n_by_2n(&new_n, d, &mut q[..size / 2], r, count);
 }
 
-// #[cfg(test)]
-// fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
-//     Ok(Default::default())
-// }
+fn rem_div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
+    let d_bits = d.nb_bits();
+    let size = d.val.len().next_power_of_two();
+    let size_bits = size * T::NB_BITS;
+    let shift = size_bits - d_bits;
+    let mut n_data = (n << shift).val;
+    let d_data = (d << shift).val;
+
+    if n_data.len() > d_data.len() * 2 {
+        return super::div(n, d);
+    }
+
+    assert_eq!(d_data.len(), size);
+    assert!(n_data.len() <= d_data.len() * 2);
+    n_data.resize(d_data.len() * 2, T::ZERO);
+    let mut q = vec![T::ZERO; size];
+    let mut r = vec![T::ZERO; size];
+
+    div_4n_by_2n(&n_data, &d_data, &mut q, &mut r, 0);
+
+    let r = BigUint::from(r) >> shift;
+    let q = BigUint::from(q);
+    debug_assert!(&r < d);
+    debug_assert_eq!(&((d * &q) + &r), n);
+    Ok((q, r))
+}
+
+#[cfg(test)]
+fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
+    Ok(rem_div(n, d)?.0)
+}
 
 #[cfg(test)]
 #[cfg(feature = "rand")]
@@ -172,7 +263,6 @@ mod tests {
     use crate::BigUint;
     use rand::distributions::Standard;
     use rand::prelude::Distribution;
-    use rand::Rng;
 
     use typed_test_gen::test_with;
 
@@ -441,8 +531,11 @@ mod tests {
             assert_eq!(a, q * b + r);
         }
     }
+}
 
-    /*
+#[cfg(test)]
+#[cfg(feature = "rand")]
+mod tests_full {
     use crate::traits::Digit;
     use crate::Imported;
     use num_bigint::BigUint;
@@ -824,5 +917,4 @@ mod tests {
         let ret = super::div(&n, &n2).unwrap();
         assert_eq!(ret.to_string(), "1");
     }
-    */
 }

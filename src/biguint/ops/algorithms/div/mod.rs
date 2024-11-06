@@ -29,6 +29,32 @@ pub(crate) fn div<T: Digit>(
     newton_raphson::rem_div(n, d)
 }
 
+/// This function is a horrible nightmare and must be fixed
+fn div_buffed<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> DivisionResult<()> {
+    let n_uint = BigUint::from(n.to_vec());
+    let d_uint = BigUint::from(d.to_vec());
+
+    let (q_uint, r_uint) = div(&n_uint, &d_uint)?;
+    // let (q_uint, r_uint) = schoolbook_div(&n_uint, &d_uint)?;
+    for i in 0..q.len() {
+        if i < q_uint.val.len() {
+            q[i] = q_uint.val[i];
+        } else {
+            q[i] = T::ZERO;
+        }
+    }
+
+    for i in 0..r.len() {
+        if i < r_uint.val.len() {
+            r[i] = r_uint.val[i];
+        } else {
+            r[i] = T::ZERO;
+        }
+    }
+
+    Ok(())
+}
+
 #[allow(unused)]
 fn schoolbook_div<T: Digit>(
     n: &BigUint<T>,
