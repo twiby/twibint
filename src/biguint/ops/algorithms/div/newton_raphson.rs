@@ -75,7 +75,7 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
         // because of the rounding
         let mut init_depth = self.precision();
         let mut nb_steps = 0;
-        while init_depth < self.precision_bits {
+        while init_depth <= self.precision_bits {
             nb_steps += 1;
             init_depth <<= 1;
         }
@@ -169,6 +169,25 @@ pub(crate) fn rem_div<T: Digit>(
     debug_assert!(&r < d);
     debug_assert_eq!(&((d * &q) + &r), n);
     Ok((q, r))
+}
+
+#[cfg(test)]
+mod non_random_tests {
+    use crate::BigUint;
+
+    #[test]
+    fn infinite_recursion_1() {
+        let n = BigUint {
+            val: vec![861237108u32, 2525407974u32, 45u32],
+        };
+        let d = BigUint {
+            val: vec![3686160436u32, 4051287098u32],
+        };
+
+        let (q, r) = super::rem_div(&n, &d).unwrap();
+        assert!(&r < &d);
+        assert_eq!(((d * &q) + &r), n);
+    }
 }
 
 #[cfg(test)]
