@@ -75,14 +75,14 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
         // because of the rounding
         let mut init_depth = self.precision();
         let mut nb_steps = 0;
-        while init_depth <= self.precision_bits {
+        while init_depth < self.precision_bits {
             nb_steps += 1;
             init_depth <<= 1;
         }
 
         // Actual newton-raphson remaining steps
         let mut counter = 0;
-        while self.precision() <= self.precision_bits {
+        while self.precision() < self.precision_bits {
             counter += 1;
             if counter > nb_steps * 2 {
                 return Err(DivisionError::InfiniteNewtonRaphson);
