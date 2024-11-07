@@ -203,12 +203,13 @@ fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T], count: usi
     assert_eq!(q.len(), size);
     assert_eq!(r.len(), size);
     assert!(d[size - 1] > (T::MAX >> 1));
+    assert!((BigUint::from(d.to_vec()) << (size * T::NB_BITS)) > BigUint::from(n.to_vec()));
 
     if size <= RECURSION_THRESHOLD || size % 2 != 0 {
         // Handle odd case ?
 
         // Normal division
-        super::div_buffed(n, d, q, r).unwrap();
+        super::schoolbook_div(n, d, q, r).unwrap();
         return;
     }
     assert_eq!(size % 2, 0);

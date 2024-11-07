@@ -1,4 +1,5 @@
 use crate::biguint::ops::add_assign;
+use crate::biguint::ops::sub_assign;
 use crate::errors::DivisionError;
 use crate::traits::Digit;
 use crate::traits::DivisionResult;
@@ -26,60 +27,37 @@ pub(crate) fn div<T: Digit>(
         _ => (),
     }
 
+    // let mut q = vec![T::ZERO; n.val.len() - d.val.len() + 1];
+    // let mut r = vec![T::ZERO; d.val.len()];
+    // schoolbook_div(&n.val, &d.val, &mut q, &mut r)?;
+    // return Ok((q.into(), r.into()));
+
     newton_raphson::rem_div(n, d)
 }
 
-/// This function is a horrible nightmare and must be fixed
-fn div_buffed<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> DivisionResult<()> {
-    let n_uint = BigUint::from(n.to_vec());
-    let d_uint = BigUint::from(d.to_vec());
-
-    let (q_uint, r_uint) = div(&n_uint, &d_uint)?;
-    // let (q_uint, r_uint) = schoolbook_div(&n_uint, &d_uint)?;
-    for i in 0..q.len() {
-        if i < q_uint.val.len() {
-            q[i] = q_uint.val[i];
-        } else {
-            q[i] = T::ZERO;
-        }
-    }
-
-    for i in 0..r.len() {
-        if i < r_uint.val.len() {
-            r[i] = r_uint.val[i];
-        } else {
-            r[i] = T::ZERO;
-        }
-    }
-
-    Ok(())
-}
-
+/// q must be big enough for the result to fit
 #[allow(unused)]
-fn schoolbook_div<T: Digit>(
-    n: &BigUint<T>,
-    d: &BigUint<T>,
-) -> DivisionResult<(BigUint<T>, BigUint<T>)> {
+fn schoolbook_div<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> DivisionResult<()> {
     // Build returned objects
-    let mut ret = BigUint::<T> {
-        val: vec![T::ZERO; n.val.len()],
-    };
-    let mut remainder = BigUint::<T>::new(T::ZERO);
+    debug_assert!(n.len() >= d.len());
+    debug_assert!(r.len() == d.len());
+    r.fill(T::ZERO);
+    q.fill(T::ZERO);
 
     // Loop on the digits of n
-    for (idx, digit) in n.val.iter().enumerate().rev() {
-        remainder.val.insert(0, *digit);
-        remainder.remove_leading_zeros();
+    for (idx, digit) in n.iter().enumerate().rev() {
+        let r_last_digit = r[d.len() - 1];
+        r.copy_within(0..d.len() - 1, 1);
+        r[0] = *digit;
 
         // Get the quotient remainder/other
-        let quotient: T = match remainder.cmp(d) {
+        let quotient: T = match ord(&r, r_last_digit, d) {
             // remainder lower than other: accumulate one more digit of n
             Ordering::Less => continue,
 
             // remainder = other: quotient is 1
             Ordering::Equal => {
-                remainder.val.resize(1, T::ZERO);
-                remainder.val[0] = T::ZERO;
+                r.fill(T::ZERO);
                 T::ONE
             }
 
@@ -90,22 +68,43 @@ fn schoolbook_div<T: Digit>(
 
                 // We add to the current product power of 2 by power of 2
                 for bit in (0..T::NB_BITS).rev() {
-                    let temp = d << bit;
-                    if &product + &temp <= remainder {
+                    let temp = BigUint::from(d.to_vec()) << bit;
+                    if ord(&r, r_last_digit, &(&product + &temp).val) != Ordering::Less {
                         quotient |= T::ONE << bit;
                         product += temp;
                     }
                 }
 
-                remainder -= &product;
+                sub_assign(r, &product.val[..product.val.len().min(d.len())]);
                 quotient
             }
         };
 
-        // ret.val[idx..] is guaranteed to be big enough to ignore carry
-        let _ = add_assign(&mut ret.val[idx..], &[quotient]);
+        // q[idx..] is guaranteed to be big enough to ignore carry
+        let _ = add_assign(&mut q[idx..], &[quotient]);
     }
 
-    ret.remove_leading_zeros();
-    Ok((ret, remainder))
+    Ok(())
+}
+
+/// Wrapper arund ord to deal with remainder that may have an additional MSB
+fn ord<T: Digit>(r: &[T], r_last_digit: T, d: &[T]) -> Ordering {
+    match d.len() - r.len() {
+        0 => {
+            if r_last_digit > T::ZERO {
+                Ordering::Greater
+            } else {
+                crate::biguint::ord(r, d)
+            }
+        }
+        1 => {
+            let msb_ord = r_last_digit.cmp(&d[d.len() - 1]);
+            if msb_ord != Ordering::Equal {
+                msb_ord
+            } else {
+                crate::biguint::ord(r, &d[..d.len() - 1])
+            }
+        }
+        _ => unreachable!(),
+    }
 }
