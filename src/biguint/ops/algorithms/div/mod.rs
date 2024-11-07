@@ -44,6 +44,9 @@ fn schoolbook_div<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> Divis
     r.fill(T::ZERO);
     q.fill(T::ZERO);
 
+    let mut p = vec![T::ZERO; d.len() + 1]; // (to reduce ??)
+    let mut shifted_d = BigUint::from(d.to_vec()) << T::NB_BITS;
+
     // Loop on the digits of n
     for (idx, digit) in n.iter().enumerate().rev() {
         let r_last_digit = r[d.len() - 1];
@@ -64,18 +67,24 @@ fn schoolbook_div<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> Divis
             // remainder greater than other: quotient is a positive u32
             Ordering::Greater => {
                 let mut quotient = T::ZERO;
-                let mut product = BigUint::<T>::new(T::ZERO);
+                p.fill(T::ZERO);
 
                 // We add to the current product power of 2 by power of 2
                 for bit in (0..T::NB_BITS).rev() {
-                    let temp = BigUint::from(d.to_vec()) << bit;
-                    if ord(&r, r_last_digit, &(&product + &temp).val) != Ordering::Less {
-                        quotient |= T::ONE << bit;
-                        product += temp;
-                    }
+                    shifted_d >>= 1;
+                    add_assign(&mut p, &shifted_d.val);
+                    match ord(&r, r_last_digit, &p) {
+                        Ordering::Less => {
+                            sub_assign(&mut p, &shifted_d.val);
+                        }
+                        _ => {
+                            quotient |= T::ONE << bit;
+                        }
+                    };
                 }
 
-                sub_assign(r, &product.val[..product.val.len().min(d.len())]);
+                shifted_d <<= T::NB_BITS;
+                sub_assign(r, &p[..d.len()]);
                 quotient
             }
         };
