@@ -1,4 +1,5 @@
 use std::any::TypeId;
+use std::ops::RemAssign;
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXorAssign, Div, Mul, Rem, Shl,
     ShlAssign, Shr, ShrAssign, Sub, SubAssign,
@@ -108,16 +109,20 @@ pub trait DoubleDigit:
     Copy
     + PartialEq
     + Add<Output = Self>
+    + RemAssign
     + Mul<Output = Self>
     + Div<Output = Self>
     + Rem<Output = Self>
     + Shl<usize, Output = Self>
+    + ShlAssign<usize>
     + BitOr<Output = Self>
+    + BitOrAssign
 {
     const ZERO: Self;
     type Single: Digit<Double = Self>;
     fn truncate_upper(self) -> Self::Single;
     fn truncate_lower(self) -> Self::Single;
+    /// returns (lsb, msb)
     fn split(self) -> (Self::Single, Self::Single) {
         (self.truncate_upper(), self.truncate_lower())
     }
