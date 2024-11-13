@@ -40,10 +40,10 @@ More details and scripts about performance are available in the `benches`
 folder.
 
 TL;DR -> The current state of `twibint`s performance (v0.3.0) is: 
-Addition, Subtraction and Multiplication are faster than for Python 
-integers (Division is slightly slower), and sometimes faster then 
-`num-bigint` at some scales. Division remains quite slower than 
-`num-bigint`.
+Addition, Subtraction, Multiplication, and Division are faster than 
+for Python integers. Compared to `num-bigint`, Addition is mostly 
+faster, Multiplication is equivalent, Subtraction and Division slightly 
+worse. 
 
 # List of features
 
