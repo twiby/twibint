@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 VERSIONS = {
 	"num-bigint": "0.4.6",
-	"twibint": "0.3.0",
+	"twibint": "0.3.2",
 }
 
 def run_benchmark(crate):
