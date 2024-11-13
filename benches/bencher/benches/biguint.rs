@@ -1,6 +1,8 @@
 use bencher::gen_random_biguint;
 use bencher::GetNbBits;
 
+use std::time::{Duration, Instant};
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 pub fn add<const N: usize>(c: &mut Criterion) {
@@ -112,7 +114,19 @@ pub fn div<const N: usize, const N2: usize>(c: &mut Criterion) {
     name.push('/');
     name.push_str(&n2.get_nb_bits().to_string());
 
-    c.bench_function(name.as_str(), |b| b.iter(|| black_box(&n1 / &n2)));
+    c.bench_function(name.as_str(), |b| {
+        b.iter_custom(|iters| {
+            let mut duration = Duration::default();
+            for _ in 0..iters {
+                let n1 = gen_random_biguint(N);
+                let n2 = gen_random_biguint(N2);
+                let start = Instant::now();
+                black_box(&n1 / &n2);
+                duration += start.elapsed();
+            }
+            duration
+        })
+    });
 }
 
 criterion_group!(
