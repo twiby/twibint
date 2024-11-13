@@ -148,11 +148,20 @@ pub(crate) fn nb_bits<T: Digit>(a: &[T]) -> usize {
 
 #[inline]
 pub(crate) fn ord<T: Digit>(a: &[T], b: &[T]) -> Ordering {
-    match a.len().cmp(&b.len()) {
+    let mut a_len = a.len();
+    while a_len > 0 && a[a_len - 1] == T::ZERO {
+        a_len -= 1;
+    }
+    let mut b_len = b.len();
+    while b_len > 0 && b[b_len - 1] == T::ZERO {
+        b_len -= 1;
+    }
+
+    match a_len.cmp(&b_len) {
         Ordering::Equal => (),
         o => return o,
     };
-    for (a, b) in a.iter().zip(b.iter()).rev() {
+    for (a, b) in a[..a_len].iter().zip(b[..b_len].iter()).rev() {
         match a.cmp(b) {
             Ordering::Equal => continue,
             o => return o,
@@ -186,5 +195,29 @@ impl<T: Digit> PartialOrd<BigUint<T>> for BigUint<T> {
 impl<T: Digit> Ord for BigUint<T> {
     fn cmp(&self, other: &BigUint<T>) -> Ordering {
         self.ord(&other.val)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::biguint::ord;
+    use crate::traits::Digit;
+    use core::cmp::Ordering;
+
+    use typed_test_gen::test_with;
+
+    #[test_with(u32, u64)]
+    fn test_ord<T: Digit>() {
+        let a = [T::ONE, T::ONE, T::ZERO, T::ZERO];
+        let b = [T::ONE, T::ONE, T::ONE];
+        assert_eq!(ord(&a, &b), Ordering::Less);
+
+        let a = [T::ONE, T::ONE, T::ONE, T::ZERO];
+        let b = [T::ONE, T::ONE, T::ONE];
+        assert_eq!(ord(&a, &b), Ordering::Equal);
+
+        let a = [T::ONE, T::ONE, T::ONE, T::ZERO];
+        let b = [T::ONE, T::ZERO, T::ONE];
+        assert_eq!(ord(&a, &b), Ordering::Greater);
     }
 }
