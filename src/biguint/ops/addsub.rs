@@ -76,7 +76,7 @@ impl<T: Digit> Add<T> for &BigUint<T> {
     fn add(self, other: T) -> Self::Output {
         let mut ret: BigUint<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<T> for BigUint<T> {
@@ -94,7 +94,7 @@ impl<T: Digit> Add<&T> for &BigUint<T> {
     fn add(self, other: &T) -> Self::Output {
         let mut ret: BigUint<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<&T> for BigUint<T> {
@@ -111,7 +111,7 @@ impl<T: Digit> Add<&BigUint<T>> for &BigUint<T> {
     fn add(self, other: &BigUint<T>) -> Self::Output {
         let mut ret = self.clone_for_addition_with(other.val.len());
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<BigUint<T>> for BigUint<T> {
@@ -187,7 +187,7 @@ impl<T: Digit> Sub<T> for &BigUint<T> {
     fn sub(self, other: T) -> BigUint<T> {
         let mut ret = self.clone();
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<&T> for &BigUint<T> {
@@ -195,7 +195,7 @@ impl<T: Digit> Sub<&T> for &BigUint<T> {
     fn sub(self, other: &T) -> BigUint<T> {
         let mut ret = self.clone();
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<T> for BigUint<T> {

@@ -121,8 +121,6 @@ pub trait DoubleDigit:
     + BitOrAssign
 {
     const ZERO: Self;
-    const MAX: Self;
-    const HALF_MAX: Self;
     type Single: Digit<Double = Self>;
     fn truncate_upper(self) -> Self::Single;
     fn truncate_lower(self) -> Self::Single;
@@ -131,7 +129,7 @@ pub trait DoubleDigit:
     fn split(self) -> (Self::Single, Self::Single) {
         (self.truncate_upper(), self.truncate_lower())
     }
-    #[cfg(test)]
+    #[cfg(all(test, feature = "rand"))]
     fn pack(d: &[Self::Single]) -> Self;
 }
 pub trait SignedDigit: Copy {
@@ -193,8 +191,6 @@ impl Digit for u32 {
 }
 impl DoubleDigit for u64 {
     const ZERO: u64 = 0u64;
-    const MAX: u64 = u64::MAX;
-    const HALF_MAX: u64 = u64::MAX >> 32;
     type Single = u32;
     #[inline]
     fn truncate_upper(self) -> u32 {
@@ -204,8 +200,8 @@ impl DoubleDigit for u64 {
     fn truncate_lower(self) -> u32 {
         (self >> 32) as u32
     }
-    #[cfg(test)]
     #[inline]
+    #[cfg(all(test, feature = "rand"))]
     fn pack(d: &[Self::Single]) -> Self {
         debug_assert_eq!(d.len(), 2);
         (d[0] as Self) + ((d[1] as Self) << 32)
@@ -276,8 +272,6 @@ impl Digit for u64 {
 }
 impl DoubleDigit for u128 {
     const ZERO: u128 = 0u128;
-    const MAX: u128 = u128::MAX;
-    const HALF_MAX: u128 = u128::MAX >> 64;
     type Single = u64;
     #[inline]
     fn truncate_upper(self) -> u64 {
@@ -287,8 +281,8 @@ impl DoubleDigit for u128 {
     fn truncate_lower(self) -> u64 {
         (self >> 64) as u64
     }
-    #[cfg(test)]
     #[inline]
+    #[cfg(all(test, feature = "rand"))]
     fn pack(d: &[Self::Single]) -> Self {
         debug_assert_eq!(d.len(), 2);
         (d[0] as Self) + ((d[1] as Self) << 64)

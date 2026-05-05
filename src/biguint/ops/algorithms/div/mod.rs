@@ -55,7 +55,7 @@ fn schoolbook_div<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> Divis
         r[0] = *digit;
 
         // Get the quotient remainder/other
-        let quotient: T = match ord(&r, r_last_digit, d) {
+        let quotient: T = match ord(r, r_last_digit, d) {
             // remainder lower than other: accumulate one more digit of n
             Ordering::Less => continue,
 
@@ -74,7 +74,7 @@ fn schoolbook_div<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut [T]) -> Divis
                 for bit in (0..T::NB_BITS).rev() {
                     shifted_d >>= 1;
                     add_assign(&mut p, &shifted_d.val);
-                    match ord(&r, r_last_digit, &p) {
+                    match ord(r, r_last_digit, &p) {
                         Ordering::Less => {
                             sub_assign(&mut p, &shifted_d.val);
                         }

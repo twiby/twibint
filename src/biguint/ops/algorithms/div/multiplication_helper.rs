@@ -26,8 +26,8 @@ impl<T: Digit> SmartMul<T> for BigFloat<T> {
     #[inline]
     fn msd(&self, nb_digits: usize) -> BigFloatMSD<'_, T> {
         BigFloatMSD {
-            float: &self,
-            nb_digits: nb_digits,
+            float: self,
+            nb_digits,
         }
     }
 
@@ -51,8 +51,8 @@ impl<T: Digit> SmartMul<T> for BigUint<T> {
     #[inline]
     fn msd(&self, nb_digits: usize) -> BigUintMSD<'_, T> {
         BigUintMSD {
-            uint: &self,
-            nb_digits: nb_digits,
+            uint: self,
+            nb_digits,
         }
     }
 }

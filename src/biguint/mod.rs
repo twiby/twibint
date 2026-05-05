@@ -90,7 +90,7 @@ impl<T: Digit> BigUint<T> {
         if b >= self.val.len() * T::NB_BITS {
             false
         } else {
-            (self.val[b / T::NB_BITS] >> b % T::NB_BITS) & T::ONE != T::ZERO
+            (self.val[b / T::NB_BITS] >> (b % T::NB_BITS)) & T::ONE != T::ZERO
         }
     }
 

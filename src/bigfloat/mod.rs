@@ -50,9 +50,7 @@ impl<T: Digit> BigFloat<T> {
             .val
             .iter()
             .take_while(|n| **n == T::ZERO)
-            .count()
-            .try_into()
-            .unwrap();
+            .count();
         self.scale += nb_zeros as isize;
         self.int.uint.val.drain(..nb_zeros);
 
@@ -129,10 +127,9 @@ impl<T: Digit> BigFloat<T> {
         }
 
         let one_half = BigFloat::from(T::ONE) >> 1;
-        let adjust = match one_half.float_unsigned_ord(self.scale, &self.int.uint.val[0..scale]) {
-            Ordering::Less => true,
-            _ => false,
-        };
+        let adjust = one_half
+            .float_unsigned_ord(self.scale, &self.int.uint.val[0..scale])
+            .is_lt();
 
         self.int.uint.val.drain(0..scale);
         if self.int.uint.val.is_empty() {

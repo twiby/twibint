@@ -130,7 +130,7 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
 
         self.temp_1.round();
         let scale = self.temp_1.scale.max(0) as usize;
-        let mut quot = self.temp_1.int.uint << scale * T::NB_BITS;
+        let mut quot = self.temp_1.int.uint << (scale * T::NB_BITS);
 
         let mut rem = self.temp_2.int.uint;
         rem.set_to_mul(&quot, self.d);
@@ -156,7 +156,7 @@ impl<'a, T: Digit> NewtonRaphsonMachine<'a, T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
     Ok(rem_div(n, d)?.0)
 }

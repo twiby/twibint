@@ -108,7 +108,7 @@ impl<T: Digit> BigFloat<T> {
         let mut remaining = T::ONE;
         for d in &mut self.int.uint.val[..scale_diff] {
             *d = (T::MAX - *d).wrapping_add(remaining);
-            remaining = T::from_bool(*d == T::ZERO && !(remaining == T::ZERO));
+            remaining = T::from_bool(*d == T::ZERO && (remaining != T::ZERO));
         }
 
         if remaining == T::ZERO {
@@ -187,7 +187,7 @@ impl<T: Digit> Add<T> for &BigFloat<T> {
     fn add(self, other: T) -> Self::Output {
         let mut ret: BigFloat<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<&T> for &BigFloat<T> {
@@ -196,7 +196,7 @@ impl<T: Digit> Add<&T> for &BigFloat<T> {
     fn add(self, other: &T) -> Self::Output {
         let mut ret: BigFloat<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<&BigFloat<T>> for &BigFloat<T> {
@@ -205,7 +205,7 @@ impl<T: Digit> Add<&BigFloat<T>> for &BigFloat<T> {
     fn add(self, other: &BigFloat<T>) -> Self::Output {
         let mut ret = self.clone_for_addition_with(other.int.uint.val.len());
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<BigFloat<T>> for &BigFloat<T> {
@@ -278,7 +278,7 @@ impl<T: Digit> Sub<T> for &BigFloat<T> {
     fn sub(self, other: T) -> BigFloat<T> {
         let mut ret = self.clone_for_addition_with(1);
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<&T> for &BigFloat<T> {
@@ -286,7 +286,7 @@ impl<T: Digit> Sub<&T> for &BigFloat<T> {
     fn sub(self, other: &T) -> BigFloat<T> {
         let mut ret = self.clone_for_addition_with(1);
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<T> for BigFloat<T> {

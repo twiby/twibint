@@ -56,14 +56,14 @@ impl VersionInfo<1> {
         let mut buff = [0u8; Self::LINE_SIZE_IN_BYTES];
 
         let version_bytes: [u8; 2] = header.version.to_le_bytes();
-        file.write(&version_bytes)?;
-        file.write(&[header.integer])?;
-        file.write(&buff[3..])?;
+        file.write_all(&version_bytes)?;
+        file.write_all(&[header.integer])?;
+        file.write_all(&buff[3..])?;
 
         buff.fill(0);
         let lines_bytes: [u8; 4] = header.lines.to_le_bytes();
-        file.write(&lines_bytes)?;
-        file.write(&buff[4..])?;
+        file.write_all(&lines_bytes)?;
+        file.write_all(&buff[4..])?;
 
         Ok(())
     }
