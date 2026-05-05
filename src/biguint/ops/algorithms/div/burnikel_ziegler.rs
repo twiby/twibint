@@ -1,19 +1,19 @@
 use crate::biguint::ops::add_assign;
 use crate::biguint::ops::mul;
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 use crate::biguint::ops::rsub_assign;
 use crate::biguint::ops::sub_assign;
 use crate::biguint::ord;
 use crate::traits::Digit;
 use crate::traits::DivisionResult;
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 use crate::traits::DoubleDigit;
 use crate::BigInt;
 use std::cmp::Ordering;
 
 use crate::BigUint;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 #[derive(Clone, Copy, Debug)]
 enum Quotient3By2<T: Digit> {
     Single(T),
@@ -21,14 +21,14 @@ enum Quotient3By2<T: Digit> {
     MaxPlusTwo,
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 #[derive(Clone, Copy, Debug)]
 enum Quotient4By2<T: Digit> {
     Single([T; 2]),
     MaxPlusOnePlus([T; 2]),
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 impl<T: Digit> Quotient3By2<T> {
     fn dec(&mut self) {
         *self = match self {
@@ -47,7 +47,7 @@ impl<T: Digit> Quotient3By2<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 impl<T: Digit> Quotient4By2<T> {
     fn pack(lsb: Quotient3By2<T>, msb: Quotient3By2<T>) -> Self {
         match (lsb, msb) {
@@ -65,7 +65,7 @@ impl<T: Digit> Quotient4By2<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 impl<T: DoubleDigit> From<T> for Quotient3By2<T::Single> {
     fn from(val: T) -> Quotient3By2<T::Single> {
         let (lsb, msb) = val.split();
@@ -85,7 +85,7 @@ impl<T: DoubleDigit> From<T> for Quotient3By2<T::Single> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 impl<T: Digit> Into<BigUint<T>> for Quotient3By2<T> {
     fn into(self) -> BigUint<T> {
         match self {
@@ -96,7 +96,7 @@ impl<T: Digit> Into<BigUint<T>> for Quotient3By2<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 impl<T: Digit> Into<BigUint<T>> for Quotient4By2<T> {
     fn into(self) -> BigUint<T> {
         match self {
@@ -107,7 +107,7 @@ impl<T: Digit> Into<BigUint<T>> for Quotient4By2<T> {
 }
 
 /// A lot of assumtions here
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 fn div_3s_by_2s<T: Digit>(a: &[T; 3], b: &[T; 2], r: &mut [T; 4]) -> Quotient3By2<T> {
     debug_assert!(b[1] > T::ZERO);
     debug_assert!(b[1] > (T::MAX >> 1));
@@ -137,7 +137,7 @@ fn div_3s_by_2s<T: Digit>(a: &[T; 3], b: &[T; 2], r: &mut [T; 4]) -> Quotient3By
     q
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 fn div_4s_by_2s<T: Digit>(
     a: &[T; 4],
     b: &[T; 2],
@@ -205,7 +205,7 @@ fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut BigInt<T>, buff
         "quotient won't fit !"
     );
 
-    if size <= RECURSION_THRESHOLD || size % 2 != 0 {
+    if size <= RECURSION_THRESHOLD || !size.is_multiple_of(2) {
         r.uint.val.resize(size, T::ZERO);
 
         if size == 1 {
@@ -228,7 +228,7 @@ fn div_4n_by_2n<T: Digit>(n: &[T], d: &[T], q: &mut [T], r: &mut BigInt<T>, buff
     new_n[..size / 2].copy_from_slice(&n[..size / 2]);
     new_n[size / 2..size / 2 + r.uint.val.len()].copy_from_slice(&r.uint.val);
     new_n[size / 2 + r.uint.val.len()..].fill(T::ZERO);
-    div_3n_by_2n(&new_n, d, &mut q[..size / 2], r, buff);
+    div_3n_by_2n(new_n, d, &mut q[..size / 2], r, buff);
 }
 
 pub(crate) fn rem_div<T: Digit>(
@@ -243,7 +243,7 @@ pub(crate) fn rem_div<T: Digit>(
     // digits in a very high level schoolbook division
     let nb_blocks = (d.val.len() / RECURSION_THRESHOLD).next_power_of_two();
     let mut block_size = d.val.len() / nb_blocks + 1;
-    if d.val.len() % nb_blocks == 0 {
+    if d.val.len().is_multiple_of(nb_blocks) {
         block_size -= 1;
     }
     let size = block_size * nb_blocks;
@@ -262,7 +262,7 @@ pub(crate) fn rem_div<T: Digit>(
 
     // Opportunity to gain one block in some cases
     // Highest block of n is not allowed to have 1 as MSB
-    if n_data.len() % size == 0 && !n_data.last().map_or(false, |&n| n > (T::MAX >> 1)) {
+    if n_data.len().is_multiple_of(size) && n_data.last().is_none_or(|&n| n <= (T::MAX >> 1)) {
         n_nb_blocks -= 1;
     }
 
@@ -312,7 +312,7 @@ pub(crate) fn rem_div<T: Digit>(
     Ok((q, r))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "rand"))]
 fn div<T: Digit>(n: &BigUint<T>, d: &BigUint<T>) -> DivisionResult<BigUint<T>> {
     Ok(rem_div(n, d)?.0)
 }

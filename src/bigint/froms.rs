@@ -69,13 +69,12 @@ impl<T: Digit> From<&BigInt<T>> for f32 {
 }
 
 fn car_cdr(s: &str) -> (char, &str) {
-    assert!(s.len() > 0);
+    assert!(!s.is_empty());
 
     for i in 1..5 {
         let r = s.get(0..i);
-        match r {
-            Some(x) => return (x.chars().next().unwrap(), &s[i..]),
-            None => (),
+        if let Some(x) = r {
+            return (x.chars().next().unwrap(), &s[i..]);
         }
     }
 
@@ -85,7 +84,7 @@ fn car_cdr(s: &str) -> (char, &str) {
 impl<T: Digit> std::str::FromStr for BigInt<T> {
     type Err = UnexpectedCharacterError;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() == 0 {
+        if s.is_empty() {
             return Ok(BigInt::<T>::default());
         }
 

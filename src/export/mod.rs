@@ -66,11 +66,11 @@ trait VersionInfoData {
         for chunk in digits.chunks(digits_per_buffer) {
             buff.fill(0);
 
-            for (d, sub_buff) in chunk.into_iter().zip(buff.chunks_mut(bytes_per_digit)) {
+            for (d, sub_buff) in chunk.iter().zip(buff.chunks_mut(bytes_per_digit)) {
                 d.write_bytes(sub_buff);
             }
 
-            file.write(&buff)?;
+            file.write_all(&buff)?;
             lines += 1;
         }
 

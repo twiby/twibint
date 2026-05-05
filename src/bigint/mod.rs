@@ -63,7 +63,7 @@ impl<T: Digit> BigInt<T> {
     }
 
     pub(crate) fn signed_eq(&self, other_sign: bool, other: &[T]) -> bool {
-        &self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
+        self.uint.val == other && ((self.sign == other_sign) || (self.uint.val == vec![T::ZERO]))
     }
 
     pub(crate) fn signed_ord(&self, other_sign: bool, other: &[T]) -> Ordering {

@@ -63,7 +63,7 @@ impl<T: Digit> Add<T> for &BigInt<T> {
     fn add(self, other: T) -> Self::Output {
         let mut ret: BigInt<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<&T> for &BigInt<T> {
@@ -72,7 +72,7 @@ impl<T: Digit> Add<&T> for &BigInt<T> {
     fn add(self, other: &T) -> Self::Output {
         let mut ret: BigInt<T> = self.clone_for_addition_with(1);
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<&BigInt<T>> for &BigInt<T> {
@@ -81,7 +81,7 @@ impl<T: Digit> Add<&BigInt<T>> for &BigInt<T> {
     fn add(self, other: &BigInt<T>) -> Self::Output {
         let mut ret = self.clone_for_addition_with(other.uint.val.len());
         ret += other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Add<BigInt<T>> for &BigInt<T> {
@@ -154,7 +154,7 @@ impl<T: Digit> Sub<T> for &BigInt<T> {
     fn sub(self, other: T) -> BigInt<T> {
         let mut ret = self.clone_for_addition_with(1);
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<&T> for &BigInt<T> {
@@ -162,7 +162,7 @@ impl<T: Digit> Sub<&T> for &BigInt<T> {
     fn sub(self, other: &T) -> BigInt<T> {
         let mut ret = self.clone_for_addition_with(1);
         ret -= other;
-        return ret;
+        ret
     }
 }
 impl<T: Digit> Sub<T> for BigInt<T> {

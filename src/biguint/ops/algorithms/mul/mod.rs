@@ -18,7 +18,7 @@ mod x86_64;
 
 /// adds the multiplicatin of rhs and lhs to ret
 fn schoolbook_mul<T: Digit>(ret: &mut [T], rhs: &[T], lhs: &[T]) {
-    if lhs.len() == 0 {
+    if lhs.is_empty() {
         ret[..rhs.len()].fill(T::ZERO);
         return;
     }
@@ -278,14 +278,14 @@ unsafe fn mul_u32<T: Digit>(
 
     match (additional_rhs_term, additional_lhs_term) {
         (Some(&a), None) => {
-            single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs, a);
+            single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], lhs, a);
         }
         (None, Some(&b)) => {
-            single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
+            single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], rhs, b);
         }
         (Some(&a), Some(&b)) => {
             single_digit_add_assign_mul(&mut ret[rhs.len() - 1..], &lhs[..lhs.len() - 1], a);
-            single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], &rhs, b);
+            single_digit_add_assign_mul(&mut ret[lhs.len() - 1..], rhs, b);
         }
         (None, None) => (),
     }

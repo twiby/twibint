@@ -79,7 +79,7 @@ impl<T: Digit> std::str::FromStr for BigUint<T> {
         }
 
         ret.remove_leading_zeros();
-        return Ok(ret);
+        Ok(ret)
     }
 }
 
@@ -110,7 +110,7 @@ impl<T: Digit> From<BigUint<T>> for String {
 
 impl<T: Digit> From<Vec<T>> for BigUint<T> {
     fn from(mut v: Vec<T>) -> BigUint<T> {
-        if v.len() == 0 {
+        if v.is_empty() {
             v.push(T::ZERO);
         }
         let mut ret = BigUint::<T> { val: v };
@@ -137,6 +137,7 @@ impl<T: Digit> From<(T, T)> for BigUint<T> {
 }
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum IntoUintError {
     ToUint16Overflow,
     ToUint32Overflow,

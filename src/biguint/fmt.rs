@@ -28,7 +28,7 @@ impl<T: Digit> std::fmt::LowerHex for BigUint<T> {
             for _ in 0..(T::NB_BITS / 4) - binary.len() {
                 full_binary.push('0');
             }
-            full_binary.push_str(&binary);
+            full_binary.push_str(binary);
             ret.push_str(&full_binary);
         }
 
@@ -44,7 +44,7 @@ impl<T: Digit> std::fmt::UpperHex for BigUint<T> {
             for _ in 0..(T::NB_BITS / 4) - binary.len() {
                 full_binary.push('0');
             }
-            full_binary.push_str(&binary);
+            full_binary.push_str(binary);
             ret.push_str(&full_binary);
         }
 
@@ -66,7 +66,7 @@ pub(crate) fn bin<T: Digit>(val: &[T], f: &mut std::fmt::Formatter<'_>) -> std::
         for _ in 0..T::NB_BITS - binary.len() {
             full_binary.push('0');
         }
-        full_binary.push_str(&binary);
+        full_binary.push_str(binary);
         ret.push_str(&full_binary);
     }
 
